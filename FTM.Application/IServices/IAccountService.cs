@@ -11,10 +11,8 @@ namespace FTM.Application.IServices
     public interface IAccountService
     {
         Task<TokenResult> Login(string username, string password);
-        Task<SendOTPTracking> Register(RegisterAccountRequest request);
-        Task<SendOTPTracking> ValidateSendOTPLimit(SendOtpRequest request);
-        Task<string> GenerateTwoFactorTokenConfirmOTP(string username, string tokenOptions);
-
-        Task<SendOTPTracking> SendSMSOtp(SendOtpRequest request);
+        //Task<SendOTPTracking> Register(RegisterAccountRequest request);
+        Task RegisterByEmail(RegisterAccountRequest request);
+        Task<bool> ConfirmEmail(Guid userId, string token);
     }
 }

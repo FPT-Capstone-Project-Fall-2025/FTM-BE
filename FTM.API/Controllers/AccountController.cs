@@ -1,10 +1,12 @@
 ﻿using FTM.API.Reponses;
 using FTM.Application.IServices;
+using FTM.Domain.Entities.Identity;
 using FTM.Domain.Models;
 using FTM.Domain.Models.Authen;
 using FTM.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FTM.API.Controllers
@@ -14,9 +16,11 @@ namespace FTM.API.Controllers
     public class AccountController : ControllerBase
     {
         private readonly IAccountService _accountService;
-        public AccountController(IAccountService accountService)
+        private readonly UserManager<ApplicationUser> _userManager;
+        public AccountController(IAccountService accountService, UserManager<ApplicationUser> userManager)
         {
             _accountService = accountService;
+            _userManager = userManager;
         }
 
         [HttpPost("login")]
@@ -42,8 +46,19 @@ namespace FTM.API.Controllers
                 ThrowModelErrors();
             }
 
-            var result = await _accountService.Register(request);
-            return Ok(new ApiSuccess(result));
+            await _accountService.RegisterByEmail(request);
+            return Ok(new ApiSuccess());
+        }
+
+        [HttpGet("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail(Guid userId, string token)
+        {
+            bool isConfirmed = await _accountService.ConfirmEmail(userId, token);
+            if (isConfirmed)
+            {
+                return Ok(new ApiSuccess("Xác nhận email thành công.", new Object()));
+            }
+            return Ok(new ApiError("Xác nhận email thất bại.", new Object()));
         }
 
         private void ThrowModelErrors()

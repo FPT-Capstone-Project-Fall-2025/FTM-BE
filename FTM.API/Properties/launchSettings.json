@@ -51,7 +51,10 @@
         "JWT_EXPIRE_DAYS": "10",
         "SMS_BASE_URL": "https://y35w41.api.infobip.com",
         "SMS_API_KEY": "62d26f33fd024ad2c5bd80b57364f2c0-0b3365d8-6ccf-4eaa-9630-08d7b75b0c4e",
-        "SMS_PREFIX": "App"
+        "SMS_PREFIX": "App",
+        "FE_URL": "https://localhost:5001",
+        "GMAIL_USERNAME": "tranphilongqv2015@gmail.com",
+        "GMAIL_PASSWORD": "epwewlrwisowsltp"
       }
     }
   }

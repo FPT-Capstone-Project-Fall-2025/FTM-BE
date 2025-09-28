@@ -7,6 +7,7 @@ using FTM.Domain.Models.Authen;
 using FTM.Infrastructure.Data;
 using FTM.Infrastructure.Repositories.Interface;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -27,7 +28,7 @@ namespace FTM.Application.Services
         private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly ICurrentUserResolver _currentUserResolver;
         private readonly ISendOTPTrackingRepository _sendOTPTrackingRepository;
-        private readonly ISendSMSService _sendSMSService;
+        private readonly IEmailSender _emailSender;
         private readonly IUnitOfWork _unitOfWork;
         private readonly AppIdentityDbContext _context;
         private readonly ITokenProvider _tokenProvider;
@@ -39,8 +40,8 @@ namespace FTM.Application.Services
             RoleManager<ApplicationRole> roleManager,
             SignInManager<ApplicationUser> signInManager,
             ICurrentUserResolver currentUserResolver,
-            ISendSMSService sendSMSService,
             IUnitOfWork unitOfWork,
+            IEmailSender emailSender,
             ISendOTPTrackingRepository sendOTPTrackingRepository,
             ITokenProvider tokenProvider,
             AppIdentityDbContext context
@@ -51,7 +52,7 @@ namespace FTM.Application.Services
             _roleManager = roleManager;
             _tokenProvider = tokenProvider;
             _currentUserResolver = currentUserResolver;
-            _sendSMSService = sendSMSService;
+            _emailSender = emailSender;
             _sendOTPTrackingRepository = sendOTPTrackingRepository;
             _unitOfWork = unitOfWork;
             _context = context;
@@ -61,10 +62,10 @@ namespace FTM.Application.Services
         {
             var user = await _userManager.FindByNameAsync(username);
 
-            if (user != null && !user.PhoneNumberConfirmed)
+            if (user != null && !user.EmailConfirmed)
                 return new TokenResult()
                 {
-                    AccountStatus = AccountStatus.DoNotConfirmPhoneNumber
+                    AccountStatus = AccountStatus.DoNotConfirmedEmail
                 };
 
             if (user == null)
@@ -193,28 +194,30 @@ namespace FTM.Application.Services
                 else throw new ArgumentException("Đăng nhập không thành công. Vui lòng kiểm tra lại email và mật khẩu.");
             }
         }
-
-        public async Task<SendOTPTracking> Register(RegisterAccountRequest request)
+        public async Task RegisterByEmail(RegisterAccountRequest request)
         {
-            var user = await _userManager.FindByNameAsync(request.PhoneNumber);
-
+            // Check if email already exists
+            var user = await _userManager.FindByEmailAsync(request.Email);
             if (user != null)
             {
-                if (user.PhoneNumberConfirmed) throw new ArgumentException("Số điện thoại đã được đăng ký tài khoản trước đó. Vui lòng sử dụng chức năng đăng nhập.");
+                if (user.EmailConfirmed)
+                    throw new ArgumentException("Email đã được đăng ký tài khoản trước đó. Vui lòng đăng nhập.");
+
+                // Optional: remove old unconfirmed account
                 await _userManager.DeleteAsync(user);
             }
 
-            user = await _userManager.FindByEmailAsync(request.Email);
-
+            // Check if phone number already exists
+            user = await _userManager.FindByNameAsync(request.PhoneNumber);
             if (user != null)
             {
-                throw new ArgumentException("Email đã được đăng ký tài khoản trước đó. Vui lòng sử dụng chức năng đăng nhập.");
-                //await _userManager.DeleteAsync(user);
+                throw new ArgumentException("Số điện thoại đã được đăng ký. Vui lòng đăng nhập.");
             }
 
+            // Create new user
             user = new ApplicationUser
             {
-                UserName = request.PhoneNumber,
+                UserName = request.Email,
                 Email = request.Email,
                 PhoneNumber = request.PhoneNumber,
                 Name = request.Name,
@@ -224,106 +227,40 @@ namespace FTM.Application.Services
 
             var result = await _userManager.CreateAsync(user, request.Password);
 
+            if (!result.Succeeded)
+                throw new ArgumentException(string.Join(";", result.Errors.Select(m => m.Description)));
+
+            // Assign default role "User"
+            await _userManager.AddToRoleAsync(user, "User");
+
+            // Generate email confirmation token
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+            string apiURL = "https://localhost:5001";
+            var confirmationLink = $"{apiURL}/api/account/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
+
+            // Send email
+            await _emailSender.SendEmailAsync(
+                request.Email,
+                "Xác nhận tài khoản của bạn",
+                $"Xin chào {request.Name},<br/>" +
+                $"Vui lòng nhấn vào liên kết để xác nhận tài khoản: <a href='{confirmationLink}'>Xác nhận Email</a>"
+            );
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> ConfirmEmail(Guid userId, string token)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null) return false;
+
+            var result = await _userManager.ConfirmEmailAsync(user, token);
             if (result.Succeeded)
             {
-                var otpRequest = new SendOtpRequest()
-                {
-                    //Email = request.Email,
-                    PhoneNumber = request.PhoneNumber,
-                    RemoteIpAddress = _currentUserResolver.RemoteIpAddress,
-                };
-
-                var otpTracking = await ValidateSendOTPLimit(otpRequest);
-
-                if (otpTracking != null)
-                {
-                    return otpTracking;
-                }
-
-                var code = await GenerateTwoFactorTokenConfirmOTP(request.PhoneNumber, TokenOptions.DefaultPhoneProvider);
-
-                otpTracking = await SendSMSOtp(new SendOtpRequest()
-                {
-                    Email = request.Email,
-                    PhoneNumber = request.PhoneNumber,
-                    Content = code,
-                    RemoteIpAddress = _currentUserResolver.RemoteIpAddress
-                });
-
-                //var refreshUser = _context.UserRefreshTokens.SingleOrDefault(u => u.ApplicationUserId == user.Id);
-
-                //if (refreshUser != null)
-                //{
-                //    _context.UserRefreshTokens.Remove(refreshUser);
-                //}
-
-                //refreshUser = new ApplicationUserRefreshToken
-                //{
-                //    ApplicationUserId = user.Id
-                //};
-
-                //_context.UserRefreshTokens.Add(refreshUser);
-                await _context.SaveChangesAsync();
-
-                return otpTracking;
+                return true;
             }
-
-            throw new ArgumentException(string.Join(";", result.Errors.Select(m => m.Description)));
+            return false;
         }
-
-        public async Task<SendOTPTracking> ValidateSendOTPLimit(SendOtpRequest request)
-        {
-            var otpTracking = await _sendOTPTrackingRepository.GetSendOTPTrackingAsync(request.RemoteIpAddress, request.Email, request.PhoneNumber);
-
-            var lastSentOTP = otpTracking.OrderByDescending(x => x.LastModifiedOn).FirstOrDefault();
-
-            if (otpTracking.Count >= MaxSendOTPPerTenM || (lastSentOTP?.LastModifiedOn != null && lastSentOTP.LastModifiedOn.AddMinutes(MinTimeSendOTP) > DateTime.UtcNow))
-            {
-                return lastSentOTP;
-            }
-
-            return null;
-        }
-
-        public async Task<string> GenerateTwoFactorTokenConfirmOTP(string providerValue, string tokenOptions)
-        {
-            ApplicationUser currentUser = null;
-            if (tokenOptions == TokenOptions.DefaultEmailProvider)
-            {
-                currentUser = await _userManager.FindByEmailAsync(providerValue);
-            }
-
-            if (tokenOptions == TokenOptions.DefaultPhoneProvider)
-            {
-                currentUser = await _userManager.FindByNameAsync(providerValue);
-            }
-
-            if (currentUser == null)
-            {
-                throw new ArgumentException("Không tìm thấy tài khoản.");
-            }
-
-            var code = await _userManager.GenerateTwoFactorTokenAsync(currentUser, tokenOptions);
-
-            return code;
-        }
-
-        public async Task<SendOTPTracking> SendSMSOtp(SendOtpRequest request)
-        {
-            _sendSMSService.SendSMS(request.PhoneNumber, request.Content);
-
-            var otpTracking = new SendOTPTracking()
-            {
-                //Email = request.Email,
-                PhoneNumber = request.PhoneNumber,
-                RemoteIpAddress = request.RemoteIpAddress,
-            };
-
-            await _sendOTPTrackingRepository.AddAsync(otpTracking);
-            await _unitOfWork.CompleteAsync();
-
-            return otpTracking;
-        }
-
     }
 }
