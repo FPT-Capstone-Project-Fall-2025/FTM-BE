@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace FTM.API.Helpers
+namespace FTM.Domain.Helpers
 {
     public static class StringHelper
     {

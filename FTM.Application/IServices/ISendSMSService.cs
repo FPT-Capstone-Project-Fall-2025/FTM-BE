@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace FTM.Application.IServices
 {
-    internal class Class1
+    public interface ISendSMSService
     {
+        public void SendSMS(string phone, string content);
     }
 }
