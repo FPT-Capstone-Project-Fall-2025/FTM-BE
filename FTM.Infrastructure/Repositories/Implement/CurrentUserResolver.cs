@@ -2,6 +2,7 @@
 using IdentityModel;
 using FTM.Infrastructure.Repositories.Interface;
 using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace FTM.Infrastructure.Repositories.Implement
 {

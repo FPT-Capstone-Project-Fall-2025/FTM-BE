@@ -43,4 +43,19 @@ app.UseLoggerMiddleware();
 app.MapHealthChecks("/health");
 app.MapControllers();
 
+// Seed data on startup with better error handling
+try
+{
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("Starting data seeding...");
+    await app.Services.SeedDataAsync();
+    logger.LogInformation("Data seeding completed!");
+}
+catch (Exception ex)
+{
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "Failed to seed data on startup");
+    // Don't throw - let app continue running
+}
+
 app.Run();

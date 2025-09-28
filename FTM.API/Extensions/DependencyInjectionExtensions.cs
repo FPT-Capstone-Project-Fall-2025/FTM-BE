@@ -22,7 +22,7 @@ namespace FTM.API.Extensions
             serrvices.AddSingleton(new SmtpClient("smtp.gmail.com")
             {
                 Port = 587,
-                Credentials = new NetworkCredential(Environment.GetEnvironmentVariable("GMAIL_USERNAME"), Environment.GetEnvironmentVariable("GMAIL_PASSWORD")),
+                Credentials = new NetworkCredential(Environment.GetEnvironmentVariable("GMAIL-USERNAME"), Environment.GetEnvironmentVariable("GMAIL-PASSWORD")),
                 EnableSsl = true
             });
             //Repositories
