@@ -10,8 +10,8 @@ namespace FTM.API.Extensions
     {
         public static IServiceCollection AddIdentityAppDbContext(this IServiceCollection services)
         {
-           
-            string connectionString = GetCustomConnectionString("test_gp_identity");
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            string connectionString = GetCustomConnectionString("gp_identity_db");
 
             services.AddDbContext<AppIdentityDbContext>(options =>
             {
@@ -30,7 +30,8 @@ namespace FTM.API.Extensions
 
         public static IServiceCollection AddFTMDbContext(this IServiceCollection services)
         {
-            string connectionString = GetCustomConnectionString("test_gp");
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            string connectionString = GetCustomConnectionString("gp_db");
 
             services.AddDbContext<FTMDbContext>(options =>
             {
@@ -51,7 +52,7 @@ namespace FTM.API.Extensions
         {
             var builder = new NpgsqlConnectionStringBuilder
             {
-                Host = "128.199.168.119",
+                Host = "localhost",
                 Port = 5432,
                 Database = dbName,
                 Username = "appuser",

@@ -1,11 +1,14 @@
 using FTM.API.Extensions;
+using FTM.Domain.Entities.Identity;
 using FTM.Infrastructure.Data;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Identity;
+using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddIdentityAppDbContext();
 builder.Services.AddFTMDbContext();
+builder.Services.AddAuthenConfig();
 builder.Services.AddDI();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -26,9 +29,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseAuthentication();
 //app.UseAuthorization();
-
 // <-----------------------Custom Middleware------------------------------------->
 app.UseLoggerMiddleware();
 // <-----------------------End Custom Middleware------------------------------------->

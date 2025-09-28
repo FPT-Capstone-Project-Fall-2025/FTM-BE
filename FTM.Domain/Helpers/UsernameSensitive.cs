@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 
-namespace FTM.API.Helpers
+namespace FTM.Domain.Helpers
 {
-    public class PhoneSensitive : JsonConverter
+    public class UsernameSensitive : JsonConverter
     {
         public override bool CanConvert(Type typeToConvert)
         {
@@ -12,7 +12,7 @@ namespace FTM.API.Helpers
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             var stringValue = reader.Value != null ? reader.Value.ToString() : string.Empty;
-            return stringValue.FormatPhoneNumber();
+            return stringValue.RemoveExtraWhiteSpace().FormatPhoneNumber().ToLower();
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
