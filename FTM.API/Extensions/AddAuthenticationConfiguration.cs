@@ -35,10 +35,10 @@ namespace FTM.API.Extensions
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER"),
-                    ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
+                    ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "FTM-API",
+                    ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "FTM-Client",
                     IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_SIGNING_KEY")!)
+                        Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_SIGNING_KEY") ?? "ThisIsMySecretKeyForFTMApplicationAndItShouldBeLongEnough123456789")
                     )
                 };
             });

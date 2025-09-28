@@ -228,7 +228,7 @@ namespace FTM.Application.Services
             {
                 var otpRequest = new SendOtpRequest()
                 {
-                    //Email = request.Email,
+                    Email = request.Email,
                     PhoneNumber = request.PhoneNumber,
                     RemoteIpAddress = _currentUserResolver.RemoteIpAddress,
                 };
@@ -314,7 +314,7 @@ namespace FTM.Application.Services
 
             var otpTracking = new SendOTPTracking()
             {
-                //Email = request.Email,
+                Email = request.Email,
                 PhoneNumber = request.PhoneNumber,
                 RemoteIpAddress = request.RemoteIpAddress,
             };
@@ -323,6 +323,222 @@ namespace FTM.Application.Services
             await _unitOfWork.CompleteAsync();
 
             return otpTracking;
+        }
+
+        public async Task<UserProfileResponse> GetUserProfileAsync(Guid userId)
+        {
+            var user = await _context.Users
+                .Include(u => u.MProvince)
+                .Include(u => u.MWard)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                throw new ArgumentException("Không tìm thấy người dùng.");
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            return new UserProfileResponse
+            {
+                UserId = user.Id,
+                UserName = user.UserName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                Name = user.Name,
+                Address = user.Address,
+                Nickname = user.Nickname,
+                Birthday = user.Birthday,
+                Job = user.Job,
+                Gender = user.Gender,
+                Picture = user.Picture,
+                IsActive = user.IsActive,
+                EmailConfirmed = user.EmailConfirmed,
+                PhoneNumberConfirmed = user.PhoneNumberConfirmed,
+                Province = user.MProvince != null ? new ProvinceInfo
+                {
+                    ProvinceId = user.MProvince.Id,
+                    Code = user.MProvince.Code,
+                    Name = user.MProvince.Name,
+                    NameWithType = user.MProvince.NameWithType
+                } : null,
+                Ward = user.MWard != null ? new WardInfo
+                {
+                    WardId = user.MWard.Id,
+                    Code = user.MWard.Code,
+                    Name = user.MWard.Name,
+                    NameWithType = user.MWard.NameWithType,
+                    Path = user.MWard.Path,
+                    PathWithType = user.MWard.PathWithType
+                } : null,
+                Roles = roles.ToList(),
+                CreatedDate = user.CreatedDate,
+                UpdatedDate = user.UpdatedDate
+            };
+        }
+
+        public async Task<UserProfileResponse> GetCurrentUserProfileAsync()
+        {
+            var currentUserId = _currentUserResolver.UserId;
+            
+            if (currentUserId == Guid.Empty)
+            {
+                throw new UnauthorizedAccessException("Vui lòng đăng nhập để xem thông tin cá nhân.");
+            }
+
+            return await GetUserProfileAsync(currentUserId);
+        }
+
+        public async Task<UserProfileResponse> UpdateCurrentUserProfileAsync(UpdateUserProfileRequest request)
+        {
+            var currentUserId = _currentUserResolver.UserId;
+            
+            if (currentUserId == Guid.Empty)
+            {
+                throw new UnauthorizedAccessException("Vui lòng đăng nhập để cập nhật thông tin cá nhân.");
+            }
+
+            var user = await _userManager.Users
+                .Include(u => u.MProvince)
+                .Include(u => u.MWard)
+                .FirstOrDefaultAsync(u => u.Id == currentUserId);
+
+            if (user == null)
+            {
+                throw new ArgumentException("Không tìm thấy thông tin người dùng.");
+            }
+
+            // Validate Province and Ward if provided
+            if (request.ProvinceId.HasValue)
+            {
+                var provinceExists = await _context.Mprovinces
+                    .AnyAsync(p => p.Id == request.ProvinceId.Value);
+                if (!provinceExists)
+                {
+                    throw new ArgumentException("Tỉnh/Thành phố không hợp lệ.");
+                }
+            }
+
+            if (request.WardId.HasValue)
+            {
+                var wardExists = await _context.MWards
+                    .AnyAsync(w => w.Id == request.WardId.Value);
+                if (!wardExists)
+                {
+                    throw new ArgumentException("Phường/Xã không hợp lệ.");
+                }
+            }
+
+            // Update user properties
+            if (!string.IsNullOrEmpty(request.Name))
+                user.Name = request.Name;
+                
+            if (!string.IsNullOrEmpty(request.Address))
+                user.Address = request.Address;
+                
+            if (!string.IsNullOrEmpty(request.Nickname))
+                user.Nickname = request.Nickname;
+                
+            if (request.Birthday.HasValue)
+                user.Birthday = request.Birthday.Value;
+                
+            if (!string.IsNullOrEmpty(request.Job))
+                user.Job = request.Job;
+                
+            if (request.Gender.HasValue)
+                user.Gender = request.Gender.Value;
+                
+            if (!string.IsNullOrEmpty(request.Picture))
+                user.Picture = request.Picture;
+                
+            if (request.ProvinceId.HasValue)
+                user.ProvinceId = request.ProvinceId.Value;
+                
+            if (request.WardId.HasValue)
+                user.WardId = request.WardId.Value;
+
+            user.UpdatedDate = DateTimeOffset.UtcNow;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Không thể cập nhật thông tin người dùng: {errors}");
+            }
+
+            // Return updated profile
+            return await GetCurrentUserProfileAsync();
+        }
+
+        public async Task<bool> ChangePasswordAsync(ChangePasswordRequest request)
+        {
+            var currentUserId = _currentUserResolver.UserId;
+            
+            if (currentUserId == Guid.Empty)
+            {
+                throw new UnauthorizedAccessException("Vui lòng đăng nhập để đổi mật khẩu.");
+            }
+
+            var user = await _userManager.FindByIdAsync(currentUserId.ToString());
+            if (user == null)
+            {
+                throw new ArgumentException("Không tìm thấy thông tin người dùng.");
+            }
+
+            // Verify current password
+            var isCurrentPasswordValid = await _userManager.CheckPasswordAsync(user, request.CurrentPassword);
+            if (!isCurrentPasswordValid)
+            {
+                throw new ArgumentException("Mật khẩu hiện tại không đúng.");
+            }
+
+            // Change password
+            var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Không thể đổi mật khẩu: {errors}");
+            }
+
+            return true;
+        }
+
+        public async Task<List<ProvinceListResponse>> GetProvincesAsync()
+        {
+            var provinces = await _context.Mprovinces
+                .Where(p => p.IsDeleted != true)
+                .OrderBy(p => p.Name)
+                .Select(p => new ProvinceListResponse
+                {
+                    Id = p.Id,
+                    Code = p.Code,
+                    Name = p.Name,
+                    NameWithType = p.NameWithType,
+                    Slug = p.Slug
+                })
+                .ToListAsync();
+
+            return provinces;
+        }
+
+        public async Task<List<WardListResponse>> GetWardsByProvinceAsync(Guid provinceId)
+        {
+            var wards = await _context.MWards
+                .Where(w => w.IsDeleted != true && w.Path != null && w.Path.Contains(provinceId.ToString()))
+                .OrderBy(w => w.Name)
+                .Select(w => new WardListResponse
+                {
+                    Id = w.Id,
+                    Code = w.Code,
+                    Name = w.Name,
+                    NameWithType = w.NameWithType,
+                    Path = w.Path,
+                    PathWithType = w.PathWithType,
+                    Slug = w.Slug
+                })
+                .ToListAsync();
+
+            return wards;
         }
 
     }

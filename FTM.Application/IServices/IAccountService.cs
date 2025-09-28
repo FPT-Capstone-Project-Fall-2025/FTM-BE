@@ -14,7 +14,16 @@ namespace FTM.Application.IServices
         Task<SendOTPTracking> Register(RegisterAccountRequest request);
         Task<SendOTPTracking> ValidateSendOTPLimit(SendOtpRequest request);
         Task<string> GenerateTwoFactorTokenConfirmOTP(string username, string tokenOptions);
-
         Task<SendOTPTracking> SendSMSOtp(SendOtpRequest request);
+        
+        // Profile methods
+        Task<UserProfileResponse> GetUserProfileAsync(Guid userId);
+        Task<UserProfileResponse> GetCurrentUserProfileAsync();
+        Task<UserProfileResponse> UpdateCurrentUserProfileAsync(UpdateUserProfileRequest request);
+        Task<bool> ChangePasswordAsync(ChangePasswordRequest request);
+        
+        // Location methods
+        Task<List<ProvinceListResponse>> GetProvincesAsync();
+        Task<List<WardListResponse>> GetWardsByProvinceAsync(Guid provinceId);
     }
 }

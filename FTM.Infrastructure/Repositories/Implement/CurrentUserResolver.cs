@@ -2,6 +2,7 @@
 using IdentityModel;
 using FTM.Infrastructure.Repositories.Interface;
 using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace FTM.Infrastructure.Repositories.Implement
 {
@@ -10,20 +11,33 @@ namespace FTM.Infrastructure.Repositories.Implement
 
         public CurrentUserResolver(IHttpContextAccessor httpContextAccessor)
         {
-            var currentUser = httpContextAccessor.HttpContext.User;
-
-            RemoteIpAddress = httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
-            if (currentUser != null)
+            RemoteIpAddress = httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString() ?? "Unknown";
+            
+            var currentUser = httpContextAccessor.HttpContext?.User;
+            if (currentUser != null && currentUser.Identity.IsAuthenticated)
             {
-                var userId = currentUser?.FindFirst(JwtClaimTypes.Subject)?.Value;
-                if (userId != null)
+                // Try multiple claim types for UserId
+                var userId = currentUser.FindFirst(JwtClaimTypes.Subject)?.Value 
+                           ?? currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                           ?? currentUser.FindFirst("sub")?.Value;
+                           
+                if (!string.IsNullOrEmpty(userId) && Guid.TryParse(userId, out var parsedUserId))
                 {
-                    UserId = new Guid(userId);
+                    UserId = parsedUserId;
                 }
-                Username = currentUser?.FindFirst(JwtClaimTypes.Name)?.Value;
-                Email = currentUser?.FindFirst(JwtClaimTypes.Email)?.Value;
-                Role = String.Join(',', currentUser?.FindAll(JwtClaimTypes.Role).Select(x => x.Value));
-                Name = currentUser?.FindFirst(CustomJwtClaimTypes.FullName)?.Value;
+
+                Username = currentUser.FindFirst(JwtClaimTypes.Name)?.Value 
+                        ?? currentUser.FindFirst(ClaimTypes.Name)?.Value;
+                        
+                Email = currentUser.FindFirst(JwtClaimTypes.Email)?.Value 
+                     ?? currentUser.FindFirst(ClaimTypes.Email)?.Value;
+                     
+                Role = String.Join(',', currentUser.FindAll(JwtClaimTypes.Role)
+                                                  .Concat(currentUser.FindAll(ClaimTypes.Role))
+                                                  .Select(x => x.Value)
+                                                  .Distinct());
+                                                  
+                Name = currentUser.FindFirst(CustomJwtClaimTypes.FullName)?.Value;
             }
         }
 

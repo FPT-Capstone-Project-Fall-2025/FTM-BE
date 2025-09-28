@@ -20,16 +20,16 @@ namespace FTM.Application.Services
         {
             _jwtOptions = new JwtOptions()
             {
-                Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
-                ExpireDays = int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRE_DAYS")),
-                Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER"),
-                SigningKey = Environment.GetEnvironmentVariable("JWT_SIGNING_KEY")
+                Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "FTM-Client",
+                ExpireDays = int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRE_DAYS") ?? "7"),
+                Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "FTM-API",
+                SigningKey = Environment.GetEnvironmentVariable("JWT_SIGNING_KEY") ?? "ThisIsMySecretKeyForFTMApplicationAndItShouldBeLongEnough123456789"
             };
         }
 
         public string GetIssuer()
         {
-            return Environment.GetEnvironmentVariable("JWT_ISSUER");
+            return Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "FTM-API";
         }
 
         public string GenerateJwtToken(IEnumerable<Claim> claims)

@@ -11,7 +11,7 @@ namespace FTM.API.Extensions
         public static IServiceCollection AddIdentityAppDbContext(this IServiceCollection services)
         {
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-            string connectionString = GetCustomConnectionString("gp_identity_db");
+            string connectionString = GetCustomConnectionString("gp_identity_test");
 
             services.AddDbContext<AppIdentityDbContext>(options =>
             {
@@ -21,8 +21,8 @@ namespace FTM.API.Extensions
                     options.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
                 });
             },
-            contextLifetime: ServiceLifetime.Transient,
-            optionsLifetime: ServiceLifetime.Transient);
+            contextLifetime: ServiceLifetime.Scoped,
+            optionsLifetime: ServiceLifetime.Scoped);
 
             return services;
         }
@@ -31,7 +31,7 @@ namespace FTM.API.Extensions
         public static IServiceCollection AddFTMDbContext(this IServiceCollection services)
         {
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-            string connectionString = GetCustomConnectionString("gp_db");
+            string connectionString = GetCustomConnectionString("gp_test");
 
             services.AddDbContext<FTMDbContext>(options =>
             {
@@ -41,8 +41,8 @@ namespace FTM.API.Extensions
                     options.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
                 });
             },
-            contextLifetime: ServiceLifetime.Transient,
-            optionsLifetime: ServiceLifetime.Transient);
+            contextLifetime: ServiceLifetime.Scoped,
+            optionsLifetime: ServiceLifetime.Scoped);
 
             return services;
         }
@@ -52,11 +52,11 @@ namespace FTM.API.Extensions
         {
             var builder = new NpgsqlConnectionStringBuilder
             {
-                Host = "localhost",
+                Host = "128.199.168.119",
                 Port = 5432,
                 Database = dbName,
                 Username = "appuser",
-                Password = "secret@123",
+                Password = "secret",
                 Timeout = 5,         
                 CommandTimeout = 300, 
                 Pooling = true,      

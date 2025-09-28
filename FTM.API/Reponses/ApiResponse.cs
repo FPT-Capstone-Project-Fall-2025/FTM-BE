@@ -32,5 +32,15 @@ namespace FTM.API.Reponses
                 _ => null
             };
         }
+
+        public static ApiResponse Fail(string message, HttpStatusCode statusCode = HttpStatusCode.BadRequest)
+        {
+            return new ApiResponse(null, false, statusCode, message);
+        }
+
+        public static ApiResponse Success(object data, string message = "Success")
+        {
+            return new ApiResponse(data, true, HttpStatusCode.OK, message);
+        }
     }
 }
