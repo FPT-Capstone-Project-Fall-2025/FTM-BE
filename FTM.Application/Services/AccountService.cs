@@ -31,6 +31,7 @@ namespace FTM.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly AppIdentityDbContext _context;
         private readonly ITokenProvider _tokenProvider;
+        private readonly IBlobStorageService _blobStorageService;
         private const int MinTimeSendOTP = 2;
         private const int MaxSendOTPPerTenM = 4;
 
@@ -43,7 +44,8 @@ namespace FTM.Application.Services
             IUnitOfWork unitOfWork,
             ISendOTPTrackingRepository sendOTPTrackingRepository,
             ITokenProvider tokenProvider,
-            AppIdentityDbContext context
+            AppIdentityDbContext context,
+            IBlobStorageService blobStorageService
         )
         {
             _userManager = userManager;
@@ -55,6 +57,7 @@ namespace FTM.Application.Services
             _sendOTPTrackingRepository = sendOTPTrackingRepository;
             _unitOfWork = unitOfWork;
             _context = context;
+            _blobStorageService = blobStorageService;
         }
 
         public async Task<TokenResult> Login(string username, string password)
@@ -448,9 +451,6 @@ namespace FTM.Application.Services
             if (request.Gender.HasValue)
                 user.Gender = request.Gender.Value;
                 
-            if (!string.IsNullOrEmpty(request.Picture))
-                user.Picture = request.Picture;
-                
             if (request.ProvinceId.HasValue)
                 user.ProvinceId = request.ProvinceId.Value;
                 
@@ -539,6 +539,71 @@ namespace FTM.Application.Services
                 .ToListAsync();
 
             return wards;
+        }
+
+        public async Task<UpdateAvatarResponse> UpdateCurrentUserAvatarAsync(UpdateAvatarRequest request)
+        {
+            var currentUserId = _currentUserResolver.UserId;
+            
+            if (currentUserId == Guid.Empty)
+            {
+                throw new UnauthorizedAccessException("Vui lòng đăng nhập để cập nhật avatar.");
+            }
+
+            var user = await _userManager.FindByIdAsync(currentUserId.ToString());
+            if (user == null)
+            {
+                throw new ArgumentException("Không tìm thấy thông tin người dùng.");
+            }
+
+            try
+            {
+                // Delete old avatar if exists
+                if (!string.IsNullOrEmpty(user.Picture))
+                {
+                    try
+                    {
+                        var oldFileName = Path.GetFileName(new Uri(user.Picture).LocalPath);
+                        await _blobStorageService.DeleteFileAsync("avatars", oldFileName);
+                    }
+                    catch
+                    {
+                        // Ignore delete errors for old avatar
+                    }
+                }
+
+                // Upload new avatar
+                var avatarUrl = await _blobStorageService.UploadFileAsync(
+                    request.Avatar, 
+                    "avatars", 
+                    $"avatar_{currentUserId}_{DateTime.UtcNow:yyyyMMddHHmmss}{Path.GetExtension(request.Avatar.FileName)}"
+                );
+
+                // Update user record
+                user.Picture = avatarUrl;
+                user.UpdatedDate = DateTimeOffset.UtcNow;
+
+                var result = await _userManager.UpdateAsync(user);
+                if (!result.Succeeded)
+                {
+                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    throw new InvalidOperationException($"Không thể cập nhật avatar: {errors}");
+                }
+
+                return new UpdateAvatarResponse
+                {
+                    AvatarUrl = avatarUrl,
+                    Message = "Cập nhật avatar thành công!"
+                };
+            }
+            catch (ArgumentException ex)
+            {
+                throw new ArgumentException($"Lỗi upload file: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Đã xảy ra lỗi khi cập nhật avatar: {ex.Message}");
+            }
         }
 
     }

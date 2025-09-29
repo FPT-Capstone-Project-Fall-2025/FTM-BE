@@ -16,6 +16,7 @@ namespace FTM.API.Extensions
             serrvices.AddScoped<IAccountService, AccountService>();
             serrvices.AddScoped<ICurrentUserResolver, CurrentUserResolver>();
             serrvices.AddScoped<ISendSMSService, SendSMSService>();
+            serrvices.AddScoped<IBlobStorageService, BlobStorageService>();
             //Repositories
             serrvices.AddScoped<ISendOTPTrackingRepository, SendOTPTrackingRepository>();
             serrvices.AddScoped<IUnitOfWork, UnitOfWork>();

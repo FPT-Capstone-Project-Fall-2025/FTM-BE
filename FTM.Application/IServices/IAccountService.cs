@@ -20,6 +20,7 @@ namespace FTM.Application.IServices
         Task<UserProfileResponse> GetUserProfileAsync(Guid userId);
         Task<UserProfileResponse> GetCurrentUserProfileAsync();
         Task<UserProfileResponse> UpdateCurrentUserProfileAsync(UpdateUserProfileRequest request);
+        Task<UpdateAvatarResponse> UpdateCurrentUserAvatarAsync(UpdateAvatarRequest request);
         Task<bool> ChangePasswordAsync(ChangePasswordRequest request);
         
         // Location methods

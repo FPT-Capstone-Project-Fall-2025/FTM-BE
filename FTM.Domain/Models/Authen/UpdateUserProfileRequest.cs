@@ -22,9 +22,6 @@ namespace FTM.Domain.Models.Authen
         [Range(0, 2, ErrorMessage = "Giới tính phải là: 0 (Khác), 1 (Nam), 2 (Nữ)")]
         public int? Gender { get; set; }
 
-        [Url(ErrorMessage = "URL ảnh không hợp lệ")]
-        public string Picture { get; set; }
-
         public Guid? ProvinceId { get; set; }
 
         public Guid? WardId { get; set; }
