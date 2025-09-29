@@ -1,4 +1,4 @@
-﻿namespace FTM.API.Helpers
+﻿namespace FTM.API.DTOs
 {
     public class Class
     {

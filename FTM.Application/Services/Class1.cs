@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FTM.Domain.Constants
+namespace FTM.Application.Services
 {
-    public static partial class Constants
+    internal class Class1
     {
-        public const int MAXIMUM_LOGIN_FAIL_NUMBER = 6;
     }
 }

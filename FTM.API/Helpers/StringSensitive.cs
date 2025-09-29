@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace FTM.Domain.Helpers
+namespace FTM.API.Helpers
 {
     public class StringSensitive : JsonConverter
     {
