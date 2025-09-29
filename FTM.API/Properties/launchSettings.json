@@ -48,7 +48,7 @@
         "JWT_ISSUER": "http://localhost:3000/",
         "JWT_AUDIENCE": "http://localhost:3000/",
         "JWT_SIGNING_KEY": "familyTree123@gmail.comfamilyTree123@gmail.comfamilyTree123@gmail.com",
-        "JWT_EXPIRE_DAYS": "10",
+        "JWT_EXPIRE_DAYS": "1",
         "SMS_BASE_URL": "https://y35w41.api.infobip.com",
         "SMS_API_KEY": "62d26f33fd024ad2c5bd80b57364f2c0-0b3365d8-6ccf-4eaa-9630-08d7b75b0c4e",
         "SMS_PREFIX": "App",

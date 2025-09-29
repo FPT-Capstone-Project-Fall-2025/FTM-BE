@@ -14,7 +14,9 @@ namespace FTM.Domain.Entities.Identity
         [StringLength(450)]
         public string? Token { get; set; }
 
-        [StringLength(450)]
+        public DateTimeOffset ExpiredAt { get; set; }
+
+        [StringLength(450)] 
         public Guid ApplicationUserId { get; set; }
 
         [ForeignKey("ApplicationUserId")]

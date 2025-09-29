@@ -9,12 +9,7 @@ using System.Net.Mail;
 using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
-{
-    // Set token lifetime to 5 minutes
-    options.TokenLifespan = TimeSpan.FromMinutes(5);
-});
+
 builder.Services.AddIdentityAppDbContext();
 builder.Services.AddFTMDbContext();
 builder.Services.AddAuthenConfig();
@@ -22,7 +17,7 @@ builder.Services.AddDI();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddSwaggerDocumentation();
 // Add HealthChecks for both DbContexts
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<AppIdentityDbContext>("IdentityDb")
@@ -39,7 +34,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
-//app.UseAuthorization();
+app.UseAuthorization();
 // <-----------------------Custom Middleware------------------------------------->
 app.UseLoggerMiddleware();
 // <-----------------------End Custom Middleware------------------------------------->

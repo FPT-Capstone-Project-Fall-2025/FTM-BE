@@ -14,5 +14,8 @@ namespace FTM.Application.IServices
         //Task<SendOTPTracking> Register(RegisterAccountRequest request);
         Task RegisterByEmail(RegisterAccountRequest request);
         Task<bool> ConfirmEmail(Guid userId, string token);
+        Task Logout(string accessToken);
+        Task ForgotPasswordAsync(ForgotPasswordRequest request);
+        Task ResetPasswordAsync(ResetPasswordRequest request);
     }
 }

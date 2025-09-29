@@ -13,6 +13,17 @@ namespace FTM.API.Reponses
             Message = message ?? GetDefaultMessageForStatusCode((int)statusCode);
         }
 
+
+        protected ApiResponse(object data, bool status, HttpStatusCode statusCode, string message, bool hasError)
+        {
+            Data = status ? data : null;
+            Errors = status ? null : data;
+            Status = status;
+            StatusCode = (int)statusCode;
+            Message = message ?? GetDefaultMessageForStatusCode((int)statusCode);
+            HasError = hasError;
+        }
+
         public int StatusCode { get; set; }
         public string Message { get; set; }
         public bool Status { get; set; } = true;
