@@ -1,5 +1,4 @@
-﻿using FTM.Domain.Entities.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -9,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace FTM.Infrastructure.Data
 {
-    public class AppIdentityDbContext :IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
+    public class AppIdentityDbContext : IdentityDbContext
     {
         public AppIdentityDbContext()
         {
@@ -19,6 +18,5 @@ namespace FTM.Infrastructure.Data
             : base(options)
         {
         }
-        public DbSet<ApplicationUserRefreshToken> UserRefreshTokens { get; set; }
     }
 }

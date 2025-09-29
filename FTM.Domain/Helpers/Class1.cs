@@ -4,11 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FTM.Domain.Enums
+namespace FTM.Domain.Helpers
 {
-    public enum FTM_ROLE
+    internal class Class1
     {
-        Admin = 1,
-        User = 2
     }
 }
