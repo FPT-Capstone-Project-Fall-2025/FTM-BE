@@ -302,6 +302,39 @@ namespace FTM.API.Controllers
             }
         }
 
+        [HttpPost("upload-avatar")]
+        [Authorize]
+        [ProducesResponseType(typeof(UpdateAvatarResponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> UploadAvatar([FromForm] UpdateAvatarRequest request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    ThrowModelErrors();
+                }
+
+                var result = await _accountService.UpdateCurrentUserAvatarAsync(request);
+                return Ok(new ApiSuccess("Cập nhật avatar thành công!", result));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ApiResponse.Fail(ex.Message));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ApiResponse.Fail(ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponse.Fail(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse.Fail("Đã xảy ra lỗi khi cập nhật avatar."));
+            }
+        }
+
         private void ThrowModelErrors()
         {
             var message = string.Join(" | ", ModelState.Values
