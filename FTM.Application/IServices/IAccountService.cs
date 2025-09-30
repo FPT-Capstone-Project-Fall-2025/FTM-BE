@@ -11,10 +11,12 @@ namespace FTM.Application.IServices
     public interface IAccountService
     {
         Task<TokenResult> Login(string username, string password);
-        Task<SendOTPTracking> Register(RegisterAccountRequest request);
-        Task<SendOTPTracking> ValidateSendOTPLimit(SendOtpRequest request);
-        Task<string> GenerateTwoFactorTokenConfirmOTP(string username, string tokenOptions);
-
-        Task<SendOTPTracking> SendSMSOtp(SendOtpRequest request);
+        Task<TokenResult> LoginWithGoogle(string fullName, string email);
+        //Task<SendOTPTracking> Register(RegisterAccountRequest request);
+        Task RegisterByEmail(RegisterAccountRequest request);
+        Task<bool> ConfirmEmail(Guid userId, string token);
+        Task Logout(string accessToken);
+        Task ForgotPasswordAsync(ForgotPasswordRequest request);
+        Task ResetPasswordAsync(ResetPasswordRequest request);
     }
 }

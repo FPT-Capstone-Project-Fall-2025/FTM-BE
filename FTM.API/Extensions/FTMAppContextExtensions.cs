@@ -21,8 +21,8 @@ namespace FTM.API.Extensions
                     options.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
                 });
             },
-            contextLifetime: ServiceLifetime.Transient,
-            optionsLifetime: ServiceLifetime.Transient);
+            contextLifetime: ServiceLifetime.Scoped,
+            optionsLifetime: ServiceLifetime.Scoped);
 
             return services;
         }
@@ -41,8 +41,8 @@ namespace FTM.API.Extensions
                     options.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
                 });
             },
-            contextLifetime: ServiceLifetime.Transient,
-            optionsLifetime: ServiceLifetime.Transient);
+            contextLifetime: ServiceLifetime.Scoped,
+            optionsLifetime: ServiceLifetime.Scoped);
 
             return services;
         }

@@ -5,6 +5,9 @@ using FTM.Infrastructure.Data;
 using FTM.Infrastructure.Repositories.Implement;
 using FTM.Infrastructure.Repositories.Interface;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using System.Net;
+using System.Net.Mail;
 
 namespace FTM.API.Extensions
 {
@@ -15,7 +18,13 @@ namespace FTM.API.Extensions
             serrvices.AddScoped<ITokenProvider, TokenProvider>();
             serrvices.AddScoped<IAccountService, AccountService>();
             serrvices.AddScoped<ICurrentUserResolver, CurrentUserResolver>();
-            serrvices.AddScoped<ISendSMSService, SendSMSService>();
+            serrvices.AddTransient<IEmailSender, EmailSender>();
+            serrvices.AddSingleton(new SmtpClient("smtp.gmail.com")
+            {
+                Port = 587,
+                Credentials = new NetworkCredential(Environment.GetEnvironmentVariable("GMAIL_USERNAME"), Environment.GetEnvironmentVariable("GMAIL_PASSWORD")),
+                EnableSsl = true
+            });
             //Repositories
             serrvices.AddScoped<ISendOTPTrackingRepository, SendOTPTrackingRepository>();
             serrvices.AddScoped<IUnitOfWork, UnitOfWork>();

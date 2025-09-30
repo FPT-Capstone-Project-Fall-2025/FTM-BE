@@ -82,7 +82,7 @@ namespace FTM.Application.Services
                 ValidAudience = _jwtOptions.Audience,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SigningKey)),
-                ValidateLifetime = false
+                ValidateLifetime = true
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();

@@ -16,5 +16,20 @@ namespace FTM.API.Controllers
         {
             return "This is dummy api using get method";
         }
+
+        [HttpGet("/admin")]
+        [Authorize(Roles = "Admin")]
+        public async Task<String> GetDummyAdmin()
+        {
+            return "This is dummy Admin api using get method";
+        }
+
+        [HttpGet("/user")]
+        [Authorize(Roles = "User")]
+        public async Task<String> GetDummyUser()
+        {
+            return "This is dummy User api using get method";
+        }
+
     }
 }

@@ -7,12 +7,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Google.Apis.Auth" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
 		<PackageReference Include="Microsoft.Data.SqlClient" />
 		<PackageReference Include="Newtonsoft.Json" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
 		<PackageReference Include="Swashbuckle.AspNetCore" />
 		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
 	</ItemGroup>
 

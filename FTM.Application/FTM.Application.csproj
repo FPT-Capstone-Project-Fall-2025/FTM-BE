@@ -9,6 +9,7 @@
 	<ItemGroup>
 		<PackageReference Include="IdentityModel" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.UI" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" />
 		<PackageReference Include="XAct.Core.PCL" />
 		<PackageReference Include="Infobip.Api.Client" />

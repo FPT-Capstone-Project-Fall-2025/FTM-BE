@@ -17,7 +17,7 @@ namespace FTM.API.Extensions
                 options.Password.RequireNonAlphanumeric = true;
                 options.Password.RequireLowercase = true;
 
-                options.SignIn.RequireConfirmedPhoneNumber = true;
+                options.SignIn.RequireConfirmedEmail = true;
                 options.Lockout.MaxFailedAccessAttempts = 6;
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(1);
             }).AddEntityFrameworkStores<AppIdentityDbContext>().AddDefaultTokenProviders();
@@ -41,7 +41,29 @@ namespace FTM.API.Extensions
                         Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_SIGNING_KEY")!)
                     )
                 };
+            }).AddGoogle(options =>
+            {
+                options.ClientId = Environment.GetEnvironmentVariable("GOOGLE_CLIENTID")!;
+                options.ClientSecret = Environment.GetEnvironmentVariable("GOOGLE_CLIENTSECRET")!;
             });
+
+            // Add services to the container.
+            serrvices.Configure<DataProtectionTokenProviderOptions>(options =>
+            {
+                // Set token lifetime to 5 minutes
+                options.TokenLifespan = TimeSpan.FromMinutes(5);
+            });
+
+            serrvices.AddCors(options =>
+            {
+                options.AddPolicy("AllowLocalhost", policy =>
+                {
+                    policy.WithOrigins("http://127.0.0.1:5500", "http://localhost:5500")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
+
         }
     }
 }
