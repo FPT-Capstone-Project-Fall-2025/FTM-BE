@@ -23,7 +23,7 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZ_CREDS }}
-
+          
       - name: Ensure Key Vault extension
         run: az extension add --name keyvault || echo "already installed"
 
