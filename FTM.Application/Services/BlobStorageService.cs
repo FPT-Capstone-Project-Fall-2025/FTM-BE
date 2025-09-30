@@ -12,12 +12,10 @@ namespace FTM.Application.Services
     public class BlobStorageService : IBlobStorageService
     {
         private readonly BlobServiceClient _blobServiceClient;
-        private readonly IConfiguration _configuration;
 
-        public BlobStorageService(IConfiguration configuration)
+        public BlobStorageService()
         {
-            _configuration = configuration;
-            var connectionString = _configuration.GetConnectionString("BlobStorage") 
+            var connectionString = Environment.GetEnvironmentVariable("BLOBSTORAGE")
                 ?? Environment.GetEnvironmentVariable("BLOB_STORAGE_CONNECTION_STRING")
                 ?? "UseDevelopmentStorage=true"; // For Azurite local development
             

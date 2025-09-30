@@ -16,7 +16,7 @@
       "launchUrl": "swagger",
       "applicationUrl": "http://localhost:5219",
       "environmentVariables": {
-        "ASPNETCORE-ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
     "https": {
@@ -26,7 +26,7 @@
       "launchUrl": "swagger",
       "applicationUrl": "https://localhost:7031;http://localhost:5219",
       "environmentVariables": {
-        "ASPNETCORE-ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
     "IIS Express": {
@@ -34,7 +34,7 @@
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
-        "ASPNETCORE-ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
     "API-dev": {
@@ -44,7 +44,7 @@
       "launchUrl": "swagger",
       "applicationUrl": "https://localhost:5001;http://localhost:5000",
       "environmentVariables": {
-        "ASPNETCORE-ENVIRONMENT": "Development",
+        "ASPNETCORE_ENVIRONMENT": "Development",
         "JWT-ISSUER": "http://localhost:3000/",
         "JWT-AUDIENCE": "http://localhost:3000/",
         "JWT-SIGNING-KEY": "familyTree123@gmail.comfamilyTree123@gmail.comfamilyTree123@gmail.com",
@@ -57,7 +57,8 @@
         "GMAIL-PASSWORD": "epwewlrwisowsltp",
         "GOOGLE-CLIENTID": "529464543864-hpkkhuu30kgjs4rnov33nrg3uo8ojgdf.apps.googleusercontent.com",
         "GOOGLE-CLIENTSECRET": "",
-        "GOOGLE-CLIENTINFOURL": "https://www.googleapis.com/oauth2/v1/userinfo"
+        "GOOGLE-CLIENTINFOURL": "https://www.googleapis.com/oauth2/v1/userinfo",
+        "BLOBSTORAGE": ""
       }
     }
   }

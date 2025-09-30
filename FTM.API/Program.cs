@@ -24,7 +24,7 @@ builder.Services.AddHealthChecks()
     .AddDbContextCheck<FTMDbContext>("FTMDb");
 
 var app = builder.Build();
-
+Console.WriteLine($"Environment: {app.Environment.EnvironmentName}");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

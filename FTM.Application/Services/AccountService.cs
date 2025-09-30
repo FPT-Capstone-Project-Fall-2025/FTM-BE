@@ -68,7 +68,7 @@ namespace FTM.Application.Services
 
         public async Task<TokenResult> Login(string username, string password)
         {
-            var user = await _userManager.FindByNameAsync(username);
+            var user = await _userManager.FindByEmailAsync(username);
 
             if (user == null)
                 throw new ArgumentException("Đăng nhập không thành công. Vui lòng kiểm tra lại email và mật khẩu.");

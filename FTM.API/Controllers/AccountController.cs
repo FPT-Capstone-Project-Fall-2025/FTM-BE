@@ -161,7 +161,7 @@ namespace FTM.API.Controllers
         }
 
         [HttpGet("profile")]
-        [Authorize]
+        [Authorize(Roles = "User")]
         [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetProfile()
         {
@@ -185,7 +185,7 @@ namespace FTM.API.Controllers
         }
 
         [HttpGet("profile/{userId}")]
-        [Authorize]
+        [Authorize(Roles = "User")]
         [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetUserProfile(Guid userId)
         {
@@ -205,7 +205,7 @@ namespace FTM.API.Controllers
         }
 
         [HttpPut("profile")]
-        [Authorize]
+        [Authorize(Roles = "User")]
         [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserProfileRequest request)
         {
@@ -238,7 +238,7 @@ namespace FTM.API.Controllers
         }
 
         [HttpGet("provinces")]
-        [Authorize]
+        [Authorize(Roles = "User")]
         [ProducesResponseType(typeof(List<ProvinceListResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetProvinces()
         {
@@ -254,7 +254,7 @@ namespace FTM.API.Controllers
         }
 
         [HttpGet("provinces/{provinceId}/wards")]
-        [Authorize]
+        [Authorize(Roles = "User")]
         [ProducesResponseType(typeof(List<WardListResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetWardsByProvince(Guid provinceId)
         {
@@ -270,7 +270,7 @@ namespace FTM.API.Controllers
         }
 
         [HttpPut("change-password")]
-        [Authorize]
+        [Authorize(Roles = "User")]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
@@ -303,7 +303,7 @@ namespace FTM.API.Controllers
         }
 
         [HttpPost("upload-avatar")]
-        [Authorize]
+        [Authorize(Roles = "User")]
         [ProducesResponseType(typeof(UpdateAvatarResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> UploadAvatar([FromForm] UpdateAvatarRequest request)
         {
