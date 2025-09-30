@@ -24,19 +24,15 @@ jobs:
         with:
           creds: ${{ secrets.AZ_CREDS }}
 
-      # Get secrets from Key Vault
-      - name: Get secrets from Key Vault
-        id: get-secrets
-        uses: azure/keyvault@v1
-        with:
-          keyvault: "${{ vars.KV_NAME }}"
-          secrets: |
-            GMAIL-PASSWORD
-            GMAIL-USERNAME
-            GOOGLE-CLIENTID
-            GOOGLE-CLIENTSECRET
-            JWT-SIGNING-KEY
-            SMS-API-KEY
+      - name: Ensure Key Vault extension
+        run: az extension add --name keyvault || echo "already installed"
+
+      - name: Load secrets from Key Vault
+        run: |
+          for secret in $(az keyvault secret list --vault-name ${{ vars.KV_NAME }} --query "[].name" -o tsv); do
+            value=$(az keyvault secret show --vault-name ${{ vars.KV_NAME }} --name $secret --query value -o tsv)
+            echo "${secret}=${value}" >> $GITHUB_ENV
+          done
 
       # Login vào ACR
       - name: Docker login to ACR
