@@ -11,6 +11,7 @@ namespace FTM.Application.IServices
     public interface IAccountService
     {
         Task<TokenResult> Login(string username, string password);
+        Task<TokenResult> LoginWithGoogle(string fullName, string email);
         //Task<SendOTPTracking> Register(RegisterAccountRequest request);
         Task RegisterByEmail(RegisterAccountRequest request);
         Task<bool> ConfirmEmail(Guid userId, string token);

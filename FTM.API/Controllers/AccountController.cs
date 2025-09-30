@@ -5,10 +5,13 @@ using FTM.Domain.Entities.Identity;
 using FTM.Domain.Models;
 using FTM.Domain.Models.Authen;
 using FTM.Infrastructure.Data;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using XAct.Users;
 
 namespace FTM.API.Controllers
 {
@@ -43,6 +46,31 @@ namespace FTM.API.Controllers
                 return BadRequest(new ApiError(ex.Message));
             }
 
+        }
+
+        [HttpPost("login/google")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(TokenResult), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                ThrowModelErrors();
+            }
+
+            try
+            {
+                var payload = await GoogleJsonWebSignature.ValidateAsync(request.IdToken);
+                var email = payload.Email;
+                var fullName = payload.Name + payload.GivenName;
+
+                var result = await _accountService.LoginWithGoogle(fullName, email);
+                return Ok(new ApiSuccess(result));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
+            }
         }
 
         [HttpPost("register")]
@@ -131,6 +159,8 @@ namespace FTM.API.Controllers
                 return BadRequest(new ApiError(ex.Message));
             }
         }
+
+
 
         private void ThrowModelErrors()
         {

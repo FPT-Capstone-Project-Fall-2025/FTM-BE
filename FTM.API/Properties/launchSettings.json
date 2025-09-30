@@ -54,7 +54,10 @@
         "SMS_PREFIX": "App",
         "FE_URL": "https://localhost:5001",
         "GMAIL_USERNAME": "tranphilongqv2015@gmail.com",
-        "GMAIL_PASSWORD": "epwewlrwisowsltp"
+        "GMAIL_PASSWORD": "epwewlrwisowsltp",
+        "GOOGLE_CLIENTID": "529464543864-hpkkhuu30kgjs4rnov33nrg3uo8ojgdf.apps.googleusercontent.com",
+        "GOOGLE_CLIENTSECRET": "",
+        "GOOGLE_CLIENTINFOURL": "https://www.googleapis.com/oauth2/v1/userinfo"
       }
     }
   }

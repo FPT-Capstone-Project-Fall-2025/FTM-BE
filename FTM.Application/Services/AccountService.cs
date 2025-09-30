@@ -21,6 +21,8 @@ using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using XAct;
 using XAct.Messages;
+using XAct.Security;
+using XAct.Users;
 using static FTM.Domain.Constants.Constants;
 
 namespace FTM.Application.Services
@@ -163,6 +165,102 @@ namespace FTM.Application.Services
             throw new ArgumentException("Đăng nhập không thành công. Vui lòng kiểm tra lại email và mật khẩu.");
         }
 
+        public async Task<TokenResult> LoginWithGoogle(string fullName, string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            TokenResult tokenResult;
+            if (user is null)
+            {
+                // Create new user
+                user = new ApplicationUser
+                {
+                    UserName = email,
+                    Email = email,
+                    Name = fullName,
+                    EmailConfirmed = true,
+                    PhoneNumberConfirmed = false,
+                };
+
+                var result = await _userManager.CreateAsync(user);
+
+                if (!result.Succeeded)
+                    throw new ArgumentException(string.Join(";", result.Errors.Select(m => m.Description)));
+
+                // Assign default role "User"
+                await _userManager.AddToRoleAsync(user, "User");
+            }
+
+            var claims = new List<Claim>
+                {
+                    new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                    new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                    new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+                    new(ClaimTypes.Name, user.UserName ?? string.Empty),
+                    new(CustomJwtClaimTypes.Name, user.UserName ?? string.Empty),
+                    new(CustomJwtClaimTypes.EmailConfirmed, user.EmailConfirmed.ToString()),
+                    new(CustomJwtClaimTypes.PhoneNumberConfirmed, user.PhoneNumberConfirmed.ToString()),
+                    new(CustomJwtClaimTypes.FullName, user.Name ?? string.Empty),
+                };
+
+            var roles = await _userManager.GetRolesAsync(user);
+            if (roles?.Count > 0)
+            {
+                foreach (var role in roles)
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+            // generate tokens
+            var accessToken = _tokenProvider.GenerateJwtToken(claims);
+            var newRefreshToken = _tokenProvider.GenerateRefreshToken();
+
+            var userRefreshToken = await _context.UserRefreshTokens
+                .FirstOrDefaultAsync(urt => urt.ApplicationUserId == user.Id);
+
+            if (userRefreshToken == null)
+            {
+                userRefreshToken = new ApplicationUserRefreshToken
+                {
+                    ApplicationUserId = user.Id,
+                    Token = newRefreshToken,
+                    ExpiredAt = DateTime.UtcNow.AddDays(7),
+                    LastModifiedBy = "System",
+                    CreatedBy = "System",
+                    CreatedByUserId = Guid.NewGuid()
+                };
+
+                await _context.UserRefreshTokens.AddAsync(userRefreshToken);
+            }
+            else
+            {
+                userRefreshToken.Token = newRefreshToken;
+                userRefreshToken.ExpiredAt = DateTime.UtcNow.AddDays(7);
+                _context.UserRefreshTokens.Update(userRefreshToken);
+            }
+
+            if (!user.IsActive)
+            {
+                user.IsActive = true;
+                _context.Update(user);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return new TokenResult
+            {
+                UserId = user.Id,
+                Username = user.UserName,
+                Email = user.Email,
+                Phone = user.PhoneNumber,
+                AccessToken = accessToken,
+                RefreshToken = userRefreshToken.Token,
+                Roles = roles,
+                AccountStatus = AccountStatus.Activated,
+                Picture = user.Picture,
+                Fullname = user.Name,
+            };
+        }
+
         public async Task RegisterByEmail(RegisterAccountRequest request)
         {
             // Check if email already exists
@@ -296,5 +394,7 @@ namespace FTM.Application.Services
 
             throw new ArgumentException("Reset password fail.");
         }
+
+        
     }
 }
