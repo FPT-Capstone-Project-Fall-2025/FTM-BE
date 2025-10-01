@@ -5,7 +5,7 @@ on:
     branches:
       - develop
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    types: [opened, reopened]
     branches:
       - develop
 
@@ -24,16 +24,6 @@ jobs:
         with:
           creds: ${{ secrets.AZ_CREDS }}
           
-      - name: Ensure Key Vault extension
-        run: az extension add --name keyvault || echo "already installed"
-
-      - name: Load secrets from Key Vault
-        run: |
-          for secret in $(az keyvault secret list --vault-name ${{ vars.KV_NAME }} --query "[].name" -o tsv); do
-            value=$(az keyvault secret show --vault-name ${{ vars.KV_NAME }} --name $secret --query value -o tsv)
-            echo "${secret}=${value}" >> $GITHUB_ENV
-          done
-
       # Login vào ACR
       - name: Docker login to ACR
         run: |
