@@ -24,7 +24,7 @@ builder.Services.AddHealthChecks()
     .AddDbContextCheck<FTMDbContext>("FTMDb");
 
 var app = builder.Build();
-
+Console.WriteLine($"Environment: {app.Environment.EnvironmentName}");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -42,5 +42,20 @@ app.UseLoggerMiddleware();
 // Map Health Check endpoint
 app.MapHealthChecks("/health");
 app.MapControllers();
+
+// Seed data on startup with better error handling
+try
+{
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("Starting data seeding...");
+    await app.Services.SeedDataAsync();
+    logger.LogInformation("Data seeding completed!");
+}
+catch (Exception ex)
+{
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "Failed to seed data on startup");
+    // Don't throw - let app continue running
+}
 
 app.Run();

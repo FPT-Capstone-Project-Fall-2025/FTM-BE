@@ -18,5 +18,16 @@ namespace FTM.Application.IServices
         Task Logout(string accessToken);
         Task ForgotPasswordAsync(ForgotPasswordRequest request);
         Task ResetPasswordAsync(ResetPasswordRequest request);
+
+        // Profile methods
+        Task<UserProfileResponse> GetUserProfileAsync(Guid userId);
+        Task<UserProfileResponse> GetCurrentUserProfileAsync();
+        Task<UserProfileResponse> UpdateCurrentUserProfileAsync(UpdateUserProfileRequest request);
+        Task<UpdateAvatarResponse> UpdateCurrentUserAvatarAsync(UpdateAvatarRequest request);
+        Task<bool> ChangePasswordAsync(ChangePasswordRequest request);
+
+        // Location methods
+        Task<List<ProvinceListResponse>> GetProvincesAsync();
+        Task<List<WardListResponse>> GetWardsByProvinceAsync(Guid provinceId);
     }
 }
