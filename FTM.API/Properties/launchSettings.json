@@ -65,7 +65,7 @@
         //"dotnetRunMessages": "true",
         "launchBrowser": true,
         "launchUrl": "swagger",
-        "applicationUrl": "https://fe.dev.familytree.io.vn;http://fe.dev.familytree.io.vn",
+        "applicationUrl": "https://be.dev.familytree.io.vn;http://be.dev.familytree.io.vn",
         "environmentVariables": {
           "ASPNETCORE_ENVIRONMENT": "Development",
           "JWT_ISSUER": "https://be.dev.familytree.io.vn",
