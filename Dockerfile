@@ -30,4 +30,4 @@ WORKDIR /app
 COPY --from=build-env /app/FTM.API/out .
 EXPOSE 80
 EXPOSE 443
-ENTRYPOINT ["dotnet", "FTM.API.dll", "--launch-profile", "API-dev"]
+ENTRYPOINT ["dotnet", "FTM.API.dll", "--launch-profile API-dev"]
