@@ -10,10 +10,10 @@ namespace FTM.Domain.Entities
     {
         public Guid Id { get; set; } = Guid.NewGuid();
         public DateTimeOffset LastModifiedOn { get; set; } = DateTimeOffset.Now;
-        public string LastModifiedBy { get; set; }
+        public string LastModifiedBy { get; set; } = String.Empty;
         public DateTimeOffset CreatedOn { get; set; } = DateTimeOffset.Now;
-        public string CreatedBy { get; set; }
+        public string CreatedBy { get; set; } = String.Empty;
         public bool? IsDeleted { get; set; } = false;
-        public Guid CreatedByUserId { get; set; }
+        public Guid CreatedByUserId { get; set; } = Guid.NewGuid();
     }
 }

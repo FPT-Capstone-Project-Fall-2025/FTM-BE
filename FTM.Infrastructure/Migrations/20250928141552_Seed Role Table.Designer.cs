@@ -3,6 +3,7 @@ using System;
 using FTM.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FTM.Infrastructure.Migrations
 {
     [DbContext(typeof(AppIdentityDbContext))]
-    partial class AppIdentityDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250928141552_Seed Role Table")]
+    partial class SeedRoleTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -78,10 +81,7 @@ namespace FTM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.ToTable("MWards");
+                    b.ToTable("MWard");
                 });
 
             modelBuilder.Entity("FTM.Domain.Entities.Applications.Mprovince", b =>
@@ -132,10 +132,7 @@ namespace FTM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.ToTable("Mprovinces");
+                    b.ToTable("Mprovince");
                 });
 
             modelBuilder.Entity("FTM.Domain.Entities.Identity.ApplicationRole", b =>
@@ -167,15 +164,15 @@ namespace FTM.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("681b430e-2fdf-42fa-adb3-b2c8a579d523"),
-                            ConcurrencyStamp = "94a04417-c31b-42fb-acf8-7eaa6435de56",
+                            Id = new Guid("30077366-9b95-4487-9345-ffec3fe61d04"),
+                            ConcurrencyStamp = "9b569db5-3cf8-43d0-875d-273011e6267d",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = new Guid("86423fa4-a161-4487-b3f9-44c3cbd60c1e"),
-                            ConcurrencyStamp = "5d30130c-d21e-4fcf-8d2c-12d58818b0af",
+                            Id = new Guid("07b58e04-048f-42b1-855b-05b9b7aa439c"),
+                            ConcurrencyStamp = "e6589af5-dbe2-4b45-8947-aa855e1f9db9",
                             Name = "User",
                             NormalizedName = "USER"
                         });
@@ -311,9 +308,6 @@ namespace FTM.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset>("ExpiredAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool?>("IsDeleted")

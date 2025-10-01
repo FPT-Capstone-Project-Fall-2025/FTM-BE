@@ -38,9 +38,9 @@ namespace FTM.Infrastructure.Repositories.Implement
             entity.CreatedOn = DateTimeOffset.Now;
             entity.LastModifiedOn = DateTimeOffset.Now;
 
-            entity.CreatedBy = _currentUserResolver.Username;
+            entity.CreatedBy = _currentUserResolver.Username ?? "FTMsystem";
             entity.CreatedByUserId = _currentUserResolver.UserId;
-            entity.LastModifiedBy = _currentUserResolver.Username;
+            entity.LastModifiedBy = _currentUserResolver.Username ?? "FTMsystem";
 
             await _dbSet.AddAsync(entity);
         }

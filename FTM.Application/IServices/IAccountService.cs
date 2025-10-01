@@ -11,10 +11,23 @@ namespace FTM.Application.IServices
     public interface IAccountService
     {
         Task<TokenResult> Login(string username, string password);
-        Task<SendOTPTracking> Register(RegisterAccountRequest request);
-        Task<SendOTPTracking> ValidateSendOTPLimit(SendOtpRequest request);
-        Task<string> GenerateTwoFactorTokenConfirmOTP(string username, string tokenOptions);
+        Task<TokenResult> LoginWithGoogle(string fullName, string email);
+        //Task<SendOTPTracking> Register(RegisterAccountRequest request);
+        Task RegisterByEmail(RegisterAccountRequest request);
+        Task<bool> ConfirmEmail(Guid userId, string token);
+        Task Logout(string accessToken);
+        Task ForgotPasswordAsync(ForgotPasswordRequest request);
+        Task ResetPasswordAsync(ResetPasswordRequest request);
 
-        Task<SendOTPTracking> SendSMSOtp(SendOtpRequest request);
+        // Profile methods
+        Task<UserProfileResponse> GetUserProfileAsync(Guid userId);
+        Task<UserProfileResponse> GetCurrentUserProfileAsync();
+        Task<UserProfileResponse> UpdateCurrentUserProfileAsync(UpdateUserProfileRequest request);
+        Task<UpdateAvatarResponse> UpdateCurrentUserAvatarAsync(UpdateAvatarRequest request);
+        Task<bool> ChangePasswordAsync(ChangePasswordRequest request);
+
+        // Location methods
+        Task<List<ProvinceListResponse>> GetProvincesAsync();
+        Task<List<WardListResponse>> GetWardsByProvinceAsync(Guid provinceId);
     }
 }

@@ -3,6 +3,7 @@ using System;
 using FTM.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FTM.Infrastructure.Migrations
 {
     [DbContext(typeof(AppIdentityDbContext))]
-    partial class AppIdentityDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250929142426_Add Expired At")]
+    partial class AddExpiredAt
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -78,10 +81,7 @@ namespace FTM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.ToTable("MWards");
+                    b.ToTable("MWard");
                 });
 
             modelBuilder.Entity("FTM.Domain.Entities.Applications.Mprovince", b =>
@@ -132,10 +132,7 @@ namespace FTM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.ToTable("Mprovinces");
+                    b.ToTable("Mprovince");
                 });
 
             modelBuilder.Entity("FTM.Domain.Entities.Identity.ApplicationRole", b =>
@@ -167,15 +164,15 @@ namespace FTM.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("681b430e-2fdf-42fa-adb3-b2c8a579d523"),
-                            ConcurrencyStamp = "94a04417-c31b-42fb-acf8-7eaa6435de56",
+                            Id = new Guid("1532c39b-cfe9-4113-b5ba-1c829ebf9e27"),
+                            ConcurrencyStamp = "7c3efeec-725e-4b34-8bc0-deb331d75673",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = new Guid("86423fa4-a161-4487-b3f9-44c3cbd60c1e"),
-                            ConcurrencyStamp = "5d30130c-d21e-4fcf-8d2c-12d58818b0af",
+                            Id = new Guid("69ce604f-a5ad-4ee7-8da7-afbcf8f62e47"),
+                            ConcurrencyStamp = "76bd8e2f-6a3d-4d79-ab11-fcf07b34e635",
                             Name = "User",
                             NormalizedName = "USER"
                         });

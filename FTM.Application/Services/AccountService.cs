@@ -7,15 +7,22 @@ using FTM.Domain.Models.Authen;
 using FTM.Infrastructure.Data;
 using FTM.Infrastructure.Repositories.Interface;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
+using System.Security.Policy;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using XAct;
+using XAct.Messages;
+using XAct.Security;
+using XAct.Users;
 using static FTM.Domain.Constants.Constants;
 
 namespace FTM.Application.Services
@@ -27,23 +34,24 @@ namespace FTM.Application.Services
         private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly ICurrentUserResolver _currentUserResolver;
         private readonly ISendOTPTrackingRepository _sendOTPTrackingRepository;
-        private readonly ISendSMSService _sendSMSService;
+        private readonly IEmailSender _emailSender;
         private readonly IUnitOfWork _unitOfWork;
         private readonly AppIdentityDbContext _context;
         private readonly ITokenProvider _tokenProvider;
-        private const int MinTimeSendOTP = 2;
-        private const int MaxSendOTPPerTenM = 4;
+        private readonly IBlobStorageService _blobStorageService;
+
 
         public AccountService(
             UserManager<ApplicationUser> userManager,
             RoleManager<ApplicationRole> roleManager,
             SignInManager<ApplicationUser> signInManager,
             ICurrentUserResolver currentUserResolver,
-            ISendSMSService sendSMSService,
             IUnitOfWork unitOfWork,
+            IEmailSender emailSender,
             ISendOTPTrackingRepository sendOTPTrackingRepository,
             ITokenProvider tokenProvider,
-            AppIdentityDbContext context
+            AppIdentityDbContext context,
+            IBlobStorageService blobStorageService
         )
         {
             _userManager = userManager;
@@ -51,170 +59,236 @@ namespace FTM.Application.Services
             _roleManager = roleManager;
             _tokenProvider = tokenProvider;
             _currentUserResolver = currentUserResolver;
-            _sendSMSService = sendSMSService;
+            _emailSender = emailSender;
             _sendOTPTrackingRepository = sendOTPTrackingRepository;
             _unitOfWork = unitOfWork;
             _context = context;
+            _blobStorageService = blobStorageService;
         }
 
         public async Task<TokenResult> Login(string username, string password)
         {
-            var user = await _userManager.FindByNameAsync(username);
-
-            if (user != null && !user.PhoneNumberConfirmed)
-                return new TokenResult()
-                {
-                    AccountStatus = AccountStatus.DoNotConfirmPhoneNumber
-                };
+            var user = await _userManager.FindByEmailAsync(username);
 
             if (user == null)
-            {
-                user = await _userManager.FindByEmailAsync(username);
-                if (user == null) throw new ArgumentException("Đăng nhập không thành công. Vui lòng kiểm tra lại email, số điện thoại và mật khẩu.");
-                if (!user.PhoneNumberConfirmed)
-                    return new TokenResult()
-                    {
-                        AccountStatus = AccountStatus.DoNotConfirmedPhoneNumberRequired
-                    };
+                throw new ArgumentException("Đăng nhập không thành công. Vui lòng kiểm tra lại email và mật khẩu.");
 
-                if (!user.EmailConfirmed)
-                    return new TokenResult()
-                    {
-                        AccountStatus = AccountStatus.DoNotConfirmedEmail
-                    };
+            if (!user.EmailConfirmed)
+            {
+                return new TokenResult
+                {
+                    AccountStatus = AccountStatus.DoNotConfirmedEmail
+                };
             }
 
-            if (_userManager.SupportsUserLockout && await _userManager.IsLockedOutAsync(user))
-                throw new ArgumentException("Tài khoản của bạn đang tạm khóa.");
+            var result = await _signInManager.PasswordSignInAsync(user.UserName, password, false, lockoutOnFailure: true);
 
-            if (await _userManager.CheckPasswordAsync(user, password))
+            if (result.Succeeded)
             {
-                if (_userManager.SupportsUserLockout && await _userManager.GetAccessFailedCountAsync(user) > 0)
+                var claims = new List<Claim>
                 {
-                    await _userManager.ResetAccessFailedCountAsync(user);
+                    new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                    new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                    new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+                    new(ClaimTypes.Name, user.UserName ?? string.Empty),
+                    new(CustomJwtClaimTypes.Name, user.UserName ?? string.Empty),
+                    new(CustomJwtClaimTypes.EmailConfirmed, user.EmailConfirmed.ToString()),
+                    new(CustomJwtClaimTypes.PhoneNumberConfirmed, user.PhoneNumberConfirmed.ToString()),
+                    new(CustomJwtClaimTypes.FullName, user.Name ?? string.Empty),
+                };
+
+                var roles = await _userManager.GetRolesAsync(user);
+                if (roles?.Count > 0)
+                {
+                    foreach (var role in roles)
+                        claims.Add(new Claim(ClaimTypes.Role, role));
                 }
 
-                var result = await _signInManager.PasswordSignInAsync(user.UserName, password, false, false);
+                // generate tokens
+                var accessToken = _tokenProvider.GenerateJwtToken(claims);
+                var newRefreshToken = _tokenProvider.GenerateRefreshToken();
 
-                if (result.Succeeded)
+                var userRefreshToken = await _context.UserRefreshTokens
+                    .FirstOrDefaultAsync(urt => urt.ApplicationUserId == user.Id);
+
+                if (userRefreshToken == null)
                 {
-                    var applicationUser = _userManager.Users.SingleOrDefault(r => r.UserName == user.UserName);
-
-                    var claims = new List<Claim>
+                    userRefreshToken = new ApplicationUserRefreshToken
                     {
-                        new(JwtRegisteredClaimNames.Sub, applicationUser.Id.ToString()),
-                        new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                        new(ClaimTypes.NameIdentifier, applicationUser.Id.ToString()),
-                        new(JwtRegisteredClaimNames.Email, applicationUser.Email),
-                        new(ClaimTypes.Name, applicationUser.UserName),
-                        new(CustomJwtClaimTypes.Name, applicationUser.UserName),
-                        new(CustomJwtClaimTypes.EmailConfirmed, applicationUser.EmailConfirmed.ToString()),
-                        new(CustomJwtClaimTypes.PhoneNumberConfirmed, applicationUser.PhoneNumberConfirmed.ToString()),
-                        new(CustomJwtClaimTypes.FullName, user.Name),
+                        ApplicationUserId = user.Id,
+                        Token = newRefreshToken,
+                        ExpiredAt = DateTime.UtcNow.AddDays(7),
+                        LastModifiedBy = "System",
+                        CreatedBy = "System",
+                        CreatedByUserId = Guid.NewGuid()
                     };
-                    
-                    var roles = await _userManager.GetRolesAsync(applicationUser);
 
-                    if (roles.Count > 0)
-                    {
-                        roles.ForEach(role => claims.Add(new Claim(ClaimTypes.Role, role)));
-                    }
-                
-                    var accessToken = _tokenProvider.GenerateJwtToken(claims);
-                    var newRefreshToken = _tokenProvider.GenerateRefreshToken();
-                    var userRefreshToken = _context.UserRefreshTokens.FirstOrDefault(urt => urt.ApplicationUserId == applicationUser.Id);
-
-                    if (userRefreshToken == null)
-                    {
-                        userRefreshToken = new ApplicationUserRefreshToken
-                        {
-                            ApplicationUserId = user.Id,
-                            Token = newRefreshToken,
-                        };
-
-                        _context.UserRefreshTokens.Add(userRefreshToken);
-                    }
-                    else
-                    {
-                        userRefreshToken.Token = newRefreshToken;
-                        _context.Update(userRefreshToken);
-                    }
-
-                    if (!applicationUser.IsActive)
-                    {
-                        applicationUser.IsActive = true;
-                        _context.Update(applicationUser);
-                    }
-
-                    await _context.SaveChangesAsync();
-
-                    var tokenResult = new TokenResult
-                    {
-                        UserId = applicationUser.Id,
-                        Username = applicationUser.UserName,
-                        Email = applicationUser.Email,
-                        Phone = applicationUser.PhoneNumber,
-                        AccessToken = accessToken,
-                        RefreshToken = userRefreshToken.Token,
-                        Roles = roles,
-                        AccountStatus = AccountStatus.Activated,
-                        Picture = user.Picture,
-                        Fullname = user.Name,
-                    };
-                    return tokenResult;
+                    await _context.UserRefreshTokens.AddAsync(userRefreshToken);
                 }
-
-                if (result.IsNotAllowed)
+                else
                 {
-                    var applicationUser = _userManager.Users.SingleOrDefault(r => r.UserName == username);
-
-                    if (!applicationUser.EmailConfirmed)
-                    {
-                        throw new ArgumentException("Tài khoản chưa được xác nhận email. Vui lòng kiểm tra hộp thư đến và xác nhận email.");
-                    }
-
-                    throw new ArgumentException("Đăng nhập không thành công. Vui lòng kiểm tra lại email và mật khẩu.");
+                    userRefreshToken.Token = newRefreshToken;
+                    userRefreshToken.ExpiredAt = DateTime.UtcNow.AddDays(7);
+                    _context.UserRefreshTokens.Update(userRefreshToken);
                 }
 
-                throw new ArgumentException("Đăng nhập không thành công. Vui lòng kiểm tra lại email và mật khẩu.");
+                if (!user.IsActive)
+                {
+                    user.IsActive = true;
+                    _context.Update(user);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return new TokenResult
+                {
+                    UserId = user.Id,
+                    Username = user.UserName,
+                    Email = user.Email,
+                    Phone = user.PhoneNumber,
+                    AccessToken = accessToken,
+                    RefreshToken = userRefreshToken.Token,
+                    Roles = roles,
+                    AccountStatus = AccountStatus.Activated,
+                    Picture = user.Picture,
+                    Fullname = user.Name,
+                };
+            }
+
+            if (result.IsLockedOut)
+            {
+                throw new ArgumentException("Tài khoản của bạn đang tạm khóa. Vui lòng thử lại sau 1 phút.");
+            }
+
+            if (result.IsNotAllowed)
+            {
+                throw new ArgumentException("Tài khoản chưa được xác nhận email. Vui lòng kiểm tra hộp thư đến và xác nhận email.");
+            }
+
+            throw new ArgumentException("Đăng nhập không thành công. Vui lòng kiểm tra lại email và mật khẩu.");
+        }
+
+        public async Task<TokenResult> LoginWithGoogle(string fullName, string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            TokenResult tokenResult;
+            if (user is null)
+            {
+                // Create new user
+                user = new ApplicationUser
+                {
+                    UserName = email,
+                    Email = email,
+                    Name = fullName,
+                    EmailConfirmed = true,
+                    PhoneNumberConfirmed = false,
+                };
+
+                var result = await _userManager.CreateAsync(user);
+
+                if (!result.Succeeded)
+                    throw new ArgumentException(string.Join(";", result.Errors.Select(m => m.Description)));
+
+                // Assign default role "User"
+                await _userManager.AddToRoleAsync(user, "User");
+            }
+
+            var claims = new List<Claim>
+                {
+                    new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                    new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                    new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+                    new(ClaimTypes.Name, user.UserName ?? string.Empty),
+                    new(CustomJwtClaimTypes.Name, user.UserName ?? string.Empty),
+                    new(CustomJwtClaimTypes.EmailConfirmed, user.EmailConfirmed.ToString()),
+                    new(CustomJwtClaimTypes.PhoneNumberConfirmed, user.PhoneNumberConfirmed.ToString()),
+                    new(CustomJwtClaimTypes.FullName, user.Name ?? string.Empty),
+                };
+
+            var roles = await _userManager.GetRolesAsync(user);
+            if (roles?.Count > 0)
+            {
+                foreach (var role in roles)
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+            // generate tokens
+            var accessToken = _tokenProvider.GenerateJwtToken(claims);
+            var newRefreshToken = _tokenProvider.GenerateRefreshToken();
+
+            var userRefreshToken = await _context.UserRefreshTokens
+                .FirstOrDefaultAsync(urt => urt.ApplicationUserId == user.Id);
+
+            if (userRefreshToken == null)
+            {
+                userRefreshToken = new ApplicationUserRefreshToken
+                {
+                    ApplicationUserId = user.Id,
+                    Token = newRefreshToken,
+                    ExpiredAt = DateTime.UtcNow.AddDays(7),
+                    LastModifiedBy = "System",
+                    CreatedBy = "System",
+                    CreatedByUserId = Guid.NewGuid()
+                };
+
+                await _context.UserRefreshTokens.AddAsync(userRefreshToken);
             }
             else
             {
-                if (_userManager.SupportsUserLockout && await _userManager.GetLockoutEnabledAsync(user))
-                {
-                    await _userManager.AccessFailedAsync(user);
-                }
-
-                if (_userManager.SupportsUserLockout && await _userManager.GetAccessFailedCountAsync(user) == Constants.MAXIMUM_LOGIN_FAIL_NUMBER - 1)
-                    return new TokenResult()
-                    {
-                        AccountStatus = AccountStatus.MaximumFail
-                    };
-                else throw new ArgumentException("Đăng nhập không thành công. Vui lòng kiểm tra lại email và mật khẩu.");
+                userRefreshToken.Token = newRefreshToken;
+                userRefreshToken.ExpiredAt = DateTime.UtcNow.AddDays(7);
+                _context.UserRefreshTokens.Update(userRefreshToken);
             }
+
+            if (!user.IsActive)
+            {
+                user.IsActive = true;
+                _context.Update(user);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return new TokenResult
+            {
+                UserId = user.Id,
+                Username = user.UserName,
+                Email = user.Email,
+                Phone = user.PhoneNumber,
+                AccessToken = accessToken,
+                RefreshToken = userRefreshToken.Token,
+                Roles = roles,
+                AccountStatus = AccountStatus.Activated,
+                Picture = user.Picture,
+                Fullname = user.Name,
+            };
         }
 
-        public async Task<SendOTPTracking> Register(RegisterAccountRequest request)
+        public async Task RegisterByEmail(RegisterAccountRequest request)
         {
-            var user = await _userManager.FindByNameAsync(request.PhoneNumber);
-
+            // Check if email already exists
+            var user = await _userManager.FindByEmailAsync(request.Email);
             if (user != null)
             {
-                if (user.PhoneNumberConfirmed) throw new ArgumentException("Số điện thoại đã được đăng ký tài khoản trước đó. Vui lòng sử dụng chức năng đăng nhập.");
+                if (user.EmailConfirmed)
+                    throw new ArgumentException("Email đã được đăng ký tài khoản trước đó. Vui lòng đăng nhập.");
+
+                // Optional: remove old unconfirmed account
                 await _userManager.DeleteAsync(user);
             }
 
-            user = await _userManager.FindByEmailAsync(request.Email);
-
+            // Check if phone number already exists
+            user = await _userManager.FindByNameAsync(request.PhoneNumber);
             if (user != null)
             {
-                throw new ArgumentException("Email đã được đăng ký tài khoản trước đó. Vui lòng sử dụng chức năng đăng nhập.");
-                //await _userManager.DeleteAsync(user);
+                throw new ArgumentException("Số điện thoại đã được đăng ký. Vui lòng đăng nhập.");
             }
 
+            // Create new user
             user = new ApplicationUser
             {
-                UserName = request.PhoneNumber,
+                UserName = request.Email,
                 Email = request.Email,
                 PhoneNumber = request.PhoneNumber,
                 Name = request.Name,
@@ -224,105 +298,383 @@ namespace FTM.Application.Services
 
             var result = await _userManager.CreateAsync(user, request.Password);
 
+            if (!result.Succeeded)
+                throw new ArgumentException(string.Join(";", result.Errors.Select(m => m.Description)));
+
+            // Assign default role "User"
+            await _userManager.AddToRoleAsync(user, "User");
+
+            // Generate email confirmation token
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+            string apiURL = "https://localhost:5001";
+            var confirmationLink = $"{apiURL}/api/account/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
+            //var confirmationLink = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, token }, Request.Scheme);
+
+            // Send email
+            await _emailSender.SendEmailAsync(
+                request.Email,
+                "Xác nhận tài khoản của bạn",
+                $"Xin chào {request.Name},<br/>" +
+                $"Vui lòng nhấn vào liên kết để xác nhận tài khoản: <a href='{confirmationLink}'>Xác nhận Email</a>"
+            );
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> ConfirmEmail(Guid userId, string token)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null) return false;
+
+            var result = await _userManager.ConfirmEmailAsync(user, token);
             if (result.Succeeded)
             {
-                var otpRequest = new SendOtpRequest()
-                {
-                    //Email = request.Email,
-                    PhoneNumber = request.PhoneNumber,
-                    RemoteIpAddress = _currentUserResolver.RemoteIpAddress,
-                };
+                return true;
+            }
+            return false;
+        }
 
-                var otpTracking = await ValidateSendOTPLimit(otpRequest);
+        public async Task Logout(string accessToken)
+        {
+            try
+            {
+                var principal = _tokenProvider.GetPrincipalFromExpiredToken(accessToken);
+                var username = principal.Identity.Name;
+                var applicationUser = _userManager.Users.SingleOrDefault(r => r.UserName == username);
+                var userRefreshToken = _context.UserRefreshTokens.SingleOrDefault(u => u.ApplicationUserId == applicationUser.Id);
 
-                if (otpTracking != null)
+                if (userRefreshToken != null)
                 {
-                    return otpTracking;
+                    userRefreshToken.Token = null;
+                    await _context.SaveChangesAsync();
                 }
 
-                var code = await GenerateTwoFactorTokenConfirmOTP(request.PhoneNumber, TokenOptions.DefaultPhoneProvider);
+                await _signInManager.SignOutAsync();
 
-                otpTracking = await SendSMSOtp(new SendOtpRequest()
+                return;
+            }
+            catch(Exception ex)
+            {
+                throw new ArgumentException("Token Invalid");
+            }
+        }
+
+        public async Task ForgotPasswordAsync(ForgotPasswordRequest request)
+        {
+            ApplicationUser user = await _userManager.FindByEmailAsync(request.Email);
+
+            if (user == null)
+            {
+                throw new ArgumentException("Account not found.");
+            }
+
+            var code = await _userManager.GeneratePasswordResetTokenAsync(user);
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+            
+            string apiURL = "https://localhost:5001";
+            var callbackUrl = $"{apiURL}/api/account/forgot-password?userId={user.Id}&&code={code}";
+            var body = "<b>Yêu cầu khôi phục lại mật khẩu</b></br><p>Chào <b>{0}!</b></p></br><p>Bạn đã yêu cầu khôi phục mật khẩu đăng nhập thành công. Vui lòng bấm vào đường dẫn bên dưới đây để khôi phục lại mật khẩu tài khoản của bạn tại GP Application:</p></br><a href=\"{1}\"> Link khôi phục mật khẩu</a></br><p>Nếu bạn không yêu cầu khôi phục mật khẩu, vui lòng bỏ qua.</p></br><p>Chân thành cảm ơn,</p><p>GP application</p>";
+            var mailBody = string.Format(body, user.Name, HtmlEncoder.Default.Encode(callbackUrl));
+            await _emailSender.SendEmailAsync(user.Email, "Xác nhận đặt lại mật khẩu", mailBody);
+        }
+
+        public async Task ResetPasswordAsync(ResetPasswordRequest request)
+        {
+            var user = await _userManager.FindByIdAsync(request.UserId);
+            if (user == null)
+            {
+                throw new ArgumentException("User not found.");
+            }
+
+            var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(request.Code));
+
+            var result = await _userManager.ResetPasswordAsync(user, code, request.Password);
+
+            if (result.Succeeded)
+            {
+                return;
+            }
+
+            throw new ArgumentException("Reset password fail.");
+        }
+
+        public async Task<UserProfileResponse> GetUserProfileAsync(Guid userId)
+        {
+            var user = await _context.Users
+                .Include(u => u.MProvince)
+                .Include(u => u.MWard)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                throw new ArgumentException("Không tìm thấy người dùng.");
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            return new UserProfileResponse
+            {
+                UserId = user.Id,
+                UserName = user.UserName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                Name = user.Name,
+                Address = user.Address,
+                Nickname = user.Nickname,
+                Birthday = user.Birthday,
+                Job = user.Job,
+                Gender = user.Gender,
+                Picture = user.Picture,
+                IsActive = user.IsActive,
+                EmailConfirmed = user.EmailConfirmed,
+                PhoneNumberConfirmed = user.PhoneNumberConfirmed,
+                Province = user.MProvince != null ? new ProvinceInfo
                 {
-                    Email = request.Email,
-                    PhoneNumber = request.PhoneNumber,
-                    Content = code,
-                    RemoteIpAddress = _currentUserResolver.RemoteIpAddress
-                });
-
-                //var refreshUser = _context.UserRefreshTokens.SingleOrDefault(u => u.ApplicationUserId == user.Id);
-
-                //if (refreshUser != null)
-                //{
-                //    _context.UserRefreshTokens.Remove(refreshUser);
-                //}
-
-                //refreshUser = new ApplicationUserRefreshToken
-                //{
-                //    ApplicationUserId = user.Id
-                //};
-
-                //_context.UserRefreshTokens.Add(refreshUser);
-                await _context.SaveChangesAsync();
-
-                return otpTracking;
-            }
-
-            throw new ArgumentException(string.Join(";", result.Errors.Select(m => m.Description)));
-        }
-
-        public async Task<SendOTPTracking> ValidateSendOTPLimit(SendOtpRequest request)
-        {
-            var otpTracking = await _sendOTPTrackingRepository.GetSendOTPTrackingAsync(request.RemoteIpAddress, request.Email, request.PhoneNumber);
-
-            var lastSentOTP = otpTracking.OrderByDescending(x => x.LastModifiedOn).FirstOrDefault();
-
-            if (otpTracking.Count >= MaxSendOTPPerTenM || (lastSentOTP?.LastModifiedOn != null && lastSentOTP.LastModifiedOn.AddMinutes(MinTimeSendOTP) > DateTime.UtcNow))
-            {
-                return lastSentOTP;
-            }
-
-            return null;
-        }
-
-        public async Task<string> GenerateTwoFactorTokenConfirmOTP(string providerValue, string tokenOptions)
-        {
-            ApplicationUser currentUser = null;
-            if (tokenOptions == TokenOptions.DefaultEmailProvider)
-            {
-                currentUser = await _userManager.FindByEmailAsync(providerValue);
-            }
-
-            if (tokenOptions == TokenOptions.DefaultPhoneProvider)
-            {
-                currentUser = await _userManager.FindByNameAsync(providerValue);
-            }
-
-            if (currentUser == null)
-            {
-                throw new ArgumentException("Không tìm thấy tài khoản.");
-            }
-
-            var code = await _userManager.GenerateTwoFactorTokenAsync(currentUser, tokenOptions);
-
-            return code;
-        }
-
-        public async Task<SendOTPTracking> SendSMSOtp(SendOtpRequest request)
-        {
-            _sendSMSService.SendSMS(request.PhoneNumber, request.Content);
-
-            var otpTracking = new SendOTPTracking()
-            {
-                //Email = request.Email,
-                PhoneNumber = request.PhoneNumber,
-                RemoteIpAddress = request.RemoteIpAddress,
+                    ProvinceId = user.MProvince.Id,
+                    Code = user.MProvince.Code,
+                    Name = user.MProvince.Name,
+                    NameWithType = user.MProvince.NameWithType
+                } : null,
+                Ward = user.MWard != null ? new WardInfo
+                {
+                    WardId = user.MWard.Id,
+                    Code = user.MWard.Code,
+                    Name = user.MWard.Name,
+                    NameWithType = user.MWard.NameWithType,
+                    Path = user.MWard.Path,
+                    PathWithType = user.MWard.PathWithType
+                } : null,
+                Roles = roles.ToList(),
+                CreatedDate = user.CreatedDate,
+                UpdatedDate = user.UpdatedDate
             };
+        }
 
-            await _sendOTPTrackingRepository.AddAsync(otpTracking);
-            await _unitOfWork.CompleteAsync();
+        public async Task<UserProfileResponse> GetCurrentUserProfileAsync()
+        {
+            var currentUserId = _currentUserResolver.UserId;
+            
+            if (currentUserId == Guid.Empty)
+            {
+                throw new UnauthorizedAccessException("Vui lòng đăng nhập để xem thông tin cá nhân.");
+            }
 
-            return otpTracking;
+            return await GetUserProfileAsync(currentUserId);
+        }
+
+        public async Task<UserProfileResponse> UpdateCurrentUserProfileAsync(UpdateUserProfileRequest request)
+        {
+            var currentUserId = _currentUserResolver.UserId;
+            
+            if (currentUserId == Guid.Empty)
+            {
+                throw new UnauthorizedAccessException("Vui lòng đăng nhập để cập nhật thông tin cá nhân.");
+            }
+
+            var user = await _userManager.Users
+                .Include(u => u.MProvince)
+                .Include(u => u.MWard)
+                .FirstOrDefaultAsync(u => u.Id == currentUserId);
+
+            if (user == null)
+            {
+                throw new ArgumentException("Không tìm thấy thông tin người dùng.");
+            }
+
+            // Validate Province and Ward if provided
+            if (request.ProvinceId.HasValue)
+            {
+                var provinceExists = await _context.Mprovinces
+                    .AnyAsync(p => p.Id == request.ProvinceId.Value);
+                if (!provinceExists)
+                {
+                    throw new ArgumentException("Tỉnh/Thành phố không hợp lệ.");
+                }
+            }
+
+            if (request.WardId.HasValue)
+            {
+                var wardExists = await _context.MWards
+                    .AnyAsync(w => w.Id == request.WardId.Value);
+                if (!wardExists)
+                {
+                    throw new ArgumentException("Phường/Xã không hợp lệ.");
+                }
+            }
+
+            // Update user properties
+            if (!string.IsNullOrEmpty(request.Name))
+                user.Name = request.Name;
+                
+            if (!string.IsNullOrEmpty(request.Address))
+                user.Address = request.Address;
+                
+            if (!string.IsNullOrEmpty(request.Nickname))
+                user.Nickname = request.Nickname;
+                
+            if (request.Birthday.HasValue)
+                user.Birthday = request.Birthday.Value;
+                
+            if (!string.IsNullOrEmpty(request.Job))
+                user.Job = request.Job;
+                
+            if (request.Gender.HasValue)
+                user.Gender = request.Gender.Value;
+                
+            if (request.ProvinceId.HasValue)
+                user.ProvinceId = request.ProvinceId.Value;
+                
+            if (request.WardId.HasValue)
+                user.WardId = request.WardId.Value;
+
+            user.UpdatedDate = DateTimeOffset.UtcNow;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Không thể cập nhật thông tin người dùng: {errors}");
+            }
+
+            // Return updated profile
+            return await GetCurrentUserProfileAsync();
+        }
+
+        public async Task<bool> ChangePasswordAsync(ChangePasswordRequest request)
+        {
+            var currentUserId = _currentUserResolver.UserId;
+            
+            if (currentUserId == Guid.Empty)
+            {
+                throw new UnauthorizedAccessException("Vui lòng đăng nhập để đổi mật khẩu.");
+            }
+
+            var user = await _userManager.FindByIdAsync(currentUserId.ToString());
+            if (user == null)
+            {
+                throw new ArgumentException("Không tìm thấy thông tin người dùng.");
+            }
+
+            // Verify current password
+            var isCurrentPasswordValid = await _userManager.CheckPasswordAsync(user, request.CurrentPassword);
+            if (!isCurrentPasswordValid)
+            {
+                throw new ArgumentException("Mật khẩu hiện tại không đúng.");
+            }
+
+            // Change password
+            var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Không thể đổi mật khẩu: {errors}");
+            }
+
+            return true;
+        }
+
+        public async Task<List<ProvinceListResponse>> GetProvincesAsync()
+        {
+            var provinces = await _context.Mprovinces
+                .Where(p => p.IsDeleted != true)
+                .OrderBy(p => p.Name)
+                .Select(p => new ProvinceListResponse
+                {
+                    Id = p.Id,
+                    Code = p.Code,
+                    Name = p.Name,
+                    NameWithType = p.NameWithType,
+                    Slug = p.Slug
+                })
+                .ToListAsync();
+
+            return provinces;
+        }
+
+        public async Task<List<WardListResponse>> GetWardsByProvinceAsync(Guid provinceId)
+        {
+            var wards = await _context.MWards
+                .Where(w => w.IsDeleted != true && w.Path != null && w.Path.Contains(provinceId.ToString()))
+                .OrderBy(w => w.Name)
+                .Select(w => new WardListResponse
+                {
+                    Id = w.Id,
+                    Code = w.Code,
+                    Name = w.Name,
+                    NameWithType = w.NameWithType,
+                    Path = w.Path,
+                    PathWithType = w.PathWithType,
+                    Slug = w.Slug
+                })
+                .ToListAsync();
+
+            return wards;
+        }
+
+        public async Task<UpdateAvatarResponse> UpdateCurrentUserAvatarAsync(UpdateAvatarRequest request)
+        {
+            var currentUserId = _currentUserResolver.UserId;
+            
+            if (currentUserId == Guid.Empty)
+            {
+                throw new UnauthorizedAccessException("Vui lòng đăng nhập để cập nhật avatar.");
+            }
+
+            var user = await _userManager.FindByIdAsync(currentUserId.ToString());
+            if (user == null)
+            {
+                throw new ArgumentException("Không tìm thấy thông tin người dùng.");
+            }
+
+            try
+            {
+                // Delete old avatar if exists
+                if (!string.IsNullOrEmpty(user.Picture))
+                {
+                    try
+                    {
+                        var oldFileName = Path.GetFileName(new Uri(user.Picture).LocalPath);
+                        await _blobStorageService.DeleteFileAsync("avatars", oldFileName);
+                    }
+                    catch
+                    {
+                        // Ignore delete errors for old avatar
+                    }
+                }
+
+                // Upload new avatar
+                var avatarUrl = await _blobStorageService.UploadFileAsync(
+                    request.Avatar, 
+                    "avatars", 
+                    $"avatar_{currentUserId}_{DateTime.UtcNow:yyyyMMddHHmmss}{Path.GetExtension(request.Avatar.FileName)}"
+                );
+
+                // Update user record
+                user.Picture = avatarUrl;
+                user.UpdatedDate = DateTimeOffset.UtcNow;
+
+                var result = await _userManager.UpdateAsync(user);
+                if (!result.Succeeded)
+                {
+                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    throw new InvalidOperationException($"Không thể cập nhật avatar: {errors}");
+                }
+
+                return new UpdateAvatarResponse
+                {
+                    AvatarUrl = avatarUrl,
+                    Message = "Cập nhật avatar thành công!"
+                };
+            }
+            catch (ArgumentException ex)
+            {
+                throw new ArgumentException($"Lỗi upload file: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Đã xảy ra lỗi khi cập nhật avatar: {ex.Message}");
+            }
         }
 
     }

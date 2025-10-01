@@ -20,16 +20,16 @@ namespace FTM.Application.Services
         {
             _jwtOptions = new JwtOptions()
             {
-                Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
-                ExpireDays = int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRE_DAYS")),
-                Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER"),
-                SigningKey = Environment.GetEnvironmentVariable("JWT_SIGNING_KEY")
+                Audience = Environment.GetEnvironmentVariable("JWT-AUDIENCE") ?? "FTM-Client",
+                ExpireDays = int.Parse(Environment.GetEnvironmentVariable("JWT-EXPIRE-DAYS") ?? "7"),
+                Issuer = Environment.GetEnvironmentVariable("JWT-ISSUER") ?? "FTM-API",
+                SigningKey = Environment.GetEnvironmentVariable("JWT-SIGNING-KEY") ?? "ThisIsMySecretKeyForFTMApplicationAndItShouldBeLongEnough123456789"
             };
         }
 
         public string GetIssuer()
         {
-            return Environment.GetEnvironmentVariable("JWT_ISSUER");
+            return Environment.GetEnvironmentVariable("JWT-ISSUER") ?? "FTM-API";
         }
 
         public string GenerateJwtToken(IEnumerable<Claim> claims)
@@ -82,7 +82,7 @@ namespace FTM.Application.Services
                 ValidAudience = _jwtOptions.Audience,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SigningKey)),
-                ValidateLifetime = false
+                ValidateLifetime = true
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();
