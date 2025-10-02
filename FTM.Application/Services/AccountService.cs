@@ -307,9 +307,8 @@ namespace FTM.Application.Services
             // Generate email confirmation token
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
-            string apiURL = "https://localhost:5001";
-            var confirmationLink = $"{apiURL}/api/account/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
-            //var confirmationLink = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, token }, Request.Scheme);
+            string feURL = Environment.GetEnvironmentVariable("FE-URL");
+            var confirmationLink = $"{feURL}/account/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
 
             // Send email
             await _emailSender.SendEmailAsync(
@@ -326,13 +325,9 @@ namespace FTM.Application.Services
         {
             var user = await _userManager.FindByIdAsync(userId.ToString());
             if (user == null) return false;
-
-            var result = await _userManager.ConfirmEmailAsync(user, token);
-            if (result.Succeeded)
-            {
-                return true;
-            }
-            return false;
+            var decodedToken = Uri.UnescapeDataString(token);
+            var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
+            return result.Succeeded;
         }
 
         public async Task Logout(string accessToken)
@@ -354,7 +349,7 @@ namespace FTM.Application.Services
 
                 return;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new ArgumentException("Token Invalid");
             }
@@ -371,9 +366,9 @@ namespace FTM.Application.Services
 
             var code = await _userManager.GeneratePasswordResetTokenAsync(user);
             code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-            
-            string apiURL = "https://localhost:5001";
-            var callbackUrl = $"{apiURL}/api/account/forgot-password?userId={user.Id}&&code={code}";
+
+            string feURL = Environment.GetEnvironmentVariable("FE_URL");
+            var callbackUrl = $"{feURL}/account/forgot-password?userId={user.Id}&&code={code}";
             var body = "<b>Yêu cầu khôi phục lại mật khẩu</b></br><p>Chào <b>{0}!</b></p></br><p>Bạn đã yêu cầu khôi phục mật khẩu đăng nhập thành công. Vui lòng bấm vào đường dẫn bên dưới đây để khôi phục lại mật khẩu tài khoản của bạn tại GP Application:</p></br><a href=\"{1}\"> Link khôi phục mật khẩu</a></br><p>Nếu bạn không yêu cầu khôi phục mật khẩu, vui lòng bỏ qua.</p></br><p>Chân thành cảm ơn,</p><p>GP application</p>";
             var mailBody = string.Format(body, user.Name, HtmlEncoder.Default.Encode(callbackUrl));
             await _emailSender.SendEmailAsync(user.Email, "Xác nhận đặt lại mật khẩu", mailBody);
@@ -677,5 +672,39 @@ namespace FTM.Application.Services
             }
         }
 
+        public async Task<TokenResult> RefreshToken(string accessToken, string refreshToken)
+        {
+            var principal = _tokenProvider.GetPrincipalFromExpiredToken(accessToken);
+            var username = principal.Identity.Name;
+            var applicationUser = _userManager.Users.SingleOrDefault(r => r.UserName == username);
+            var userRefreshToken = _context.UserRefreshTokens.SingleOrDefault(u => u.ApplicationUserId == applicationUser.Id);
+
+            if (userRefreshToken == null || userRefreshToken.Token != refreshToken)
+            {
+                throw new ArgumentException("Vui lòng đăng nhập lại.");
+            }
+
+            var newJwtToken = _tokenProvider.GenerateJwtToken(principal.Claims);
+            var newRefreshToken = _tokenProvider.GenerateRefreshToken();
+            userRefreshToken.Token = newRefreshToken;
+            _context.Update(userRefreshToken);
+
+            await _context.SaveChangesAsync();
+            var roles = await _userManager.GetRolesAsync(applicationUser);
+
+            return new TokenResult
+            {
+                UserId = applicationUser.Id,
+                Username = applicationUser.UserName,
+                Email = applicationUser.Email,
+                Phone = applicationUser.PhoneNumber,
+                AccountStatus = AccountStatus.Activated,
+                Picture = applicationUser.Picture,
+                Fullname = applicationUser.Name,
+                AccessToken = newJwtToken,
+                RefreshToken = newRefreshToken,
+                Roles = roles,
+            };
+        }
     }
 }

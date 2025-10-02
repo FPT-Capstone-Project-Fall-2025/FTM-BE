@@ -42,7 +42,8 @@ namespace FTM.API.Controllers
                 var result = await _accountService.Login(model.UserName, model.Password);
                 return Ok(new ApiSuccess(result));
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 return BadRequest(new ApiError(ex.Message));
             }
 
@@ -81,7 +82,7 @@ namespace FTM.API.Controllers
             {
                 ThrowModelErrors();
             }
-            
+
             try
             {
                 await _accountService.RegisterByEmail(request);
@@ -160,6 +161,24 @@ namespace FTM.API.Controllers
             }
         }
 
+        [HttpPost("refresh-token")]
+        [AllowAnonymous]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest model)
+        {
+            if (!ModelState.IsValid)
+            {
+                ThrowModelErrors();
+            }
+            try
+            {
+                var result = await _accountService.RefreshToken(model.AccessToken, model.RefreshToken);
+                return Ok(new ApiSuccess(result));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError("Invalid Token"));
+            }
+        }
         [HttpGet("profile")]
         [Authorize(Roles = "User")]
         [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
