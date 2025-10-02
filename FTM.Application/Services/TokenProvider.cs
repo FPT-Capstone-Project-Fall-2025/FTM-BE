@@ -20,16 +20,16 @@ namespace FTM.Application.Services
         {
             _jwtOptions = new JwtOptions()
             {
-                Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "FTM-Client",
+                Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
                 ExpireDays = int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIRE_DAYS") ?? "7"),
-                Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "FTM-API",
-                SigningKey = Environment.GetEnvironmentVariable("JWT_SIGNING_KEY") ?? "ThisIsMySecretKeyForFTMApplicationAndItShouldBeLongEnough123456789"
+                Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER"),
+                SigningKey = Environment.GetEnvironmentVariable("JWT_SIGNING_KEY")
             };
         }
 
         public string GetIssuer()
         {
-            return Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "FTM-API";
+            return Environment.GetEnvironmentVariable("JWT_ISSUER");
         }
 
         public string GenerateJwtToken(IEnumerable<Claim> claims)
@@ -47,7 +47,7 @@ namespace FTM.Application.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        private JwtSecurityToken CreateJwtToken(IEnumerable<Claim> claims, DateTime? expires)
+        private JwtSecurityToken CreateJwtToken(IEnumerable<Claim> claims, DateTime? _expires)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SigningKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -57,7 +57,7 @@ namespace FTM.Application.Services
                 _jwtOptions.Audience,
                 claims,
                 notBefore: DateTime.Now,
-                expires: expires,
+                expires: _expires,
                 signingCredentials: creds
             );
         }
@@ -82,7 +82,7 @@ namespace FTM.Application.Services
                 ValidAudience = _jwtOptions.Audience,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SigningKey)),
-                ValidateLifetime = true
+                ValidateLifetime = false
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();

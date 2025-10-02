@@ -12,7 +12,7 @@ namespace FTM.Application.IServices
     {
         Task<TokenResult> Login(string username, string password);
         Task<TokenResult> LoginWithGoogle(string fullName, string email);
-        //Task<SendOTPTracking> Register(RegisterAccountRequest request);
+        Task<TokenResult> RefreshToken(string accessToken, string refreshToken);
         Task RegisterByEmail(RegisterAccountRequest request);
         Task<bool> ConfirmEmail(Guid userId, string token);
         Task Logout(string accessToken);

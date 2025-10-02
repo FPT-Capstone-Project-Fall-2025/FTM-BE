@@ -35,10 +35,10 @@ namespace FTM.API.Extensions
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "FTM_API",
-                    ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "FTM-_lient",
+                    ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER"),
+                    ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
                     IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_SIGNING_KEY") ?? "ThisIsMySecretKeyForFTMApplicationAndItShouldBeLongEnough123456789")
+                        Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_SIGNING_KEY")!)
                     )
                 };
             }).AddGoogle(options =>
@@ -56,9 +56,9 @@ namespace FTM.API.Extensions
 
             serrvices.AddCors(options =>
             {
-                options.AddPolicy("AllowLocalhost", policy =>
+                options.AddPolicy("AllowPorts", policy =>
                 {
-                    policy.WithOrigins("http://127.0.0.1:5500", "http://localhost:5500")
+                    policy.WithOrigins(Environment.GetEnvironmentVariable("FE_URL")?? "http://localhost:8900", "http://localhost:5500")
                           .AllowAnyHeader()
                           .AllowAnyMethod();
                 });
