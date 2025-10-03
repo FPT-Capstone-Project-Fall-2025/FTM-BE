@@ -1,4 +1,4 @@
-﻿using FTM.Domain.Models.Authen;
+﻿using FTM.Domain.DTOs.Authen;
 using System;
 using System.Collections.Generic;
 using System.Linq;

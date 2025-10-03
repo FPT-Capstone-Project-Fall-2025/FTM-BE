@@ -1,9 +1,9 @@
 ﻿using Azure.Core;
 using FTM.API.Reponses;
 using FTM.Application.IServices;
+using FTM.Domain.DTOs.Authen;
 using FTM.Domain.Entities.Identity;
 using FTM.Domain.Models;
-using FTM.Domain.Models.Authen;
 using FTM.Infrastructure.Data;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authorization;
@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 using XAct.Users;
 
 namespace FTM.API.Controllers
@@ -30,7 +31,8 @@ namespace FTM.API.Controllers
         [HttpPost("login")]
         [AllowAnonymous]
         [ProducesResponseType(typeof(TokenResult), StatusCodes.Status200OK)]
-        public async Task<IActionResult> Login([FromBody] LoginRequest model)
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		public async Task<IActionResult> Login([FromBody] LoginRequest model)
         {
             if (!ModelState.IsValid)
             {
@@ -52,7 +54,8 @@ namespace FTM.API.Controllers
         [HttpPost("login/google")]
         [AllowAnonymous]
         [ProducesResponseType(typeof(TokenResult), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
         {
             if (!ModelState.IsValid)
             {
@@ -76,7 +79,9 @@ namespace FTM.API.Controllers
 
         [HttpPost("register")]
         [AllowAnonymous]
-        public async Task<IActionResult> Register([FromBody] RegisterAccountRequest request)
+		[ProducesResponseType(StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		public async Task<IActionResult> Register([FromBody] RegisterAccountRequest request)
         {
             if (!ModelState.IsValid)
             {
@@ -95,6 +100,9 @@ namespace FTM.API.Controllers
         }
 
         [HttpGet("confirm-email")]
+		[AllowAnonymous]
+		[ProducesResponseType(StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ConfirmEmail(Guid userId, string token)
         {
             bool isConfirmed = await _accountService.ConfirmEmail(userId, token);
@@ -107,7 +115,9 @@ namespace FTM.API.Controllers
 
         [HttpPost("Logout")]
         [AllowAnonymous]
-        public async Task<IActionResult> Logout(string accessToken)
+		[ProducesResponseType(StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		public async Task<IActionResult> Logout(string accessToken)
         {
             try
             {
@@ -121,8 +131,10 @@ namespace FTM.API.Controllers
         }
 
         [HttpPost("forgot-password")]
-        [AllowAnonymous]
-        public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest model)
+		[AllowAnonymous]
+		[ProducesResponseType(StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest model)
         {
             if (!ModelState.IsValid)
             {
@@ -141,9 +153,11 @@ namespace FTM.API.Controllers
         }
 
         [HttpPost("reset-password")]
-        [AllowAnonymous]
-        //[ValidateAntiForgeryToken]
-        public async Task<IActionResult> ResetPassword(ResetPasswordRequest model)
+		[AllowAnonymous]
+		[ProducesResponseType(StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		//[ValidateAntiForgeryToken]
+		public async Task<IActionResult> ResetPassword(ResetPasswordRequest model)
         {
             if (!ModelState.IsValid)
             {
@@ -162,8 +176,10 @@ namespace FTM.API.Controllers
         }
 
         [HttpPost("refresh-token")]
-        [AllowAnonymous]
-        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest model)
+		[AllowAnonymous]
+		[ProducesResponseType(StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest model)
         {
             if (!ModelState.IsValid)
             {
@@ -180,9 +196,10 @@ namespace FTM.API.Controllers
             }
         }
         [HttpGet("profile")]
-        [Authorize(Roles = "User")]
-        [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetProfile()
+		[Authorize]
+		[ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		public async Task<IActionResult> GetProfile()
         {
             try
             {
@@ -191,22 +208,23 @@ namespace FTM.API.Controllers
             }
             catch (UnauthorizedAccessException ex)
             {
-                return Unauthorized(ApiResponse.Fail(ex.Message));
-            }
+				return Unauthorized(new ApiError(ex.Message, HttpStatusCode.NotFound));
+			}
             catch (ArgumentException ex)
             {
-                return NotFound(ApiResponse.Fail(ex.Message));
-            }
+				return NotFound( new ApiError(ex.Message, HttpStatusCode.NotFound));
+			}
             catch (Exception ex)
             {
-                return StatusCode(500, ApiResponse.Fail("Đã xảy ra lỗi khi lấy thông tin cá nhân."));
+                return StatusCode(500, new ApiError("Đã xảy ra lỗi khi lấy thông tin cá nhân.", HttpStatusCode.InternalServerError));
             }
         }
 
         [HttpGet("profile/{userId}")]
-        [Authorize(Roles = "User")]
-        [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetUserProfile(Guid userId)
+		[Authorize]
+		[ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		public async Task<IActionResult> GetUserProfile(Guid userId)
         {
             try
             {
@@ -215,18 +233,19 @@ namespace FTM.API.Controllers
             }
             catch (ArgumentException ex)
             {
-                return NotFound(ApiResponse.Fail(ex.Message));
-            }
+				return NotFound(new ApiError(ex.Message, HttpStatusCode.NotFound));
+			}
             catch (Exception ex)
             {
-                return StatusCode(500, ApiResponse.Fail("Đã xảy ra lỗi khi lấy thông tin người dùng."));
-            }
+				return StatusCode(500, new ApiError("Đã xảy ra lỗi khi lấy thông tin người dùng.", HttpStatusCode.InternalServerError));
+			}
         }
 
         [HttpPut("profile")]
-        [Authorize(Roles = "User")]
-        [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
-        public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserProfileRequest request)
+		[Authorize]
+		[ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserProfileRequest request)
         {
             try
             {
@@ -240,26 +259,27 @@ namespace FTM.API.Controllers
             }
             catch (UnauthorizedAccessException ex)
             {
-                return Unauthorized(ApiResponse.Fail(ex.Message));
-            }
+				return Unauthorized(new ApiError(ex.Message, HttpStatusCode.Unauthorized));
+			}
             catch (ArgumentException ex)
             {
-                return BadRequest(ApiResponse.Fail(ex.Message));
-            }
+                return BadRequest(new ApiError(ex.Message, HttpStatusCode.BadRequest));
+			}
             catch (InvalidOperationException ex)
             {
-                return BadRequest(ApiResponse.Fail(ex.Message));
-            }
+                return BadRequest(new ApiError(ex.Message, HttpStatusCode.BadRequest));
+			}
             catch (Exception ex)
             {
-                return StatusCode(500, ApiResponse.Fail("Đã xảy ra lỗi khi cập nhật thông tin cá nhân."));
+				return StatusCode(500, new ApiError("Đã xảy ra lỗi khi cập nhật thông tin cá nhân.", HttpStatusCode.InternalServerError));
             }
         }
 
         [HttpGet("provinces")]
-        [Authorize(Roles = "User")]
-        [ProducesResponseType(typeof(List<ProvinceListResponse>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetProvinces()
+		[Authorize]
+		[ProducesResponseType(typeof(List<ProvinceListResponse>), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		public async Task<IActionResult> GetProvinces()
         {
             try
             {
@@ -268,14 +288,15 @@ namespace FTM.API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ApiResponse.Fail("Đã xảy ra lỗi khi lấy danh sách tỉnh/thành phố."));
+				return StatusCode(500, new ApiError("Đã xảy ra lỗi khi lấy danh sách tỉnh/thành phố.", HttpStatusCode.InternalServerError));
             }
         }
 
         [HttpGet("provinces/{provinceId}/wards")]
-        [Authorize(Roles = "User")]
-        [ProducesResponseType(typeof(List<WardListResponse>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetWardsByProvince(Guid provinceId)
+		[Authorize]
+		[ProducesResponseType(typeof(List<WardListResponse>), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		public async Task<IActionResult> GetWardsByProvince(Guid provinceId)
         {
             try
             {
@@ -284,14 +305,15 @@ namespace FTM.API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ApiResponse.Fail("Đã xảy ra lỗi khi lấy danh sách phường/xã."));
-            }
+				return StatusCode(500, new ApiError("Đã xảy ra lỗi khi lấy danh sách phường/xã.", HttpStatusCode.InternalServerError));
+			}
         }
 
         [HttpPut("change-password")]
-        [Authorize(Roles = "User")]
-        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+		[Authorize]
+		[ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
             try
             {
@@ -303,28 +325,29 @@ namespace FTM.API.Controllers
                 var result = await _accountService.ChangePasswordAsync(request);
                 return Ok(new ApiSuccess("Đổi mật khẩu thành công!", result));
             }
-            catch (UnauthorizedAccessException ex)
+			catch (UnauthorizedAccessException ex)
+			{
+				return Unauthorized(new ApiError(ex.Message, HttpStatusCode.Unauthorized));
+			}
+			catch (ArgumentException ex)
+			{
+				return BadRequest(new ApiError(ex.Message, HttpStatusCode.BadRequest));
+			}
+			catch (InvalidOperationException ex)
+			{
+				return BadRequest(new ApiError(ex.Message, HttpStatusCode.BadRequest));
+			}
+			catch (Exception ex)
             {
-                return Unauthorized(ApiResponse.Fail(ex.Message));
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ApiResponse.Fail(ex.Message));
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ApiResponse.Fail(ex.Message));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ApiResponse.Fail("Đã xảy ra lỗi khi đổi mật khẩu."));
+				return StatusCode(500, new ApiError("Đã xảy ra lỗi khi đổi mật khẩu.", HttpStatusCode.InternalServerError));
             }
         }
 
         [HttpPost("upload-avatar")]
-        [Authorize(Roles = "User")]
+        [Authorize]
         [ProducesResponseType(typeof(UpdateAvatarResponse), StatusCodes.Status200OK)]
-        public async Task<IActionResult> UploadAvatar([FromForm] UpdateAvatarRequest request)
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		public async Task<IActionResult> UploadAvatar([FromForm] UpdateAvatarRequest request)
         {
             try
             {
@@ -336,30 +359,30 @@ namespace FTM.API.Controllers
                 var result = await _accountService.UpdateCurrentUserAvatarAsync(request);
                 return Ok(new ApiSuccess("Cập nhật avatar thành công!", result));
             }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ApiResponse.Fail(ex.Message));
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ApiResponse.Fail(ex.Message));
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ApiResponse.Fail(ex.Message));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ApiResponse.Fail("Đã xảy ra lỗi khi cập nhật avatar."));
-            }
+			catch (UnauthorizedAccessException ex)
+			{
+				return Unauthorized(new ApiError(ex.Message, HttpStatusCode.Unauthorized));
+			}
+			catch (ArgumentException ex)
+			{
+				return BadRequest(new ApiError(ex.Message, HttpStatusCode.BadRequest));
+			}
+			catch (InvalidOperationException ex)
+			{
+				return BadRequest(new ApiError(ex.Message, HttpStatusCode.BadRequest));
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, new ApiError("Đã xảy ra lỗi khi cập nhật avatar.", HttpStatusCode.InternalServerError));
+			}
         }
 
-        private void ThrowModelErrors()
+        private IActionResult ThrowModelErrors()
         {
             var message = string.Join(" | ", ModelState.Values
                                                         .SelectMany(v => v.Errors)
                                                         .Select(e => e.ErrorMessage));
-            throw new ArgumentException(message);
+            return BadRequest(new ApiError(message));
         }
     }
 }

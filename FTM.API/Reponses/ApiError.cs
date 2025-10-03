@@ -14,6 +14,11 @@ namespace FTM.API.Reponses
         {
         }
 
+        public ApiError(string message, HttpStatusCode httpStatus)
+            : base(null, true, httpStatus, "Error", true)
+        {
+        }
+
         public ApiError(string message)
             : base(null, true, HttpStatusCode.BadRequest, message, true)
         {
@@ -23,5 +28,7 @@ namespace FTM.API.Reponses
             : base(data, true, HttpStatusCode.BadRequest, message, true)
         {
         }
+
+
     }
 }

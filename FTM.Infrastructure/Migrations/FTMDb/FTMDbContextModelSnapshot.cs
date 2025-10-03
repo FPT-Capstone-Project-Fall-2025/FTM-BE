@@ -132,7 +132,7 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.ToTable("Mprovinces");
                 });
 
-            modelBuilder.Entity("FTM.Domain.Models.Authen.SendOTPTracking", b =>
+            modelBuilder.Entity("FTM.Domain.DTOs.Authen.SendOTPTracking", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()

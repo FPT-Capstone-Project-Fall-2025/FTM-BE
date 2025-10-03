@@ -25,7 +25,7 @@ namespace FTM.Infrastructure.Migrations.FTMDb
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("FTM.Domain.Models.Authen.SendOTPTracking", b =>
+            modelBuilder.Entity("FTM.Domain.DTOs.Authen.SendOTPTracking", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()

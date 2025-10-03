@@ -3,7 +3,7 @@ using FTM.Domain.Constants;
 using FTM.Domain.Entities.Identity;
 using FTM.Domain.Enums;
 using FTM.Domain.Models;
-using FTM.Domain.Models.Authen;
+using FTM.Domain.DTOs.Authen;
 using FTM.Infrastructure.Data;
 using FTM.Infrastructure.Repositories.Interface;
 using Microsoft.AspNetCore.Identity;

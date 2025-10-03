@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace FTM.Domain.Models.Authen
+namespace FTM.Domain.DTOs.Authen
 {
     public class ProvinceListResponse
     {

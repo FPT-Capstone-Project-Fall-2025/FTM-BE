@@ -1,4 +1,4 @@
-﻿using FTM.Domain.Models.Authen;
+﻿using FTM.Domain.DTOs.Authen;
 using FTM.Domain.Entities.Applications;
 using Microsoft.EntityFrameworkCore;
 using System;

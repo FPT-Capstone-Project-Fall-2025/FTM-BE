@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace FTM.Domain.Models.Authen
+namespace FTM.Domain.DTOs.Authen
 {
     public class ChangePasswordRequest
     {
