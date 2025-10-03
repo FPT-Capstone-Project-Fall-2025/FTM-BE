@@ -39,7 +39,7 @@ namespace FTM.API.Controllers
 
             try
             {
-                var result = await _accountService.Login(model.UserName, model.Password);
+                var result = await _accountService.Login(model.Username, model.Password);
                 return Ok(new ApiSuccess(result));
             }
             catch (Exception ex)

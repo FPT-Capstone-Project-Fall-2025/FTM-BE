@@ -75,10 +75,11 @@ namespace FTM.Application.Services
 
             if (!user.EmailConfirmed)
             {
-                return new TokenResult
-                {
-                    AccountStatus = AccountStatus.DoNotConfirmedEmail
-                };
+                throw new ArgumentException("Đăng nhập không thành công. Vui lòng xác nhận email.");
+                //return new TokenResult
+                //{
+                //    AccountStatus = AccountStatus.DoNotConfirmedEmail
+                //};
             }
 
             var result = await _signInManager.PasswordSignInAsync(user.UserName, password, false, lockoutOnFailure: true);
@@ -143,16 +144,16 @@ namespace FTM.Application.Services
 
                 return new TokenResult
                 {
-                    UserId = user.Id,
-                    Username = user.UserName,
-                    Email = user.Email,
-                    Phone = user.PhoneNumber,
+                    //UserId = user.Id,
+                    //Username = user.UserName,
+                    //Email = user.Email,
+                    //Phone = user.PhoneNumber,
                     AccessToken = accessToken,
                     RefreshToken = userRefreshToken.Token,
-                    Roles = roles,
-                    AccountStatus = AccountStatus.Activated,
-                    Picture = user.Picture,
-                    Fullname = user.Name,
+                    //Roles = roles,
+                    //AccountStatus = AccountStatus.Activated,
+                    //Picture = user.Picture,
+                    //Fullname = user.Name,
                 };
             }
 
@@ -192,6 +193,10 @@ namespace FTM.Application.Services
 
                 // Assign default role "User"
                 await _userManager.AddToRoleAsync(user, "User");
+            }
+            else if(user is not null && !user.EmailConfirmed)
+            {
+                user.EmailConfirmed = true;    
             }
 
             var claims = new List<Claim>
@@ -252,16 +257,16 @@ namespace FTM.Application.Services
 
             return new TokenResult
             {
-                UserId = user.Id,
-                Username = user.UserName,
-                Email = user.Email,
-                Phone = user.PhoneNumber,
+                //UserId = user.Id,
+                //Username = user.UserName,
+                //Email = user.Email,
+                //Phone = user.PhoneNumber,
                 AccessToken = accessToken,
                 RefreshToken = userRefreshToken.Token,
-                Roles = roles,
-                AccountStatus = AccountStatus.Activated,
-                Picture = user.Picture,
-                Fullname = user.Name,
+                //Roles = roles,
+                //AccountStatus = AccountStatus.Activated,
+                //Picture = user.Picture,
+                //Fullname = user.Name,
             };
         }
 
@@ -411,7 +416,7 @@ namespace FTM.Application.Services
             return new UserProfileResponse
             {
                 UserId = user.Id,
-                UserName = user.UserName,
+                Username = user.UserName,
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
                 Name = user.Name,
@@ -449,7 +454,7 @@ namespace FTM.Application.Services
         public async Task<UserProfileResponse> GetCurrentUserProfileAsync()
         {
             var currentUserId = _currentUserResolver.UserId;
-            
+
             if (currentUserId == Guid.Empty)
             {
                 throw new UnauthorizedAccessException("Vui lòng đăng nhập để xem thông tin cá nhân.");
@@ -461,7 +466,7 @@ namespace FTM.Application.Services
         public async Task<UserProfileResponse> UpdateCurrentUserProfileAsync(UpdateUserProfileRequest request)
         {
             var currentUserId = _currentUserResolver.UserId;
-            
+
             if (currentUserId == Guid.Empty)
             {
                 throw new UnauthorizedAccessException("Vui lòng đăng nhập để cập nhật thông tin cá nhân.");
@@ -501,25 +506,25 @@ namespace FTM.Application.Services
             // Update user properties
             if (!string.IsNullOrEmpty(request.Name))
                 user.Name = request.Name;
-                
+
             if (!string.IsNullOrEmpty(request.Address))
                 user.Address = request.Address;
-                
+
             if (!string.IsNullOrEmpty(request.Nickname))
                 user.Nickname = request.Nickname;
-                
+
             if (request.Birthday.HasValue)
                 user.Birthday = request.Birthday.Value;
-                
+
             if (!string.IsNullOrEmpty(request.Job))
                 user.Job = request.Job;
-                
+
             if (request.Gender.HasValue)
                 user.Gender = request.Gender.Value;
-                
+
             if (request.ProvinceId.HasValue)
                 user.ProvinceId = request.ProvinceId.Value;
-                
+
             if (request.WardId.HasValue)
                 user.WardId = request.WardId.Value;
 
@@ -539,7 +544,7 @@ namespace FTM.Application.Services
         public async Task<bool> ChangePasswordAsync(ChangePasswordRequest request)
         {
             var currentUserId = _currentUserResolver.UserId;
-            
+
             if (currentUserId == Guid.Empty)
             {
                 throw new UnauthorizedAccessException("Vui lòng đăng nhập để đổi mật khẩu.");
@@ -610,7 +615,7 @@ namespace FTM.Application.Services
         public async Task<UpdateAvatarResponse> UpdateCurrentUserAvatarAsync(UpdateAvatarRequest request)
         {
             var currentUserId = _currentUserResolver.UserId;
-            
+
             if (currentUserId == Guid.Empty)
             {
                 throw new UnauthorizedAccessException("Vui lòng đăng nhập để cập nhật avatar.");
@@ -640,8 +645,8 @@ namespace FTM.Application.Services
 
                 // Upload new avatar
                 var avatarUrl = await _blobStorageService.UploadFileAsync(
-                    request.Avatar, 
-                    "avatars", 
+                    request.Avatar,
+                    "avatars",
                     $"avatar_{currentUserId}_{DateTime.UtcNow:yyyyMMddHHmmss}{Path.GetExtension(request.Avatar.FileName)}"
                 );
 
@@ -694,16 +699,16 @@ namespace FTM.Application.Services
 
             return new TokenResult
             {
-                UserId = applicationUser.Id,
-                Username = applicationUser.UserName,
-                Email = applicationUser.Email,
-                Phone = applicationUser.PhoneNumber,
-                AccountStatus = AccountStatus.Activated,
-                Picture = applicationUser.Picture,
-                Fullname = applicationUser.Name,
+                //UserId = applicationUser.Id,
+                //Username = applicationUser.UserName,
+                //Email = applicationUser.Email,
+                //Phone = applicationUser.PhoneNumber,
+                //AccountStatus = AccountStatus.Activated,
+                //Picture = applicationUser.Picture,
+                //Fullname = applicationUser.Name,
                 AccessToken = newJwtToken,
                 RefreshToken = newRefreshToken,
-                Roles = roles,
+                //Roles = roles,
             };
         }
     }
