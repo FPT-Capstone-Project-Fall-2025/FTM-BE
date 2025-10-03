@@ -14,7 +14,18 @@ builder.Services.AddIdentityAppDbContext();
 builder.Services.AddFTMDbContext();
 builder.Services.AddAuthenConfig();
 builder.Services.AddDI();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddNewtonsoftJson(options =>
+    {
+        // Example: ignore circular references
+        options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+
+        // Example: don’t preserve object references ($id/$ref will not appear)
+        options.SerializerSettings.PreserveReferencesHandling = Newtonsoft.Json.PreserveReferencesHandling.None;
+
+        // Example: use camelCase for property names
+        options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSwaggerDocumentation();
