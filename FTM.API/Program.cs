@@ -14,6 +14,7 @@ builder.Services.AddIdentityAppDbContext();
 builder.Services.AddFTMDbContext();
 builder.Services.AddAuthenConfig();
 builder.Services.AddDI();
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>
     {
