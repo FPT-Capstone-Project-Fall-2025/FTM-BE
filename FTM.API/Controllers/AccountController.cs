@@ -111,7 +111,8 @@ namespace FTM.API.Controllers
 
             if (isConfirmed)
             {
-                return Redirect($"{feURL}/login?message=Xác nhận email thành công.");
+               // return Redirect($"{feURL}/login?message=Xác nhận email thành công.");
+                return Redirect($"{feURL}");
             }
 
             return Redirect($"{feURL}/error?message=Xác nhận email thất bại.");
