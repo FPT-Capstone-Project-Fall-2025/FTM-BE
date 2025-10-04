@@ -91,7 +91,7 @@ namespace FTM.API.Controllers
             try
             {
                 await _accountService.RegisterByEmail(request);
-                return Ok(new ApiSuccess());
+                return Ok(new ApiSuccess("Đăng kí thành công. Vui lòng xác nhận email để đăng nhập."));
             }
             catch (Exception ex)
             {
@@ -100,18 +100,23 @@ namespace FTM.API.Controllers
         }
 
         [HttpGet("confirm-email")]
-		[AllowAnonymous]
-		[ProducesResponseType(StatusCodes.Status200OK)]
-		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ConfirmEmail(Guid userId, string token)
         {
+            string feURL = Environment.GetEnvironmentVariable("FE_URL");
+
             bool isConfirmed = await _accountService.ConfirmEmail(userId, token);
+
             if (isConfirmed)
             {
-                return Ok(new ApiSuccess("Xác nhận email thành công.", new Object()));
+                return Redirect($"{feURL}/login?message=Xác nhận email thành công.");
             }
-            return Ok(new ApiError("Xác nhận email thất bại.", new Object()));
+
+            return Redirect($"{feURL}/error?message=Xác nhận email thất bại.");
         }
+
 
         [HttpPost("Logout")]
         [AllowAnonymous]

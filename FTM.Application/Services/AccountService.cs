@@ -312,9 +312,8 @@ namespace FTM.Application.Services
             // Generate email confirmation token
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
-            string feURL = Environment.GetEnvironmentVariable("FE_URL");
-            var confirmationLink = $"{feURL}/account/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
-
+            string beURL = Environment.GetEnvironmentVariable("BE_URL");
+            var confirmationLink = $"{beURL}/api/account/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
             // Send email
             await _emailSender.SendEmailAsync(
                 request.Email,
