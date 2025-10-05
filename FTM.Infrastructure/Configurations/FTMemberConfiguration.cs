@@ -46,6 +46,10 @@ namespace FTM.Infrastructure.Configurations
                 .HasForeignKey(m => m.BurialWardId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.HasOne(m => m.FT)
+                .WithMany(ft => ft.FTMembers)
+                .HasForeignKey(m => m.FTId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -28,6 +28,8 @@ namespace FTM.Infrastructure.Data
         public virtual DbSet<MEthnic> MEthnics { get; set; }
         public virtual DbSet<MReligion> MReligions { get; set; }
         public virtual DbSet<FTMember> FTMembers { get; set; }
+        public virtual DbSet<FTMemberFile> FTMemberFiles { get; set; }
+        public virtual DbSet<FamilyTree> FamilyTrees { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -35,10 +37,12 @@ namespace FTM.Infrastructure.Data
             builder.ApplyConfiguration(new MReligionConfiguration());
             builder.ApplyConfiguration(new MProvinceConfiguration());
             builder.ApplyConfiguration(new MWardConfiguration());
-            builder.ApplyConfiguration(new FTMemberConfiguration());    
+            builder.ApplyConfiguration(new FTMemberConfiguration());
+            builder.ApplyConfiguration(new FTMemberFileConfiguration());
+            builder.ApplyConfiguration(new FamilyTreeConfiguration());
             base.OnModelCreating(builder);
         }
 
-        
+
     }
 }

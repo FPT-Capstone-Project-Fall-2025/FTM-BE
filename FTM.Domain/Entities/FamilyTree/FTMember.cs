@@ -10,6 +10,7 @@ namespace FTM.Domain.Entities.FamilyTree
     public class FTMember : BaseEntity
     {
         public Guid? UserId { get; set; }
+        public Guid FTId { get; set; }
         public string Fullname { get; set; }
         public int Gender { get; set; }
         public DateTime? Birthday { get; set; }
@@ -45,5 +46,9 @@ namespace FTM.Domain.Entities.FamilyTree
 
         public virtual MWard BurialWard { get; set; }
         public virtual Mprovince BurialProvince { get; set; }
+
+        public virtual FamilyTree FT { get; set; }
+
+        public virtual ICollection<FTMemberFile> FTMemberFiles { get; set; } = new List<FTMemberFile>();
     }
 }
