@@ -27,7 +27,6 @@ namespace FTM.API.Extensions
                 EnableSsl = true
             });
             //Repositories
-            serrvices.AddScoped<ISendOTPTrackingRepository, SendOTPTrackingRepository>();
             serrvices.AddScoped<IUnitOfWork, UnitOfWork>();
         }
     }
