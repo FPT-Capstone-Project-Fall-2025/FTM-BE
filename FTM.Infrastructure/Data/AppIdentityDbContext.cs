@@ -23,6 +23,7 @@ namespace FTM.Infrastructure.Data
         public DbSet<ApplicationUserRefreshToken> UserRefreshTokens { get; set; }
         public DbSet<Mprovince> Mprovinces { get; set; }
         public DbSet<MWard> MWards { get; set; }
+        public DbSet<Biography> Biographies { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -65,6 +66,19 @@ namespace FTM.Infrastructure.Data
             builder.Entity<MWard>()
                 .HasIndex(w => w.Code)
                 .IsUnique();
+
+            // Configure Biography
+            builder.Entity<Biography>()
+                .HasKey(b => b.Id);
+
+            builder.Entity<Biography>()
+                .HasOne(b => b.User)
+                .WithMany()
+                .HasForeignKey(b => b.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Biography>()
+                .HasIndex(b => new { b.UserId, b.Type });
 
             // Configure ApplicationUser relationships - will add these after seeding data
             // builder.Entity<ApplicationUser>()
