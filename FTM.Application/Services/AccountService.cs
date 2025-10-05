@@ -594,8 +594,23 @@ namespace FTM.Application.Services
 
         public async Task<List<WardListResponse>> GetWardsByProvinceAsync(Guid provinceId)
         {
+            var province = await _context.Mprovinces
+                .Where(p => p.Id == provinceId && p.IsDeleted != true)
+                .FirstOrDefaultAsync();
+
+            if (province == null)
+            {
+                return new List<WardListResponse>();
+            }
+
+           
             var wards = await _context.MWards
-                .Where(w => w.IsDeleted != true && w.Path != null && w.Path.Contains(provinceId.ToString()))
+                .Where(w => w.IsDeleted != true && 
+                           w.Path != null && 
+                           (w.Path.Contains(province.Name) || 
+                            w.Path.Contains(province.NameWithType) ||
+                            w.PathWithType != null && w.PathWithType.Contains(province.Name) ||
+                            w.PathWithType != null && w.PathWithType.Contains(province.NameWithType)))
                 .OrderBy(w => w.Name)
                 .Select(w => new WardListResponse
                 {
