@@ -10,6 +10,7 @@ COPY FTM.API/*.csproj ./FTM.API/
 COPY FTM.Application/*.csproj ./FTM.Application/
 COPY FTM.Infrastructure/*.csproj ./FTM.Infrastructure/
 COPY FTM.Domain/*.csproj ./FTM.Domain/
+COPY FTM.Tests/*.csproj ./FTM.Tests/
 COPY Directory.Packages.props .
 
 RUN dotnet restore
@@ -19,6 +20,7 @@ COPY FTM.API/. ./FTM.API/
 COPY FTM.Application/. ./FTM.Application/
 COPY FTM.Infrastructure/. ./FTM.Infrastructure/
 COPY FTM.Domain/. ./FTM.Domain/
+COPY FTM.Tests/. ./FTM.Tests/
 
 WORKDIR /app/FTM.API
 
