@@ -50,5 +50,8 @@ namespace FTM.Domain.Entities.FamilyTree
         public virtual FamilyTree FT { get; set; }
 
         public virtual ICollection<FTMemberFile> FTMemberFiles { get; set; } = new List<FTMemberFile>();
+        public virtual ICollection<FTRelationship> FTRelationshipFrom { get; set; } = new List<FTRelationship>();
+        public virtual ICollection<FTRelationship> FTRelationshipFromPartner { get; set; } = new List<FTRelationship>();
+        public virtual ICollection<FTRelationship> FTRelationshipTo { get; set; } = new List<FTRelationship>();
     }
 }

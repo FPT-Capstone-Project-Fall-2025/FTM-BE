@@ -40,6 +40,7 @@ namespace FTM.Infrastructure.Data
             builder.ApplyConfiguration(new FTMemberConfiguration());
             builder.ApplyConfiguration(new FTMemberFileConfiguration());
             builder.ApplyConfiguration(new FamilyTreeConfiguration());
+            builder.ApplyConfiguration(new FTRelationshipConfiguration());
             base.OnModelCreating(builder);
         }
 

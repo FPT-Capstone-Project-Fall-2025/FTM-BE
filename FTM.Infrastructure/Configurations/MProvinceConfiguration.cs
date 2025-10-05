@@ -13,7 +13,7 @@ namespace FTM.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<Mprovince> builder)
         {
-            builder.ToTable("Mprovinces")
+            builder.ToTable("MProvinces")
                 .HasKey(x => x.Id);
 
             builder.Property(e => e.Code).IsRequired();
