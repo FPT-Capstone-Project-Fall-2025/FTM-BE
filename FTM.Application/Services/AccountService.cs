@@ -430,14 +430,14 @@ namespace FTM.Application.Services
                 PhoneNumberConfirmed = user.PhoneNumberConfirmed,
                 Province = user.MProvince != null ? new ProvinceInfo
                 {
-                    ProvinceId = user.MProvince.Id,
+                    Id = user.MProvince.Id,
                     Code = user.MProvince.Code,
                     Name = user.MProvince.Name,
                     NameWithType = user.MProvince.NameWithType
                 } : null,
                 Ward = user.MWard != null ? new WardInfo
                 {
-                    WardId = user.MWard.Id,
+                    Id = user.MWard.Id,
                     Code = user.MWard.Code,
                     Name = user.MWard.Name,
                     NameWithType = user.MWard.NameWithType,
@@ -505,6 +505,9 @@ namespace FTM.Application.Services
             // Update user properties
             if (!string.IsNullOrEmpty(request.Name))
                 user.Name = request.Name;
+
+            if (!string.IsNullOrEmpty(request.PhoneNumber))
+                user.PhoneNumber = request.PhoneNumber;
 
             if (!string.IsNullOrEmpty(request.Address))
                 user.Address = request.Address;
