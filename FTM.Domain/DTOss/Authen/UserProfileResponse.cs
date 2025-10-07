@@ -37,7 +37,7 @@ namespace FTM.Domain.DTOs.Authen
 
     public class ProvinceInfo
     {
-        public Guid? ProvinceId { get; set; }
+        public Guid? Id { get; set; }
         public string Code { get; set; }
         public string Name { get; set; }
         public string NameWithType { get; set; }
@@ -45,7 +45,7 @@ namespace FTM.Domain.DTOs.Authen
 
     public class WardInfo
     {
-        public Guid? WardId { get; set; }
+        public Guid? Id { get; set; }
         public string Code { get; set; }
         public string Name { get; set; }
         public string NameWithType { get; set; }
