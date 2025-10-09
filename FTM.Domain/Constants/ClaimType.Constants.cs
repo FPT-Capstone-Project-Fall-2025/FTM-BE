@@ -18,6 +18,7 @@ namespace FTM.Domain.Constants
             public const string GPRole = "gpRole";
             public const string EmailConfirmed = "emailConfirmed";
             public const string PhoneNumberConfirmed = "phoneNumberConfirmed";
+            public const string IsGoogleLogin = "isgooglelogin";
             public const string Name = "name";
             public const string FullName = "fullName";
         }

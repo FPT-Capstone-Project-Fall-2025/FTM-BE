@@ -95,8 +95,9 @@ namespace FTM.Application.Services
                     new(ClaimTypes.Name, user.UserName ?? string.Empty),
                     new(CustomJwtClaimTypes.Name, user.UserName ?? string.Empty),
                     new(CustomJwtClaimTypes.EmailConfirmed, user.EmailConfirmed.ToString()),
+                    new(CustomJwtClaimTypes.IsGoogleLogin, user.IsGoogleLogin? "true":"false"),
                     new(CustomJwtClaimTypes.PhoneNumberConfirmed, user.PhoneNumberConfirmed.ToString()),
-                    new(CustomJwtClaimTypes.FullName, user.Name ?? string.Empty),
+                    new(CustomJwtClaimTypes.FullName, user.Name ?? string.Empty)
                 };
 
                 var roles = await _userManager.GetRolesAsync(user);
@@ -183,6 +184,7 @@ namespace FTM.Application.Services
                     Email = email,
                     Name = fullName,
                     EmailConfirmed = true,
+                    IsGoogleLogin = true,
                     PhoneNumberConfirmed = false,
                 };
 
@@ -209,6 +211,7 @@ namespace FTM.Application.Services
                     new(CustomJwtClaimTypes.Name, user.UserName ?? string.Empty),
                     new(CustomJwtClaimTypes.EmailConfirmed, user.EmailConfirmed.ToString()),
                     new(CustomJwtClaimTypes.PhoneNumberConfirmed, user.PhoneNumberConfirmed.ToString()),
+                    new(CustomJwtClaimTypes.EmailConfirmed, user.EmailConfirmed.ToString()),
                     new(CustomJwtClaimTypes.FullName, user.Name ?? string.Empty),
                 };
 
