@@ -46,17 +46,16 @@ namespace FTM.Infrastructure.Data
                     Name = "User",
                     NormalizedName = "USER",
                     ConcurrencyStamp = Guid.NewGuid().ToString()
+                },
+                new ApplicationRole
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "GPOwner",
+                    NormalizedName = "GPOWNER",
+                    ConcurrencyStamp = Guid.NewGuid().ToString()
                 }
             );
 
-
-            // Configure Mprovince
-            builder.Entity<Mprovince>()
-                .HasKey(p => p.Id);
-
-            builder.Entity<Mprovince>()
-                .HasIndex(p => p.Code)
-                .IsUnique();
 
             // Configure MWard
             builder.Entity<MWard>()
@@ -65,6 +64,24 @@ namespace FTM.Infrastructure.Data
             builder.Entity<MWard>()
                 .HasIndex(w => w.Code)
                 .IsUnique();
+
+            // Ignore navigation properties that reference FTMember (not part of Identity context)
+            builder.Entity<MWard>()
+                .Ignore(w => w.FTMembers)
+                .Ignore(w => w.BurialFTMembers);
+
+            // Configure Mprovince  
+            builder.Entity<Mprovince>()
+                .HasKey(p => p.Id);
+
+            builder.Entity<Mprovince>()
+                .HasIndex(p => p.Code)
+                .IsUnique();
+
+            // Ignore navigation properties that reference FTMember (not part of Identity context)
+            builder.Entity<Mprovince>()
+                .Ignore(p => p.FTMembers)
+                .Ignore(p => p.BurialFTMembers);
 
             // Configure ApplicationUser relationships - will add these after seeding data
             // builder.Entity<ApplicationUser>()

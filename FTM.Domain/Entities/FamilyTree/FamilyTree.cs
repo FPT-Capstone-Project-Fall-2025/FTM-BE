@@ -19,7 +19,6 @@ namespace FTM.Domain.Entities.FamilyTree
 
         public bool? IsActive { get; set; } = true;
         public int? GPModeCode { get; set; }
-        public bool IsShareEnable { get; set; }
 
         public virtual ICollection<FTMember> FTMembers { get; set; } = new List<FTMember>();
     }

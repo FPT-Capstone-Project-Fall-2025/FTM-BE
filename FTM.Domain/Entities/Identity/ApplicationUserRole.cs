@@ -17,6 +17,5 @@ namespace FTM.Domain.Entities.Identity
 
         [ForeignKey(nameof(RoleId))]
         public virtual ApplicationRole Role { get; set; }
-
     }
 }

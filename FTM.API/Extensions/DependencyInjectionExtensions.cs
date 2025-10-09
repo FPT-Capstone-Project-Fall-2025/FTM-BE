@@ -17,6 +17,17 @@ namespace FTM.API.Extensions
             //Services
             serrvices.AddScoped<ITokenProvider, TokenProvider>();
             serrvices.AddScoped<IAccountService, AccountService>();
+            serrvices.AddScoped<IFamilyTreeService>(provider => 
+                new FamilyTreeService(
+                    provider.GetService<FTMDbContext>()!,
+                    provider.GetService<AppIdentityDbContext>()!,
+                    provider.GetService<ICurrentUserResolver>()!,
+                    provider.GetService<IUnitOfWork>()!,
+                    provider.GetService<IUserRepository>()!,
+                    provider.GetService<IRoleRepository>()!,
+                    provider.GetService<UserManager<ApplicationUser>>()!,
+                    provider.GetService<RoleManager<ApplicationRole>>()!
+                ));
             serrvices.AddScoped<ICurrentUserResolver, CurrentUserResolver>();
             serrvices.AddTransient<IEmailSender, EmailSender>();
             serrvices.AddTransient<IBlobStorageService, BlobStorageService>();
@@ -28,6 +39,8 @@ namespace FTM.API.Extensions
             });
             //Repositories
             serrvices.AddScoped<IUnitOfWork, UnitOfWork>();
+            serrvices.AddScoped<IUserRepository, UserRepository>();
+            serrvices.AddScoped<IRoleRepository, RoleRepository>();
         }
     }
 }
