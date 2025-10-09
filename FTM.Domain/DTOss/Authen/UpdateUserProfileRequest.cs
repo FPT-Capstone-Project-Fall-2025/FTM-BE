@@ -23,7 +23,7 @@ namespace FTM.Domain.DTOs.Authen
         [StringLength(100, ErrorMessage = "Nghề nghiệp không được vượt quá 100 ký tự")]
         public string? Job { get; set; }
 
-        [Range(0, 2, ErrorMessage = "Giới tính phải là: 0 (Khác), 1 (Nam), 2 (Nữ)")]
+        [Range(0, 1, ErrorMessage = "Giới tính phải là: 0 (Nam), 1 (Nữ)")]
         public int? Gender { get; set; }
 
         public Guid? ProvinceId { get; set; }
