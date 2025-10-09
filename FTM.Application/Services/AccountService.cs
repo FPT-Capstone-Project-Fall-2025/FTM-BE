@@ -375,7 +375,7 @@ namespace FTM.Application.Services
             code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
 
             string feURL = Environment.GetEnvironmentVariable("FE_URL");
-            var callbackUrl = $"{feURL}/account/forgot-password?userId={user.Id}&&code={code}";
+            var callbackUrl = $"{feURL}/reset-password?userId={user.Id}&&code={code}";
             var body = "<b>Yêu cầu khôi phục lại mật khẩu</b></br><p>Chào <b>{0}!</b></p></br><p>Bạn đã yêu cầu khôi phục mật khẩu đăng nhập thành công. Vui lòng bấm vào đường dẫn bên dưới đây để khôi phục lại mật khẩu tài khoản của bạn tại GP Application:</p></br><a href=\"{1}\"> Link khôi phục mật khẩu</a></br><p>Nếu bạn không yêu cầu khôi phục mật khẩu, vui lòng bỏ qua.</p></br><p>Chân thành cảm ơn,</p><p>GP application</p>";
             var mailBody = string.Format(body, user.Name, HtmlEncoder.Default.Encode(callbackUrl));
             await _emailSender.SendEmailAsync(user.Email, "Xác nhận đặt lại mật khẩu", mailBody);
