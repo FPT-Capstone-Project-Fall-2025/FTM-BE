@@ -28,6 +28,8 @@ namespace FTM.Domain.Entities.Identity
         public string? Picture { get; set; }
         public bool IsActive { get; set; }
 
+        public bool IsGoogleLogin { get; set; } = false;
+
         public DateTimeOffset CreatedDate { get; set; } = DateTimeOffset.Now;
 
         public DateTimeOffset UpdatedDate { get; set; } = DateTimeOffset.Now;
