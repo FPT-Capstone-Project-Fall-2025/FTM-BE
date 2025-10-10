@@ -25,6 +25,9 @@ namespace FTM.Infrastructure.Data
         public DbSet<MWard> MWards { get; set; }
         public DbSet<Biography> Biographies { get; set; }
 
+            public DbSet<WorkExperience> WorkExperiences { get; set; }
+    public DbSet<WorkPosition> WorkPositions { get; set; }
+    public DbSet<Education> Educations { get; set; }    
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -79,6 +82,42 @@ namespace FTM.Infrastructure.Data
 
             builder.Entity<Biography>()
                 .HasIndex(b => new { b.UserId, b.Type });
+
+                      // Configure WorkExperience
+            builder.Entity<WorkExperience>()
+                .HasKey(w => w.Id);
+
+            builder.Entity<WorkExperience>()
+                .HasOne(w => w.User)
+                .WithMany()
+                .HasForeignKey(w => w.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<WorkExperience>()
+                .HasIndex(w => new { w.UserId, w.CompanyName });
+
+            // Configure WorkPosition
+            builder.Entity<WorkPosition>()
+                .HasKey(p => p.Id);
+
+            builder.Entity<WorkPosition>()
+                .HasOne(p => p.WorkExperience)
+                .WithMany(w => w.Positions)
+                .HasForeignKey(p => p.WorkExperienceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure Education
+            builder.Entity<Education>()
+                .HasKey(e => e.Id);
+
+            builder.Entity<Education>()
+                .HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Education>()
+                .HasIndex(e => new { e.UserId, e.InstitutionName });
 
             // Configure ApplicationUser relationships - will add these after seeding data
             // builder.Entity<ApplicationUser>()

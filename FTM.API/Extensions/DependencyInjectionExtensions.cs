@@ -33,6 +33,13 @@ namespace FTM.API.Extensions
             serrvices.AddScoped<ISendOTPTrackingRepository, SendOTPTrackingRepository>();
             serrvices.AddScoped<IUnitOfWork, UnitOfWork>();
             serrvices.AddScoped<IBiographyRepository, BiographyRepository>();
+            // Work & Education repositories
+            serrvices.AddScoped<IEducationRepository, EducationRepository>();
+            serrvices.AddScoped<IWorkRepository, WorkRepository>();
+
+            // Application Services
+            serrvices.AddScoped<IEducationService, EducationService>();
+            serrvices.AddScoped<IWorkService, WorkService>();
         }
     }
 }
