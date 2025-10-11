@@ -43,7 +43,16 @@ namespace FTM.Domain.Models.Applications
         public List<CreateWorkPositionRequest>? Positions { get; set; }
     }
 
-    public class UpdateWorkRequest : CreateWorkRequest { }
+    public class UpdateWorkRequest
+    {
+        public string CompanyName { get; set; } = null!;
+        public string? Description { get; set; }
+        public string? Location { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public bool IsCurrent { get; set; }
+        public List<UpdateWorkPositionRequest>? Positions { get; set; }
+    }
 
     public class WorkResponse
     {
@@ -61,6 +70,15 @@ namespace FTM.Domain.Models.Applications
 
     public class CreateWorkPositionRequest
     {
+        public string Title { get; set; } = null!;
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public string? Description { get; set; }
+    }
+
+    public class UpdateWorkPositionRequest
+    {
+        public Guid? Id { get; set; } // Optional: null = new position, has value = update existing
         public string Title { get; set; } = null!;
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

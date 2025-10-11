@@ -57,5 +57,28 @@ namespace FTM.Infrastructure.Repositories
         {
             return await _context.WorkExperiences.AnyAsync(w => w.Id == workId && w.UserId == userId);
         }
+
+        public async Task<WorkPosition> AddPositionAsync(WorkPosition position)
+        {
+            _context.WorkPositions.Add(position);
+            await _context.SaveChangesAsync();
+            return position;
+        }
+
+        public async Task<WorkPosition> UpdatePositionAsync(WorkPosition position)
+        {
+            _context.WorkPositions.Update(position);
+            await _context.SaveChangesAsync();
+            return position;
+        }
+
+        public async Task<bool> DeletePositionAsync(Guid positionId)
+        {
+            var position = await _context.WorkPositions.FindAsync(positionId);
+            if (position == null) return false;
+            _context.WorkPositions.Remove(position);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

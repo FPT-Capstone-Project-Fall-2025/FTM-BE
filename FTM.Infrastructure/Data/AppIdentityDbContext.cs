@@ -32,9 +32,9 @@ namespace FTM.Infrastructure.Data
         {
             base.OnModelCreating(builder);
 
-            // Seed Roles
-            var adminRoleId = Guid.NewGuid();
-            var userRoleId = Guid.NewGuid();
+            // Seed Roles - Use fixed GUIDs to avoid recreating roles on each migration
+            var adminRoleId = new Guid("afb13cf0-7c8f-497d-9688-3d3b40f8f624");
+            var userRoleId = new Guid("07ee47d3-1b90-438c-be49-ad7d07cef604");
 
             builder.Entity<ApplicationRole>().HasData(
                 new ApplicationRole
@@ -42,14 +42,14 @@ namespace FTM.Infrastructure.Data
                     Id = adminRoleId,
                     Name = "Admin",
                     NormalizedName = "ADMIN",
-                    ConcurrencyStamp = Guid.NewGuid().ToString()
+                    ConcurrencyStamp = "ab15fb30-bb52-41aa-98a1-2e094f233271"
                 },
                 new ApplicationRole
                 {
                     Id = userRoleId,
                     Name = "User",
                     NormalizedName = "USER",
-                    ConcurrencyStamp = Guid.NewGuid().ToString()
+                    ConcurrencyStamp = "901f6f42-3c4b-4649-8ce0-48b495ef36b9"
                 }
             );
 

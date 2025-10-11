@@ -136,6 +136,7 @@ namespace FTM.Application.Services
             var existing = await _workRepository.GetWorkByIdAsync(workId);
             if (existing == null || existing.UserId != userId) return null;
 
+            // Update work experience basic info
             existing.CompanyName = request.CompanyName;
             existing.Description = request.Description;
             existing.Location = request.Location;
@@ -143,21 +144,71 @@ namespace FTM.Application.Services
             existing.EndDate = request.EndDate;
             existing.IsCurrent = request.IsCurrent;
 
-            // replace positions simplistically
-            existing.Positions = request.Positions?.Select(p => new WorkPosition
-            {
-                WorkExperienceId = existing.Id,
-                Title = p.Title,
-                StartDate = p.StartDate,
-                EndDate = p.EndDate,
-                Description = p.Description
-            }).ToList() ?? new List<WorkPosition>();
+            // Smart position management
+            var existingPositions = existing.Positions ?? new List<WorkPosition>();
+            var requestPositions = request.Positions ?? new List<UpdateWorkPositionRequest>();
 
-            var updated = await _workRepository.UpdateWorkAsync(existing);
+            // Get IDs from request
+            var requestPositionIds = requestPositions
+                .Where(p => p.Id.HasValue)
+                .Select(p => p.Id!.Value)
+                .ToHashSet();
+
+            var existingPositionIds = existingPositions.Select(p => p.Id).ToHashSet();
+
+            // 1. DELETE: Positions that exist in DB but not in request
+            var positionsToDelete = existingPositions
+                .Where(p => !requestPositionIds.Contains(p.Id))
+                .ToList();
+
+            foreach (var position in positionsToDelete)
+            {
+                await _workRepository.DeletePositionAsync(position.Id);
+            }
+
+            // 2. UPDATE or ADD positions from request
+            foreach (var reqPosition in requestPositions)
+            {
+                if (reqPosition.Id.HasValue && existingPositionIds.Contains(reqPosition.Id.Value))
+                {
+                    // UPDATE existing position
+                    var existingPosition = existingPositions.First(p => p.Id == reqPosition.Id.Value);
+                    
+                    // Check if there are any changes
+                    if (existingPosition.Title != reqPosition.Title ||
+                        existingPosition.StartDate != reqPosition.StartDate ||
+                        existingPosition.EndDate != reqPosition.EndDate ||
+                        existingPosition.Description != reqPosition.Description)
+                    {
+                        existingPosition.Title = reqPosition.Title;
+                        existingPosition.StartDate = reqPosition.StartDate;
+                        existingPosition.EndDate = reqPosition.EndDate;
+                        existingPosition.Description = reqPosition.Description;
+                        await _workRepository.UpdatePositionAsync(existingPosition);
+                    }
+                }
+                else
+                {
+                    // ADD new position (Id is null or not found in existing)
+                    var newPosition = new WorkPosition
+                    {
+                        Id = Guid.NewGuid(),
+                        WorkExperienceId = workId,
+                        Title = reqPosition.Title,
+                        StartDate = reqPosition.StartDate,
+                        EndDate = reqPosition.EndDate,
+                        Description = reqPosition.Description
+                    };
+                    await _workRepository.AddPositionAsync(newPosition);
+                }
+            }
+
+            // Reload work experience with updated positions
+            var updated = await _workRepository.GetWorkByIdAsync(workId);
 
             return new WorkResponse
             {
-                Id = updated.Id,
+                Id = updated!.Id,
                 CompanyName = updated.CompanyName,
                 Description = updated.Description,
                 Location = updated.Location,
@@ -183,6 +234,73 @@ namespace FTM.Application.Services
             var owns = await _workRepository.UserOwnsWorkAsync(userId, workId);
             if (!owns) return false;
             return await _workRepository.DeleteWorkAsync(workId);
+        }
+
+        public async Task<WorkPositionResponse> AddPositionToWorkAsync(Guid workId, CreateWorkPositionRequest request)
+        {
+            var userId = GetCurrentUserId();
+            var work = await _workRepository.GetWorkByIdAsync(workId);
+            if (work == null || work.UserId != userId)
+                throw new UnauthorizedAccessException("Work experience not found or access denied");
+
+            var position = new WorkPosition
+            {
+                Id = Guid.NewGuid(),
+                WorkExperienceId = workId,
+                Title = request.Title,
+                StartDate = request.StartDate,
+                EndDate = request.EndDate,
+                Description = request.Description
+            };
+
+            await _workRepository.AddPositionAsync(position);
+
+            return new WorkPositionResponse
+            {
+                Id = position.Id,
+                Title = position.Title,
+                StartDate = position.StartDate,
+                EndDate = position.EndDate,
+                Description = position.Description
+            };
+        }
+
+        public async Task<WorkPositionResponse?> UpdatePositionAsync(Guid workId, Guid positionId, UpdateWorkPositionRequest request)
+        {
+            var userId = GetCurrentUserId();
+            var work = await _workRepository.GetWorkByIdAsync(workId);
+            if (work == null || work.UserId != userId) return null;
+
+            var position = work.Positions?.FirstOrDefault(p => p.Id == positionId);
+            if (position == null) return null;
+
+            position.Title = request.Title;
+            position.StartDate = request.StartDate;
+            position.EndDate = request.EndDate;
+            position.Description = request.Description;
+
+            await _workRepository.UpdatePositionAsync(position);
+
+            return new WorkPositionResponse
+            {
+                Id = position.Id,
+                Title = position.Title,
+                StartDate = position.StartDate,
+                EndDate = position.EndDate,
+                Description = position.Description
+            };
+        }
+
+        public async Task<bool> DeletePositionAsync(Guid workId, Guid positionId)
+        {
+            var userId = GetCurrentUserId();
+            var work = await _workRepository.GetWorkByIdAsync(workId);
+            if (work == null || work.UserId != userId) return false;
+
+            var position = work.Positions?.FirstOrDefault(p => p.Id == positionId);
+            if (position == null) return false;
+
+            return await _workRepository.DeletePositionAsync(positionId);
         }
     }
 }
