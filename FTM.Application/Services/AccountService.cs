@@ -33,7 +33,6 @@ namespace FTM.Application.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly ICurrentUserResolver _currentUserResolver;
-        private readonly ISendOTPTrackingRepository _sendOTPTrackingRepository;
         private readonly IEmailSender _emailSender;
         private readonly IUnitOfWork _unitOfWork;
         private readonly AppIdentityDbContext _context;
@@ -48,7 +47,6 @@ namespace FTM.Application.Services
             ICurrentUserResolver currentUserResolver,
             IUnitOfWork unitOfWork,
             IEmailSender emailSender,
-            ISendOTPTrackingRepository sendOTPTrackingRepository,
             ITokenProvider tokenProvider,
             AppIdentityDbContext context,
             IBlobStorageService blobStorageService
@@ -60,7 +58,6 @@ namespace FTM.Application.Services
             _tokenProvider = tokenProvider;
             _currentUserResolver = currentUserResolver;
             _emailSender = emailSender;
-            _sendOTPTrackingRepository = sendOTPTrackingRepository;
             _unitOfWork = unitOfWork;
             _context = context;
             _blobStorageService = blobStorageService;

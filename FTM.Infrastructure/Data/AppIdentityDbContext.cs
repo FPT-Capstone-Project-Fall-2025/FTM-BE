@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace FTM.Infrastructure.Data
 {
-    public class AppIdentityDbContext :IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
+    public class AppIdentityDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
     {
         public AppIdentityDbContext()
         {
@@ -25,9 +25,9 @@ namespace FTM.Infrastructure.Data
         public DbSet<MWard> MWards { get; set; }
         public DbSet<Biography> Biographies { get; set; }
 
-            public DbSet<WorkExperience> WorkExperiences { get; set; }
-    public DbSet<WorkPosition> WorkPositions { get; set; }
-    public DbSet<Education> Educations { get; set; }    
+        public DbSet<WorkExperience> WorkExperiences { get; set; }
+        public DbSet<WorkPosition> WorkPositions { get; set; }
+        public DbSet<Education> Educations { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -62,6 +62,13 @@ namespace FTM.Infrastructure.Data
                 .HasIndex(p => p.Code)
                 .IsUnique();
 
+            // Ignore FTMember navigation properties (they belong to FTMDbContext)
+            builder.Entity<Mprovince>()
+                .Ignore(p => p.BurialFTMembers);
+
+            builder.Entity<Mprovince>()
+                .Ignore(p => p.FTMembers);
+
             // Configure MWard
             builder.Entity<MWard>()
                 .HasKey(w => w.Id);
@@ -69,6 +76,13 @@ namespace FTM.Infrastructure.Data
             builder.Entity<MWard>()
                 .HasIndex(w => w.Code)
                 .IsUnique();
+
+            // Ignore FTMember navigation properties (they belong to FTMDbContext)
+            builder.Entity<MWard>()
+                .Ignore(w => w.BurialFTMembers);
+
+            builder.Entity<MWard>()
+                .Ignore(w => w.FTMembers);
 
             // Configure Biography
             builder.Entity<Biography>()
@@ -83,7 +97,7 @@ namespace FTM.Infrastructure.Data
             builder.Entity<Biography>()
                 .HasIndex(b => new { b.UserId, b.Type });
 
-                      // Configure WorkExperience
+            // Configure WorkExperience
             builder.Entity<WorkExperience>()
                 .HasKey(w => w.Id);
 
