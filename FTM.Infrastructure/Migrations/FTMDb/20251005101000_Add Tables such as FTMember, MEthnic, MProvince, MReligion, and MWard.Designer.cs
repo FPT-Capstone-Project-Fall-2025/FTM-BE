@@ -3,6 +3,7 @@ using System;
 using FTM.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FTM.Infrastructure.Migrations.FTMDb
 {
     [DbContext(typeof(FTMDbContext))]
-    partial class FTMDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251005101000_Add Tables such as FTMember, MEthnic, MProvince, MReligion, and MWard")]
+    partial class AddTablessuchasFTMemberMEthnicMProvinceMReligionandMWard
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -213,7 +216,7 @@ namespace FTM.Infrastructure.Migrations.FTMDb
 
                     b.HasKey("Id");
 
-                    b.ToTable("MProvinces", (string)null);
+                    b.ToTable("Mprovinces", (string)null);
                 });
 
             modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.FTMember", b =>
@@ -268,9 +271,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
 
                     b.Property<Guid?>("EthnicId")
                         .IsRequired()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("FTId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Fullname")
@@ -346,8 +346,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
 
                     b.HasIndex("EthnicId");
 
-                    b.HasIndex("FTId");
-
                     b.HasIndex("ProvinceId");
 
                     b.HasIndex("ReligionId");
@@ -355,185 +353,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.HasIndex("WardId");
 
                     b.ToTable("FTMembers", (string)null);
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.FTMemberFile", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("FTMemberId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("FilePath")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("FileType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool?>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("LastModifiedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("LastModifiedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Thumbnail")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("UploadedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset?>("UploadedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FTMemberId");
-
-                    b.ToTable("FTMemberFiles", (string)null);
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.FTRelationship", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("CategoryCode")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("FromFTMemberId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("FromFTMemberPartnerId")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool?>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("LastModifiedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("LastModifiedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ToFTMemberId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FromFTMemberId");
-
-                    b.HasIndex("FromFTMemberPartnerId");
-
-                    b.HasIndex("ToFTMemberId");
-
-                    b.ToTable("FTRelationships", (string)null);
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.FamilyTree", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int?>("GPModeCode")
-                        .HasColumnType("integer");
-
-                    b.Property<bool?>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("LastModifiedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("LastModifiedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Owner")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Picture")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("FamilyTrees", (string)null);
                 });
 
             modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.FTMember", b =>
@@ -554,12 +373,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                         .WithMany("FTMembers")
                         .HasForeignKey("EthnicId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FamilyTree", "FT")
-                        .WithMany("FTMembers")
-                        .HasForeignKey("FTId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("FTM.Domain.Entities.Applications.Mprovince", "Province")
@@ -586,51 +399,11 @@ namespace FTM.Infrastructure.Migrations.FTMDb
 
                     b.Navigation("Ethnic");
 
-                    b.Navigation("FT");
-
                     b.Navigation("Province");
 
                     b.Navigation("Religion");
 
                     b.Navigation("Ward");
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.FTMemberFile", b =>
-                {
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "FTMember")
-                        .WithMany("FTMemberFiles")
-                        .HasForeignKey("FTMemberId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("FTMember");
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.FTRelationship", b =>
-                {
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "FromFTMember")
-                        .WithMany("FTRelationshipFrom")
-                        .HasForeignKey("FromFTMemberId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "FromFTMemberPartner")
-                        .WithMany("FTRelationshipFromPartner")
-                        .HasForeignKey("FromFTMemberPartnerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "ToFTMember")
-                        .WithMany("FTRelationshipTo")
-                        .HasForeignKey("ToFTMemberId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("FromFTMember");
-
-                    b.Navigation("FromFTMemberPartner");
-
-                    b.Navigation("ToFTMember");
                 });
 
             modelBuilder.Entity("FTM.Domain.Entities.Applications.MEthnic", b =>
@@ -654,22 +427,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                 {
                     b.Navigation("BurialFTMembers");
 
-                    b.Navigation("FTMembers");
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.FTMember", b =>
-                {
-                    b.Navigation("FTMemberFiles");
-
-                    b.Navigation("FTRelationshipFrom");
-
-                    b.Navigation("FTRelationshipFromPartner");
-
-                    b.Navigation("FTRelationshipTo");
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.FamilyTree", b =>
-                {
                     b.Navigation("FTMembers");
                 });
 #pragma warning restore 612, 618
