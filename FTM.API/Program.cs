@@ -26,6 +26,9 @@ builder.Services.AddControllers()
 
         // Example: use camelCase for property names
         options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
+
+        //Example: To make your API send and receive enum names like "View", "Edit", "Delete"
+        options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
     });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

@@ -3,6 +3,7 @@ using System;
 using FTM.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FTM.Infrastructure.Migrations.FTMDb
 {
     [DbContext(typeof(FTMDbContext))]
-    partial class FTMDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251013091005_AddFTMRoleFieldForFTMember")]
+    partial class AddFTMRoleFieldForFTMember
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -589,9 +592,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.Property<string>("Owner")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<Guid>("OwnerId")
-                        .HasColumnType("uuid");
 
                     b.Property<string>("Picture")
                         .IsRequired()

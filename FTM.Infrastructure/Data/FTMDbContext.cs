@@ -42,6 +42,7 @@ namespace FTM.Infrastructure.Data
             builder.ApplyConfiguration(new FTMemberFileConfiguration());
             builder.ApplyConfiguration(new FamilyTreeConfiguration());
             builder.ApplyConfiguration(new FTRelationshipConfiguration());
+            builder.ApplyConfiguration(new FTAuthorizationConfiguration());
             base.OnModelCreating(builder);
         }
 

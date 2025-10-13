@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace FTM.Domain.Enums
 {
-    public enum FTM_ROLE
+    public enum FTMRole
     {
-        Admin = 1,
-        User = 2
+        FTMember = 1,
+        FTGuest = 2
     }
 }

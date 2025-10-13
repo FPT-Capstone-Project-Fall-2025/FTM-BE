@@ -10,7 +10,7 @@ namespace FTM.Domain.Entities.FamilyTree
     public class FamilyTree : BaseEntity
     {
         public string Name { get; set; }
-
+        public Guid OwnerId { get; set; }
         public string Owner { get; set; }
 
         public string Description { get; set; }
@@ -21,5 +21,6 @@ namespace FTM.Domain.Entities.FamilyTree
         public int? GPModeCode { get; set; }
 
         public virtual ICollection<FTMember> FTMembers { get; set; } = new List<FTMember>();
+        public virtual ICollection<FTAuthorization> FTAuthorizations { get; set; } = new List<FTAuthorization>();
     }
 }

@@ -11,13 +11,14 @@ namespace FTM.Domain.DTOs.FamilyTree
         public string LastModifiedBy { get; set; } = string.Empty;
         public DateTimeOffset LastModifiedOn { get; set; }
         public string Name { get; set; } = string.Empty;
+        public Guid OwnerId { get; set; }
         public string Owner { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string? Picture { get; set; }
         public bool IsActive { get; set; }
         public int? GPModeCode { get; set; }
         public int NumberOfMember { get; set; }
-        public List<string> Roles { get; set; } = new List<string>();
+        //public List<string> Roles { get; set; } = new List<string>();
         public bool IsNeedConfirmAcceptInvited { get; set; }
     }
 }

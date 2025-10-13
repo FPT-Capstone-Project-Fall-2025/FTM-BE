@@ -1,7 +1,7 @@
 using FTM.Application.IServices;
 using FTM.Domain.Constants;
 using FTM.Domain.DTOs.FamilyTree;
-using FTM.Domain.DTOss.FamilyTree;
+using FTM.Domain.Entities.FamilyTree;
 using FTM.Domain.Entities.Identity;
 using FTM.Infrastructure.Data;
 using FTM.Infrastructure.Repositories.Interface;
@@ -11,6 +11,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using XAct.Users;
+using static FTM.Domain.Constants.Constants;
 
 namespace FTM.Application.Services
 {
@@ -67,11 +69,12 @@ namespace FTM.Application.Services
                     throw new UnauthorizedAccessException("Đối tượng có thể truy cập và xem cây gia phả không hợp lệ.");
                 }
 
-                var familyTree = new Domain.Entities.FamilyTree.FamilyTree
+                var familyTree = new FamilyTree
                 {
                     Id = Guid.NewGuid(),
                     Name = request.Name,
                     Owner = request.Owner ?? _currentUserResolver.Name,
+                    OwnerId =  _currentUserResolver.UserId,
                     Description = request.Description,
                     Picture = request.Picture,
                     GPModeCode = request.GPModeCode,
@@ -89,27 +92,27 @@ namespace FTM.Application.Services
                 // Complete the unit of work for FamilyTree creation
                 await _unitOfWork.CompleteAsync();
 
-                // Simplified: Just assign GPOwner role to user if not already assigned
-                var currentUser = await _userManager.FindByIdAsync(_currentUserResolver.UserId.ToString());
-                if (currentUser != null)
-                {
-                    // Ensure GPOwner role exists
-                    var roleExists = await _roleManager.RoleExistsAsync(Roles.GPOwner);
-                    if (!roleExists)
-                    {
-                        await _roleManager.CreateAsync(new ApplicationRole
-                        {
-                            Name = Roles.GPOwner,
-                            NormalizedName = Roles.GPOwner.ToUpper()
-                        });
-                    }
+                //// Simplified: Just assign GPOwner role to user if not already assigned
+                //var currentUser = await _userManager.FindByIdAsync(_currentUserResolver.UserId.ToString());
+                //if (currentUser != null)
+                //{
+                //    // Ensure GPOwner role exists
+                //    var roleExists = await _roleManager.RoleExistsAsync(Roles.GPOwner);
+                //    if (!roleExists)
+                //    {
+                //        await _roleManager.CreateAsync(new ApplicationRole
+                //        {
+                //            Name = Roles.GPOwner,
+                //            NormalizedName = Roles.GPOwner.ToUpper()
+                //        });
+                //    }
 
-                    var userRoles = await _userManager.GetRolesAsync(currentUser);
-                    if (!userRoles.Contains(Roles.GPOwner))
-                    {
-                        await _userManager.AddToRoleAsync(currentUser, Roles.GPOwner);
-                    }
-                }
+                //    var userRoles = await _userManager.GetRolesAsync(currentUser);
+                //    if (!userRoles.Contains(Roles.GPOwner))
+                //    {
+                //        await _userManager.AddToRoleAsync(currentUser, Roles.GPOwner);
+                //    }
+                //}
 
                 return await GetFamilyTreeByIdAsync(familyTree.Id);
             }
@@ -134,13 +137,13 @@ namespace FTM.Application.Services
                 var numberOfMembers = familyTree.FTMembers?.Count(m => m.IsDeleted != true) ?? 0;
 
                 // Get user roles for this family tree (simplified for now)
-                var roles = new List<string>();
-                var currentUser = await _userManager.FindByIdAsync(_currentUserResolver.UserId.ToString());
-                if (currentUser != null)
-                {
-                    var userRoles = await _userManager.GetRolesAsync(currentUser);
-                    roles = userRoles.ToList();
-                }
+                //var roles = new List<string>();
+                //var currentUser = await _userManager.FindByIdAsync(_currentUserResolver.UserId.ToString());
+                //if (currentUser != null)
+                //{
+                //    var userRoles = await _userManager.GetRolesAsync(currentUser);
+                //    roles = userRoles.ToList();
+                //}
 
                 return new FamilyTreeDetailsDto
                 {
@@ -150,13 +153,14 @@ namespace FTM.Application.Services
                     LastModifiedBy = familyTree.LastModifiedBy,
                     LastModifiedOn = familyTree.LastModifiedOn,
                     Name = familyTree.Name,
+                    OwnerId = familyTree.OwnerId,
                     Owner = familyTree.Owner,
                     Description = familyTree.Description,
                     Picture = familyTree.Picture,
                     IsActive = familyTree.IsActive ?? true,
                     GPModeCode = familyTree.GPModeCode,
                     NumberOfMember = numberOfMembers,
-                    Roles = roles,
+                    //Roles = roles,
                     IsNeedConfirmAcceptInvited = false // TODO: Implement invitation system if needed
                 };
             }
@@ -173,8 +177,19 @@ namespace FTM.Application.Services
                 var familyTree = await _context.FamilyTrees
                     .FirstOrDefaultAsync(ft => ft.Id == id && ft.IsDeleted != true);
 
+
                 if (familyTree == null)
                     throw new ArgumentException("Không tìm thấy gia phả");
+
+                if(request.OwnerId != null)
+                {
+                    var user = await _userManager.FindByIdAsync(request.OwnerId.ToString());
+                    if (user is null)
+                    {
+                        throw new ArgumentException("Không tìm thấy người sở hữu");
+                    }
+                }
+                
 
                 // Set default mode if not provided
                 if (request.GPModeCode == null || request.GPModeCode == 0)
@@ -192,6 +207,7 @@ namespace FTM.Application.Services
 
                 // Update properties
                 familyTree.Name = request.Name;
+                familyTree.OwnerId = request.OwnerId ?? familyTree.OwnerId;
                 familyTree.Owner = request.Owner ?? familyTree.Owner;
                 familyTree.Description = request.Description;
                 familyTree.Picture = request.Picture;
@@ -243,6 +259,7 @@ namespace FTM.Application.Services
                     {
                         Id = ft.Id,
                         Name = ft.Name,
+                        OwnerId = ft.OwnerId,
                         Owner = ft.Owner,
                         Description = ft.Description,
                         Picture = ft.Picture,
@@ -275,6 +292,7 @@ namespace FTM.Application.Services
                     {
                         Id = ft.Id,
                         Name = ft.Name,
+                        OwnerId = ft.OwnerId,
                         Owner = ft.Owner,
                         Description = ft.Description,
                         Picture = ft.Picture,

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FTM.Domain.DTOss.FamilyTree
+namespace FTM.Domain.DTOs.FamilyTree
 {
-    public class GPDetailsDto
+    public class FTDetailsDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;

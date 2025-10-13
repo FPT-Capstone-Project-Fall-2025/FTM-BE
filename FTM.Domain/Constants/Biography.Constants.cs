@@ -1,8 +1,11 @@
 namespace FTM.Domain.Constants
 {
-    public static class BiographyType
+    public static partial class Constants
     {
-        public const string Description = "Description";
-        public const string Event = "Event";
+        public static class BiographyType
+        {
+            public const string Description = "Description";
+            public const string Event = "Event";
+        }
     }
 }

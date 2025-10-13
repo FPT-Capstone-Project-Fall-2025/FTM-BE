@@ -15,6 +15,10 @@ namespace FTM.Infrastructure.Configurations
         {
             builder.ToTable("FamilyTrees")
                 .HasKey(x => x.Id);
+
+            builder.Property(x => x.Name).IsRequired();
+            builder.Property(x => x.Owner).IsRequired();
+            builder.Property(x => x.OwnerId).IsRequired();
         }
     }
 }

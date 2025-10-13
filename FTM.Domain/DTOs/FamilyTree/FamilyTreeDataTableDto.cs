@@ -6,6 +6,7 @@ namespace FTM.Domain.DTOs.FamilyTree
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+        public Guid OwnerId { get; set; }
         public string Owner { get; set; }
         public string Description { get; set; }
         public string Picture { get; set; }

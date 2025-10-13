@@ -1,4 +1,5 @@
 ﻿using FTM.Domain.Entities.Applications;
+using FTM.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,7 @@ namespace FTM.Domain.Entities.FamilyTree
     {
         public Guid? UserId { get; set; }
         public Guid FTId { get; set; }
+        public FTMRole FTRole { get; set; }
         public string Fullname { get; set; }
         public int Gender { get; set; }
         public DateTime? Birthday { get; set; }
@@ -53,5 +55,6 @@ namespace FTM.Domain.Entities.FamilyTree
         public virtual ICollection<FTRelationship> FTRelationshipFrom { get; set; } = new List<FTRelationship>();
         public virtual ICollection<FTRelationship> FTRelationshipFromPartner { get; set; } = new List<FTRelationship>();
         public virtual ICollection<FTRelationship> FTRelationshipTo { get; set; } = new List<FTRelationship>();
+        public virtual ICollection<FTAuthorization> FTAuthorizations { get; set; } = new List<FTAuthorization>();
     }
 }

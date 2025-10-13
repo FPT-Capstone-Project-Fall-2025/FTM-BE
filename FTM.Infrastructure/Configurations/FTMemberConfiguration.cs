@@ -16,6 +16,10 @@ namespace FTM.Infrastructure.Configurations
             builder.ToTable("FTMembers")
                   .HasKey(m => m.Id);
 
+            builder.Property(m => m.FTRole)
+                .HasConversion<string>()
+                .IsRequired();
+
             builder.HasOne(m => m.Ethnic)
                 .WithMany(e => e.FTMembers)
                 .HasForeignKey(m => m.EthnicId)

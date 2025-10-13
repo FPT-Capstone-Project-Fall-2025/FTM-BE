@@ -3,6 +3,7 @@ using FTM.Domain.Entities.Applications;
 using FTM.Infrastructure.Data;
 using FTM.Infrastructure.Repositories.IRepositories;
 using Microsoft.EntityFrameworkCore;
+using static FTM.Domain.Constants.Constants;
 
 namespace FTM.Infrastructure.Repositories
 {
