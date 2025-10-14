@@ -2,6 +2,7 @@
 using FTM.Domain.Entities.Applications;
 using FTM.Domain.Entities.FamilyTree;
 using FTM.Domain.Entities.Identity;
+using FTM.Domain.Entities.Posts;
 using FTM.Infrastructure.Configurations;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -31,6 +32,12 @@ namespace FTM.Infrastructure.Data
         public virtual DbSet<FTMemberFile> FTMemberFiles { get; set; }
         public virtual DbSet<FamilyTree> FamilyTrees { get; set; }
         public virtual DbSet<FTRelationship> FTRelationships { get; set; }
+        
+        // Posts
+        public virtual DbSet<Post> Posts { get; set; }
+        public virtual DbSet<PostComment> PostComments { get; set; }
+        public virtual DbSet<PostReaction> PostReactions { get; set; }
+        public virtual DbSet<PostAttachment> PostAttachments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -43,6 +50,10 @@ namespace FTM.Infrastructure.Data
             builder.ApplyConfiguration(new FamilyTreeConfiguration());
             builder.ApplyConfiguration(new FTRelationshipConfiguration());
             builder.ApplyConfiguration(new FTAuthorizationConfiguration());
+            builder.ApplyConfiguration(new PostConfiguration());
+            builder.ApplyConfiguration(new PostCommentConfiguration());
+            builder.ApplyConfiguration(new PostReactionConfiguration());
+            builder.ApplyConfiguration(new PostAttachmentConfiguration());
             base.OnModelCreating(builder);
         }
 

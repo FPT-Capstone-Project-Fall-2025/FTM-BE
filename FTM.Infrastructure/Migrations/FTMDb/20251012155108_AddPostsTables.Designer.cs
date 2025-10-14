@@ -3,6 +3,7 @@ using System;
 using FTM.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FTM.Infrastructure.Migrations.FTMDb
 {
     [DbContext(typeof(FTMDbContext))]
-    partial class FTMDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251012155108_AddPostsTables")]
+    partial class AddPostsTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -216,65 +219,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.ToTable("MProvinces", (string)null);
                 });
 
-            modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.FTAuthorization", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("FTId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("FTMemberId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("FeatureCode")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("LastModifiedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("LastModifiedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("MethodCode")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FTId");
-
-                    b.HasIndex("FTMemberId");
-
-                    b.ToTable("FTAuthorizations", (string)null);
-                });
-
             modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.FTMember", b =>
                 {
                     b.Property<Guid>("Id")
@@ -331,10 +275,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
 
                     b.Property<Guid>("FTId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("FTRole")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("Fullname")
                         .IsRequired()
@@ -590,9 +530,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("OwnerId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Picture")
                         .IsRequired()
                         .HasColumnType("text");
@@ -750,10 +687,16 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("ParentCommentId")
+                        .IsRequired()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("PostId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.HasKey("Id");
 
@@ -797,7 +740,12 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.Property<DateTimeOffset>("LastModifiedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("PostId")
+                    b.Property<Guid?>("PostCommentId")
+                        .IsRequired()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("PostId")
+                        .IsRequired()
                         .HasColumnType("uuid");
 
                     b.Property<int>("ReactionType")
@@ -807,31 +755,19 @@ namespace FTM.Infrastructure.Migrations.FTMDb
 
                     b.HasIndex("GPMemberId");
 
+                    b.HasIndex("PostCommentId");
+
                     b.HasIndex("PostId");
 
+                    b.HasIndex("PostCommentId", "GPMemberId")
+                        .IsUnique()
+                        .HasFilter("[PostCommentId] IS NOT NULL");
+
                     b.HasIndex("PostId", "GPMemberId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[PostId] IS NOT NULL");
 
                     b.ToTable("PostReactions", (string)null);
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.FTAuthorization", b =>
-                {
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FamilyTree", "FamilyTree")
-                        .WithMany("FTAuthorizations")
-                        .HasForeignKey("FTId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "AuthorizedMember")
-                        .WithMany("FTAuthorizations")
-                        .HasForeignKey("FTMemberId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AuthorizedMember");
-
-                    b.Navigation("FamilyTree");
                 });
 
             modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.FTMember", b =>
@@ -988,6 +924,12 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("FTM.Domain.Entities.Posts.PostComment", "PostComment")
+                        .WithMany("PostReactions")
+                        .HasForeignKey("PostCommentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("FTM.Domain.Entities.Posts.Post", "Post")
                         .WithMany("PostReactions")
                         .HasForeignKey("PostId")
@@ -997,6 +939,8 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.Navigation("GPMember");
 
                     b.Navigation("Post");
+
+                    b.Navigation("PostComment");
                 });
 
             modelBuilder.Entity("FTM.Domain.Entities.Applications.MEthnic", b =>
@@ -1025,8 +969,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
 
             modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.FTMember", b =>
                 {
-                    b.Navigation("FTAuthorizations");
-
                     b.Navigation("FTMemberFiles");
 
                     b.Navigation("FTRelationshipFrom");
@@ -1038,8 +980,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
 
             modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.FamilyTree", b =>
                 {
-                    b.Navigation("FTAuthorizations");
-
                     b.Navigation("FTMembers");
                 });
 
@@ -1055,6 +995,8 @@ namespace FTM.Infrastructure.Migrations.FTMDb
             modelBuilder.Entity("FTM.Domain.Entities.Posts.PostComment", b =>
                 {
                     b.Navigation("ChildComments");
+
+                    b.Navigation("PostReactions");
                 });
 #pragma warning restore 612, 618
         }
