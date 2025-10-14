@@ -52,6 +52,12 @@ namespace FTM.API.Extensions
             // Application Services
             serrvices.AddScoped<IEducationService, EducationService>();
             serrvices.AddScoped<IWorkService, WorkService>();
+
+            // Posts System
+            serrvices.AddScoped<IPostRepository, PostRepository>();
+            serrvices.AddScoped<IPostCommentRepository, PostCommentRepository>();
+            serrvices.AddScoped<IPostReactionRepository, PostReactionRepository>();
+            serrvices.AddScoped<IPostService, PostService>();
         }
     }
 }

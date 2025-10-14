@@ -27,23 +27,61 @@ namespace FTM.Application.Services
             if (file == null || file.Length == 0)
                 throw new ArgumentException("File không hợp lệ", nameof(file));
 
-            // Validate file type (only images)
-            var allowedTypes = new[] { "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp" };
+            // Validate file type - Support Images, Videos, Icons, Documents
+            var allowedTypes = new[] 
+            { 
+                // Images
+                "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/bmp", "image/svg+xml",
+                // Videos
+                "video/mp4", "video/mpeg", "video/quicktime", "video/x-msvideo", "video/x-ms-wmv", "video/webm",
+                // Documents
+                "application/pdf", 
+                "application/msword", 
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+                "application/vnd.ms-excel", 
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+                "application/vnd.ms-powerpoint",
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation", // .pptx
+                "text/plain",
+                // Icons
+                "image/x-icon", "image/vnd.microsoft.icon"
+            };
+            
             if (!allowedTypes.Contains(file.ContentType.ToLower()))
-                throw new ArgumentException("Chỉ chấp nhận file ảnh (JPEG, PNG, GIF, WebP)");
+                throw new ArgumentException($"Loại file không được hỗ trợ: {file.ContentType}. Chỉ chấp nhận ảnh, video, document và icon.");
 
-            // Validate file size (max 5MB)
-            if (file.Length > 5 * 1024 * 1024)
-                throw new ArgumentException("Kích thước file không được vượt quá 5MB");
+            // Validate file size based on type
+            long maxFileSize;
+            if (file.ContentType.StartsWith("video/"))
+            {
+                maxFileSize = 100 * 1024 * 1024; // 100MB for videos
+            }
+            else if (file.ContentType.StartsWith("application/"))
+            {
+                maxFileSize = 20 * 1024 * 1024; // 20MB for documents
+            }
+            else
+            {
+                maxFileSize = 10 * 1024 * 1024; // 10MB for images and icons
+            }
 
+            if (file.Length > maxFileSize)
+                throw new ArgumentException($"Kích thước file không được vượt quá {maxFileSize / (1024 * 1024)}MB");
+
+            // Determine subfolder based on file type
+            string subFolder = GetSubFolderByContentType(file.ContentType);
+            
             fileName ??= GenerateUniqueFileName(file.FileName);
+            
+            // Combine subfolder with filename: posts/images/filename.jpg
+            string blobPath = $"{subFolder}/{fileName}";
 
             var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
             
             // Create container if it doesn't exist
             await containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob);
 
-            var blobClient = containerClient.GetBlobClient(fileName);
+            var blobClient = containerClient.GetBlobClient(blobPath);
 
             using var stream = file.OpenReadStream();
             
@@ -94,6 +132,29 @@ namespace FTM.Application.Services
             var uniqueFileName = $"{fileName}_{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid():N}{extension}";
             
             return uniqueFileName;
+        }
+
+        /// <summary>
+        /// Determine subfolder based on content type
+        /// </summary>
+        private string GetSubFolderByContentType(string contentType)
+        {
+            if (contentType.StartsWith("image/"))
+            {
+                // Icons also go to images folder
+                return "images";
+            }
+            else if (contentType.StartsWith("video/"))
+            {
+                return "videos";
+            }
+            else if (contentType.StartsWith("application/") || contentType.StartsWith("text/"))
+            {
+                return "documents";
+            }
+            
+            // Default fallback
+            return "others";
         }
     }
 }
