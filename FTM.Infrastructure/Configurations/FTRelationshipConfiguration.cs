@@ -24,6 +24,7 @@ namespace FTM.Infrastructure.Configurations
             builder.HasOne(r => r.FromFTMemberPartner)
                 .WithMany(m => m.FTRelationshipFromPartner)
                 .HasForeignKey(r => r.FromFTMemberPartnerId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(r => r.ToFTMember)

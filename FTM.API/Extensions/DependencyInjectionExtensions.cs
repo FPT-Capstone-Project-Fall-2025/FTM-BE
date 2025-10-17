@@ -16,7 +16,7 @@ namespace FTM.API.Extensions
     public static class DependencyInjectionExtensions
     {
         public static void AddDI(this IServiceCollection serrvices) {
-            //Services
+            //---------------------------Services----------------------------------------
             serrvices.AddScoped<ITokenProvider, TokenProvider>();
             serrvices.AddScoped<IAccountService, AccountService>();
             serrvices.AddScoped<IFamilyTreeService>(provider => 
@@ -40,7 +40,16 @@ namespace FTM.API.Extensions
                 Credentials = new NetworkCredential(Environment.GetEnvironmentVariable("GMAIL_USERNAME"), Environment.GetEnvironmentVariable("GMAIL_PASSWORD")),
                 EnableSsl = true
             });
-            //Repositories
+            // Application Services
+            serrvices.AddScoped<IEducationService, EducationService>();
+            serrvices.AddScoped<IWorkService, WorkService>();
+            //Family Tree
+            serrvices.AddScoped<IFTMemberService, FTMemberService>();
+            // Auto Mapper
+            serrvices.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+
+            //-----------------Repositories-------------------------
             serrvices.AddScoped<IUnitOfWork, UnitOfWork>();
             serrvices.AddScoped<IUserRepository, UserRepository>();
             serrvices.AddScoped<IRoleRepository, RoleRepository>();
@@ -48,6 +57,10 @@ namespace FTM.API.Extensions
             // Work & Education repositories
             serrvices.AddScoped<IEducationRepository, EducationRepository>();
             serrvices.AddScoped<IWorkRepository, WorkRepository>();
+            //Family Tree
+            serrvices.AddScoped<IFamilyTreeRepository, FamilyTreeRepository>();
+            serrvices.AddScoped<IFTMemberRepository, FTMemberRepository>();
+            serrvices.AddScoped<IFTRelationshipRepository, FTRelationshipRepository>();
 
             // Application Services
             serrvices.AddScoped<IEducationService, EducationService>();
@@ -58,6 +71,8 @@ namespace FTM.API.Extensions
             serrvices.AddScoped<IPostCommentRepository, PostCommentRepository>();
             serrvices.AddScoped<IPostReactionRepository, PostReactionRepository>();
             serrvices.AddScoped<IPostService, PostService>();
+            // Generic 
+            serrvices.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         }
     }
 }

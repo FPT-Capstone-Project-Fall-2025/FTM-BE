@@ -23,31 +23,37 @@ namespace FTM.Infrastructure.Configurations
             builder.HasOne(m => m.Ethnic)
                 .WithMany(e => e.FTMembers)
                 .HasForeignKey(m => m.EthnicId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(m => m.Religion)
                 .WithMany(r => r.FTMembers)
                 .HasForeignKey(m => m.ReligionId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(m => m.Province)
                .WithMany(p => p.FTMembers)
                .HasForeignKey(m => m.ProvinceId)
+               .IsRequired(false)
                .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(m => m.BurialProvince)
                 .WithMany(p => p.BurialFTMembers)
                 .HasForeignKey(m => m.BurialProvinceId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(m => m.Ward)
                .WithMany(w => w.FTMembers)
                .HasForeignKey(m => m.WardId)
+               .IsRequired(false)
                .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(m => m.BurialWard)
                 .WithMany(w => w.BurialFTMembers)
                 .HasForeignKey(m => m.BurialWardId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(m => m.FT)

@@ -3,6 +3,7 @@ using System;
 using FTM.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FTM.Infrastructure.Migrations.FTMDb
 {
     [DbContext(typeof(FTMDbContext))]
-    partial class FTMDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251016131545_MakeFromFTMemberPartnerIdFieldsNullable")]
+    partial class MakeFromFTMemberPartnerIdFieldsNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -574,219 +577,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.ToTable("FamilyTrees", (string)null);
                 });
 
-            modelBuilder.Entity("FTM.Domain.Entities.Posts.Post", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<Guid?>("ApprovedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("GPId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("GPMemberId")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("LastModifiedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("LastModifiedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Status")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedOn");
-
-                    b.HasIndex("GPMemberId");
-
-                    b.HasIndex("Status");
-
-                    b.ToTable("Posts", (string)null);
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.Posts.PostAttachment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Caption")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("FileType")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("FileUrl")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("LastModifiedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("LastModifiedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FileType");
-
-                    b.HasIndex("PostId");
-
-                    b.ToTable("PostAttachments", (string)null);
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.Posts.PostComment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("GPMemberId")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("LastModifiedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("LastModifiedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("ParentCommentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedOn");
-
-                    b.HasIndex("GPMemberId");
-
-                    b.HasIndex("ParentCommentId");
-
-                    b.HasIndex("PostId");
-
-                    b.ToTable("PostComments", (string)null);
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.Posts.PostReaction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("GPMemberId")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("LastModifiedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("LastModifiedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("ReactionType")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GPMemberId");
-
-                    b.HasIndex("PostId");
-
-                    b.HasIndex("PostId", "GPMemberId")
-                        .IsUnique();
-
-                    b.ToTable("PostReactions", (string)null);
-                });
-
             modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.FTAuthorization", b =>
                 {
                     b.HasOne("FTM.Domain.Entities.FamilyTree.FamilyTree", "FamilyTree")
@@ -896,74 +686,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.Navigation("ToFTMember");
                 });
 
-            modelBuilder.Entity("FTM.Domain.Entities.Posts.Post", b =>
-                {
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "GPMember")
-                        .WithMany()
-                        .HasForeignKey("GPMemberId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("GPMember");
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.Posts.PostAttachment", b =>
-                {
-                    b.HasOne("FTM.Domain.Entities.Posts.Post", "Post")
-                        .WithMany("PostAttachments")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Post");
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.Posts.PostComment", b =>
-                {
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "GPMember")
-                        .WithMany()
-                        .HasForeignKey("GPMemberId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("FTM.Domain.Entities.Posts.PostComment", "ParentComment")
-                        .WithMany("ChildComments")
-                        .HasForeignKey("ParentCommentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("FTM.Domain.Entities.Posts.Post", "Post")
-                        .WithMany("PostComments")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("GPMember");
-
-                    b.Navigation("ParentComment");
-
-                    b.Navigation("Post");
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.Posts.PostReaction", b =>
-                {
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "GPMember")
-                        .WithMany()
-                        .HasForeignKey("GPMemberId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("FTM.Domain.Entities.Posts.Post", "Post")
-                        .WithMany("PostReactions")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("GPMember");
-
-                    b.Navigation("Post");
-                });
-
             modelBuilder.Entity("FTM.Domain.Entities.Applications.MEthnic", b =>
                 {
                     b.Navigation("FTMembers");
@@ -1006,20 +728,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.Navigation("FTAuthorizations");
 
                     b.Navigation("FTMembers");
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.Posts.Post", b =>
-                {
-                    b.Navigation("PostAttachments");
-
-                    b.Navigation("PostComments");
-
-                    b.Navigation("PostReactions");
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.Posts.PostComment", b =>
-                {
-                    b.Navigation("ChildComments");
                 });
 #pragma warning restore 612, 618
         }

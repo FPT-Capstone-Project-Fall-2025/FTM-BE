@@ -71,7 +71,7 @@ namespace FTM.Infrastructure.Repositories.Implement
 
             entity.LastModifiedOn = DateTimeOffset.Now;
 
-            entity.LastModifiedBy = _currentUserResolver.Username;
+            entity.LastModifiedBy = _currentUserResolver.Username ?? "FTMSystem";
 
             _context.Entry(entity).State = EntityState.Modified;
         }
@@ -115,8 +115,8 @@ namespace FTM.Infrastructure.Repositories.Implement
 
         private IQueryable<TEntity> ApplySpecification(ISpecification<TEntity> spec)
         {
-            //return SpecificationEvaluator<TEntity>.GetQuery(_context.Set<TEntity>().AsQueryable(), spec);
-            return null;
+            return SpecificationEvaluator<TEntity>.GetQuery(_context.Set<TEntity>().AsQueryable(), spec);
+            //return null;
         }
 
         public void Delete(List<TEntity> entities)

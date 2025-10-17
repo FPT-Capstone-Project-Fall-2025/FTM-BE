@@ -11,7 +11,7 @@ namespace FTM.Domain.Entities.FamilyTree
     {
         public bool? IsActive { get; set; } = true;
         public Guid FromFTMemberId { get; set; }
-        public Guid FromFTMemberPartnerId { get; set; }
+        public Guid? FromFTMemberPartnerId { get; set; }
         public Guid ToFTMemberId { get; set; }
         public int CategoryCode { get; set; }
 

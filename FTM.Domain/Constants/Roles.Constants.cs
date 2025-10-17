@@ -8,11 +8,11 @@ namespace FTM.Domain.Constants
 {
     public static partial class Constants
     {
-        public static class Roles
-        {
-            public const string GPOwner = "GPOwner";
-            public const string GPMember = "GPMember";
-            public const string GPAdmin = "GPAdmin";
-        }
+    public static class Roles
+    {
+        public const string GPOwner = "GPOwner";
+        public const string GPMember = "GPMember";
+        public const string GPAdmin = "GPAdmin";
     }
+}
 }

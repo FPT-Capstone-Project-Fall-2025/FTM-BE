@@ -10,6 +10,7 @@ namespace FTM.Domain.Constants
     {
         public static class Category
         {
+            public const int FT_MEMBER_STATUS_CATEGORY = 4;
             public const int FT_MEMBER_RELATIONSHIP_CATEGORY = 5;
             public const int FT_AUTHORIZATION_METHOD = 6;
             public const int FT_AUTHORIZATION_FEATURE = 7;
