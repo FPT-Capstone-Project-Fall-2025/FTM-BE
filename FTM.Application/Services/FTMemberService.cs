@@ -4,14 +4,18 @@ using FTM.Application.IServices;
 using FTM.Domain.DTOs.FamilyTree;
 using FTM.Domain.Entities.FamilyTree;
 using FTM.Domain.Enums;
+using FTM.Domain.Specification;
+using FTM.Domain.Specification.FTMembers;
 using FTM.Infrastructure.Repositories.Implement;
 using FTM.Infrastructure.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using XAct;
 using static FTM.Domain.Constants.Constants;
 
 namespace FTM.Application.Services
@@ -275,5 +279,46 @@ namespace FTM.Application.Services
             }
         }
 
+        public async Task<FTMemberDetailsDto> GetByUserId(Guid FTId, Guid userId)
+        {
+            PropertyFilter[] propertyFilters = new PropertyFilter[]
+            {
+                new PropertyFilter
+                {
+                    Name = "FTId",
+                    Operation = "EQUAL",
+                    Value = FTId
+                },
+                new PropertyFilter
+                {
+                    Name = "UserId",
+                    Operation = "EQUAL",
+                    Value = userId
+                },
+                new PropertyFilter
+                {
+                    Name = "IsDeleted",
+                    Operation = "EQUAL",
+                    Value = false
+                }
+            };
+
+            var serializedFilters = JsonConvert.SerializeObject(propertyFilters);
+
+            FTMemberSpecParams specParams = new FTMemberSpecParams
+            {
+                PropertyFilters = serializedFilters
+            };
+
+            var spec = new FTMemberSpecification(FTId, specParams);
+            var members = await _fTMemberRepository.ListAsync(spec);
+            
+            if(members.Count() == 0)
+            {
+                throw new ArgumentException("Không tìm thấy thành viên gia phả với UserId này");
+            }
+
+            return _mapper.Map<FTMemberDetailsDto>(members.First());
+        }
     }
 }
