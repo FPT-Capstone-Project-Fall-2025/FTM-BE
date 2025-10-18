@@ -1,6 +1,7 @@
 ﻿using FTM.Domain.Entities.FamilyTree;
 using FTM.Infrastructure.Data;
 using FTM.Infrastructure.Repositories.Interface;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,18 @@ namespace FTM.Infrastructure.Repositories.Implement
         {
             this._context = context;
             this._currentUserResolver = currentUserResolver;
+        }
+
+        public async Task<FTMember?> GetDetaildedById(Guid id)
+        {
+            return await _context.FTMembers.Include(m => m.Ethnic)
+                              .Include(m => m.Religion)
+                              .Include(m => m.Ward)
+                              .Include(m => m.Province)
+                              .Include(m => m.BurialWard)
+                              .Include(m => m.BurialProvince)
+                              .Include(m => m.FTMemberFiles)
+                              .FirstOrDefaultAsync(m =>  m.Id == id);
         }
     }
 }

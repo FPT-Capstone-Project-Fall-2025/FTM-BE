@@ -23,7 +23,7 @@ namespace FTM.API.Controllers
                 return ThrowModelErrors();
             }
 
-            var result = _fTMemberService.Add(ftId, request);
+            var result = await _fTMemberService.Add(ftId, request);
 
             return Ok(result);
         }
