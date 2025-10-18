@@ -9,5 +9,6 @@ namespace FTM.Infrastructure.Repositories.Interface
 {
     public interface IFTMemberRepository : IGenericRepository<FTMember>
     {
+        Task<FTMember?> GetDetaildedById(Guid id);
     }
 }

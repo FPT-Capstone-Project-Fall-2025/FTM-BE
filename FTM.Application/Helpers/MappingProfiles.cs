@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using FTM.Domain.DTOs.FamilyTree;
+using FTM.Domain.Entities.Applications;
 using FTM.Domain.Entities.FamilyTree;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,7 @@ namespace FTM.Application.Helpers
     {
         public MappingProfiles()
         {
-           
+
             CreateMap<UpsertFTMemberRequest, FTMember>()
                 .ForMember(dest => dest.FTMemberFiles, opt => opt.MapFrom(src => src.FTMemberFiles))
                 // Ignore navigation collections that shouldn’t be updated automatically
@@ -22,8 +23,24 @@ namespace FTM.Application.Helpers
                 .ForMember(dest => dest.FTRelationshipTo, opt => opt.Ignore())
                 .ForMember(dest => dest.FTAuthorizations, opt => opt.Ignore());
 
-            CreateMap<FTMemberFileRequest, FTMemberFile>().ReverseMap();
+            CreateMap<FTMember, FTMemberDetailsDto>()
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => !src.IsDeleted))
+                .ForMember(dest => dest.Religion, opt => opt.MapFrom(src => src.Religion))
+                .ForMember(dest => dest.Ethnic, opt => opt.MapFrom(src => src.Ethnic))
+                .ForMember(dest => dest.Province, opt => opt.MapFrom(src => src.Province))
+                .ForMember(dest => dest.Ward, opt => opt.MapFrom(src => src.Ward))
+                .ForMember(dest => dest.BurialProvince, opt => opt.MapFrom(src => src.BurialProvince))
+                .ForMember(dest => dest.BurialWard, opt => opt.MapFrom(src => src.BurialWard))
+                .ForMember(dest => dest.FTMemberFiles, opt => opt.MapFrom(src => src.FTMemberFiles));
 
+
+            CreateMap<FTMemberFileRequest, FTMemberFile>().ReverseMap();
+            CreateMap<MReligionDto, MReligion>().ReverseMap();
+            CreateMap<MEthnicDto, MEthnic>().ReverseMap();
+            CreateMap<MWardDto, MWard>().ReverseMap();
+            CreateMap<MprovinceDto, Mprovince>().ReverseMap();
+            CreateMap<MprovinceDto, Mprovince>().ReverseMap();
+            CreateMap<FTMemberFileDto, FTMemberFile>().ReverseMap();
             CreateMap<UpsertFTRelationshipRequest, FTRelationship>().ReverseMap();
         }
     }

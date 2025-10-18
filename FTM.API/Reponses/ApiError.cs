@@ -15,7 +15,7 @@ namespace FTM.API.Reponses
         }
 
         public ApiError(string message, HttpStatusCode httpStatus)
-            : base(null, true, httpStatus, "Error", true)
+            : base(null, true, httpStatus, message, true)
         {
         }
 

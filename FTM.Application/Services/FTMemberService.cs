@@ -4,14 +4,18 @@ using FTM.Application.IServices;
 using FTM.Domain.DTOs.FamilyTree;
 using FTM.Domain.Entities.FamilyTree;
 using FTM.Domain.Enums;
+using FTM.Domain.Specification;
+using FTM.Domain.Specification.FTMembers;
 using FTM.Infrastructure.Repositories.Implement;
 using FTM.Infrastructure.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using XAct;
 using static FTM.Domain.Constants.Constants;
 
 namespace FTM.Application.Services
@@ -19,14 +23,14 @@ namespace FTM.Application.Services
     public class FTMemberService : IFTMemberService
     {
         private readonly IGenericRepository<FamilyTree> _familyTreeRepository;
-        private readonly IGenericRepository<FTMember> _fTMemberRepository;
+        private readonly IFTMemberRepository _fTMemberRepository;
         private readonly IGenericRepository<FTRelationship> _fTRelationshipRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
         public FTMemberService(
             IGenericRepository<FamilyTree> familyTreeRepository,
-            IGenericRepository<FTMember> FTMemberRepository,
+            IFTMemberRepository FTMemberRepository,
             IGenericRepository<FTRelationship> FTRelationshipRepository,
             IUnitOfWork unitOfWork,
             IMapper mapper)
@@ -39,6 +43,7 @@ namespace FTM.Application.Services
         }
         public async Task<FTMemberDetailsDto> Add(Guid FTId, UpsertFTMemberRequest request)
         {
+            FTMember newFMember = new FTMember();
             var familyTree = await _familyTreeRepository.GetByIdAsync(FTId);
 
             FTMember rootOld = null;
@@ -55,7 +60,7 @@ namespace FTM.Application.Services
             var ftMember = _mapper.Map<FTMember>(request);
             ftMember.FTRole = FTMRole.FTMember;
             // Dummy For member file
-            //ftMember.FTMemberFiles.First().FilePath = "";
+            //ftMember.FTMemberFiles.First().FilePath = "dummyFilePath";
 
             await executionStrategy.ExecuteAsync(
                    async () =>
@@ -90,19 +95,19 @@ namespace FTM.Application.Services
 
                                //----------------Handle MemberFile Entity---------------------
                                //----------------End Handle MemberFile Entity---------------------
-
                                await _unitOfWork.CompleteAsync();
+                               newFMember = await _fTMemberRepository.GetDetaildedById(ftMember.Id);
                                await transaction.CommitAsync();
                            }
                            catch (Exception ex)
                            {
                                await transaction.RollbackAsync();
-                               throw new Exception("Thêm thành viên thất bại");
+                               throw;
                            }
                        }
                    }
                 );
-            return new FTMemberDetailsDto();
+            return _mapper.Map<FTMemberDetailsDto>(newFMember);
         }
 
         private async Task AddChildrenMember(FTMember? rootOld, FTMember ftMember, UpsertFTMemberRequest request)
@@ -274,5 +279,46 @@ namespace FTM.Application.Services
             }
         }
 
+        public async Task<FTMemberDetailsDto> GetByUserId(Guid FTId, Guid userId)
+        {
+            PropertyFilter[] propertyFilters = new PropertyFilter[]
+            {
+                new PropertyFilter
+                {
+                    Name = "FTId",
+                    Operation = "EQUAL",
+                    Value = FTId
+                },
+                new PropertyFilter
+                {
+                    Name = "UserId",
+                    Operation = "EQUAL",
+                    Value = userId
+                },
+                new PropertyFilter
+                {
+                    Name = "IsDeleted",
+                    Operation = "EQUAL",
+                    Value = false
+                }
+            };
+
+            var serializedFilters = JsonConvert.SerializeObject(propertyFilters);
+
+            FTMemberSpecParams specParams = new FTMemberSpecParams
+            {
+                PropertyFilters = serializedFilters
+            };
+
+            var spec = new FTMemberSpecification(FTId, specParams);
+            var members = await _fTMemberRepository.ListAsync(spec);
+            
+            if(members.Count() == 0)
+            {
+                throw new ArgumentException("Không tìm thấy thành viên gia phả với UserId này");
+            }
+
+            return _mapper.Map<FTMemberDetailsDto>(members.First());
+        }
     }
 }

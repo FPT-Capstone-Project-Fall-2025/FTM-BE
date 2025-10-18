@@ -9,6 +9,7 @@ namespace FTM.Application.IServices
 {
     public interface IFTMemberService
     {
+        Task<FTMemberDetailsDto> GetByUserId(Guid FTId, Guid userId);
         Task<FTMemberDetailsDto> Add(Guid FTId, UpsertFTMemberRequest request);
     }
 }

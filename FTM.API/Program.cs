@@ -46,13 +46,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseLoggerMiddleware();
+app.UseGlobalExceptionMiddleware();
 app.UseCors("AllowPorts");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-// <-----------------------Custom Middleware------------------------------------->
-app.UseLoggerMiddleware();
-// <-----------------------End Custom Middleware------------------------------------->
 
 // Map Health Check endpoint
 app.MapHealthChecks("/health");
