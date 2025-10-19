@@ -1,4 +1,5 @@
 using FTM.Domain.Entities.Posts;
+using FTM.Domain.Specification.Posts;
 using FTM.Infrastructure.Data;
 using FTM.Infrastructure.Repositories.Implement;
 using FTM.Infrastructure.Repositories.Interface;
@@ -18,15 +19,42 @@ namespace FTM.Infrastructure.Repositories
         {
         }
 
-        public async Task<IEnumerable<PostComment>> GetCommentsByPostAsync(Guid postId)
+        public async Task<IEnumerable<PostComment>> GetCommentsAsync(CommentSpecParams specParams)
         {
-            return await Context.PostComments
+            var query = Context.PostComments
                 .Include(c => c.GPMember)
                 .Include(c => c.ChildComments)
                     .ThenInclude(cc => cc.GPMember)
-                .Where(c => c.PostId == postId && c.IsDeleted == false && c.ParentCommentId == null)
-                .OrderBy(c => c.CreatedOn)
+                .Where(c => c.IsDeleted == false && c.ParentCommentId == null);
+
+            // Filter by PostId if provided
+            if (specParams.PostId.HasValue)
+            {
+                query = query.Where(c => c.PostId == specParams.PostId.Value);
+            }
+
+            // Apply ordering
+            query = query.OrderBy(c => c.CreatedOn);
+
+            // Apply pagination
+            return await query
+                .Skip(specParams.Skip)
+                .Take(specParams.Take)
                 .ToListAsync();
+        }
+
+        public async Task<int> CountCommentsAsync(CommentSpecParams specParams)
+        {
+            var query = Context.PostComments
+                .Where(c => c.IsDeleted == false && c.ParentCommentId == null);
+
+            // Filter by PostId if provided
+            if (specParams.PostId.HasValue)
+            {
+                query = query.Where(c => c.PostId == specParams.PostId.Value);
+            }
+
+            return await query.CountAsync();
         }
 
         public async Task<IEnumerable<PostComment>> GetCommentsByParentAsync(Guid parentCommentId)
