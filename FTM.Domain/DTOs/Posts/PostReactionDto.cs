@@ -12,5 +12,6 @@ namespace FTM.Domain.DTOs.Posts
         public string AuthorPicture { get; set; }
         public ReactionType ReactionType { get; set; }
         public DateTimeOffset CreatedOn { get; set; }
+        public bool HasReacted { get; set; }
     }
 }

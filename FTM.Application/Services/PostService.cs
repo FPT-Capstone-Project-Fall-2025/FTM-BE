@@ -2,6 +2,7 @@ using FTM.Application.IServices;
 using FTM.Domain.DTOs.Posts;
 using FTM.Domain.Entities.Posts;
 using FTM.Domain.Enums;
+using FTM.Domain.Specification.Posts;
 using FTM.Infrastructure.Data;
 using FTM.Infrastructure.Repositories.IRepositories;
 using FTM.Infrastructure.Repositories.Interface;
@@ -183,9 +184,9 @@ namespace FTM.Application.Services
             return await MapToPostResponseDto(post);
         }
 
-        public async Task<IEnumerable<PostResponseDto>> GetPostsByFamilyTreeAsync(Guid familyTreeId)
+        public async Task<IEnumerable<PostResponseDto>> GetPostsByFamilyTreeAsync(PostSpecParams specParams)
         {
-            var posts = await _postRepository.GetPostsByFamilyTreeAsync(familyTreeId);
+            var posts = await _postRepository.GetPostsAsync(specParams);
             var result = new List<PostResponseDto>();
 
             foreach (var post in posts)
@@ -196,9 +197,14 @@ namespace FTM.Application.Services
             return result;
         }
 
-        public async Task<IEnumerable<PostResponseDto>> GetPostsByMemberAsync(Guid memberId)
+        public async Task<int> CountPostsByFamilyTreeAsync(PostSpecParams specParams)
         {
-            var posts = await _postRepository.GetPostsByMemberAsync(memberId);
+            return await _postRepository.CountPostsAsync(specParams);
+        }
+
+        public async Task<IEnumerable<PostResponseDto>> GetPostsByMemberAsync(PostSpecParams specParams)
+        {
+            var posts = await _postRepository.GetPostsAsync(specParams);
             var result = new List<PostResponseDto>();
 
             foreach (var post in posts)
@@ -207,6 +213,11 @@ namespace FTM.Application.Services
             }
 
             return result;
+        }
+
+        public async Task<int> CountPostsByMemberAsync(PostSpecParams specParams)
+        {
+            return await _postRepository.CountPostsAsync(specParams);
         }
 
         #endregion
@@ -282,10 +293,15 @@ namespace FTM.Application.Services
             return true;
         }
 
-        public async Task<IEnumerable<PostCommentDto>> GetCommentsByPostAsync(Guid postId)
+        public async Task<IEnumerable<PostCommentDto>> GetCommentsByPostAsync(CommentSpecParams specParams)
         {
-            var comments = await _commentRepository.GetCommentsByPostAsync(postId);
+            var comments = await _commentRepository.GetCommentsAsync(specParams);
             return comments.Select(c => MapToPostCommentDto(c)).ToList();
+        }
+
+        public async Task<int> CountCommentsByPostAsync(CommentSpecParams specParams)
+        {
+            return await _commentRepository.CountCommentsAsync(specParams);
         }
 
         public async Task<IEnumerable<PostCommentDto>> GetCommentsByParentAsync(Guid parentCommentId)
@@ -348,10 +364,15 @@ namespace FTM.Application.Services
             return true;
         }
 
-        public async Task<IEnumerable<PostReactionDto>> GetReactionsByPostAsync(Guid postId)
+        public async Task<IEnumerable<PostReactionDto>> GetReactionsByPostAsync(ReactionSpecParams specParams)
         {
-            var reactions = await _reactionRepository.GetReactionsByPostAsync(postId);
+            var reactions = await _reactionRepository.GetReactionsAsync(specParams);
             return reactions.Select(r => MapToPostReactionDto(r)).ToList();
+        }
+
+        public async Task<int> CountReactionsByPostAsync(ReactionSpecParams specParams)
+        {
+            return await _reactionRepository.CountReactionsAsync(specParams);
         }
 
         public async Task<Dictionary<string, int>> GetReactionsSummaryForPostAsync(Guid postId)
@@ -441,7 +462,8 @@ namespace FTM.Application.Services
                 AuthorName = reaction.GPMember?.Fullname ?? "Unknown",
                 AuthorPicture = reaction.GPMember?.Picture ?? "",
                 ReactionType = reaction.ReactionType,
-                CreatedOn = reaction.CreatedOn
+                CreatedOn = reaction.CreatedOn,
+                HasReacted = true // Always true since this reaction exists
             };
         }
 
