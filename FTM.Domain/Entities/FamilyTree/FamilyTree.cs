@@ -15,7 +15,8 @@ namespace FTM.Domain.Entities.FamilyTree
 
         public string Description { get; set; }
 
-        public string Picture { get; set; }
+        public string? FilePath {  get; set; }
+        public int FileType { get; set; } = 1;
 
         public bool? IsActive { get; set; } = true;
         public int? GPModeCode { get; set; }

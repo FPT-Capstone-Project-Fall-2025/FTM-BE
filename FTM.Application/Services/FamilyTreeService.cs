@@ -32,6 +32,7 @@ namespace FTM.Application.Services
         private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly IGenericRepository<FamilyTree> _familyTreeRepository;
         private readonly IMapper _mapper;
+        private readonly IBlobStorageService _blobStorageService;
 
         public FamilyTreeService(
             FTMDbContext context,
@@ -43,7 +44,8 @@ namespace FTM.Application.Services
             IRoleRepository roleRepository,
             IGenericRepository<FamilyTree> familyTreeRepository,
             UserManager<ApplicationUser> userManager,
-            RoleManager<ApplicationRole> roleManager)
+            RoleManager<ApplicationRole> roleManager,
+            IBlobStorageService blobStorageService)
         {
             _context = context;
             _appIdentityDbContext = appIdentityDbContext;
@@ -55,6 +57,7 @@ namespace FTM.Application.Services
             _roleRepository = roleRepository;
             _userManager = userManager;
             _roleManager = roleManager;
+            _blobStorageService = blobStorageService;
         }
 
         public async Task<FamilyTreeDetailsDto> CreateFamilyTreeAsync(UpsertFamilyTreeRequest request)
@@ -76,18 +79,28 @@ namespace FTM.Application.Services
                     request.GPModeCode != FamilyTreeModes.PUBLIC && 
                     request.GPModeCode != FamilyTreeModes.SHARED)
                 {
-                    throw new UnauthorizedAccessException("Đối tượng có thể truy cập và xem cây gia phả không hợp lệ.");
+                    throw new UnauthorizedAccessException("Vui lòng chọn chế độ cho cây gia phả");
                 }
+
+                // Handle File
+                var file = request.File;
+                var filePath = "";
+                if(file != null)
+                {
+                    // Upload to Blob Storage
+                    filePath = await _blobStorageService.UploadFileAsync(file, "familytrees", null);
+                }    
 
                 var familyTree = new FamilyTree
                 {
                     Id = Guid.NewGuid(),
                     Name = request.Name,
-                    Owner = request.Owner ?? _currentUserResolver.Name,
+                    Owner = _currentUserResolver.Name,
                     OwnerId =  _currentUserResolver.UserId,
                     Description = request.Description,
-                    Picture = request.Picture,
                     GPModeCode = request.GPModeCode,
+                    FilePath = filePath,
+                    FileType = 1,
                     IsActive = true,
                     CreatedOn = DateTimeOffset.UtcNow,
                     CreatedBy = _currentUserResolver.Email,
@@ -165,8 +178,8 @@ namespace FTM.Application.Services
                     Name = familyTree.Name,
                     OwnerId = familyTree.OwnerId,
                     Owner = familyTree.Owner,
+                    FilePath = familyTree.FilePath,
                     Description = familyTree.Description,
-                    Picture = familyTree.Picture,
                     IsActive = familyTree.IsActive ?? true,
                     GPModeCode = familyTree.GPModeCode,
                     NumberOfMember = numberOfMembers,
@@ -184,6 +197,7 @@ namespace FTM.Application.Services
         {
             try
             {
+                string newOwner = string.Empty;
                 var familyTree = await _context.FamilyTrees
                     .FirstOrDefaultAsync(ft => ft.Id == id && ft.IsDeleted != true);
 
@@ -198,6 +212,7 @@ namespace FTM.Application.Services
                     {
                         throw new ArgumentException("Không tìm thấy người sở hữu");
                     }
+                    newOwner = user.Name;
                 }
                 
 
@@ -215,15 +230,25 @@ namespace FTM.Application.Services
                     throw new ArgumentException("Đối tượng có thể truy cập và xem cây gia phả không hợp lệ.");
                 }
 
+
+                // Handle File
+                if (request.File != null)
+                {
+                    // Upload to Blob Storage
+                    familyTree.FilePath = await _blobStorageService.UploadFileAsync(request.File, "familytrees", null);
+                }
+
                 // Update properties
-                familyTree.Name = request.Name;
-                familyTree.OwnerId = request.OwnerId ?? familyTree.OwnerId;
-                familyTree.Owner = request.Owner ?? familyTree.Owner;
-                familyTree.Description = request.Description;
-                familyTree.Picture = request.Picture;
-                familyTree.GPModeCode = request.GPModeCode;
+                familyTree.Name = request.Name ?? familyTree.Name;
+                if(request.OwnerId != null)
+                {
+                    familyTree.OwnerId = request.OwnerId.Value;
+                    familyTree.Owner = newOwner;
+                }
+                familyTree.Description = request.Description?? familyTree.Description;
+                familyTree.GPModeCode = request.GPModeCode ?? familyTree.GPModeCode;
                 familyTree.LastModifiedOn = DateTimeOffset.UtcNow;
-                familyTree.LastModifiedBy = _currentUserResolver.Email;
+                familyTree.LastModifiedBy = _currentUserResolver.Username;
 
                 _context.FamilyTrees.Update(familyTree);
                 await _context.SaveChangesAsync();
@@ -282,7 +307,6 @@ namespace FTM.Application.Services
                         OwnerId = ft.OwnerId,
                         Owner = ft.Owner,
                         Description = ft.Description,
-                        Picture = ft.Picture,
                         IsActive = ft.IsActive ?? true,
                         GPModeCode = ft.GPModeCode,
                         CreatedAt = ft.CreatedOn.DateTime,
