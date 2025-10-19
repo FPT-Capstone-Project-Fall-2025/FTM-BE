@@ -14,7 +14,7 @@ namespace FTM.Domain.DTOs.FamilyTree
         public Guid OwnerId { get; set; }
         public string Owner { get; set; } = string.Empty;
         public string? Description { get; set; }
-        public string? Picture { get; set; }
+        public string? FilePath { get; set; }
         public bool IsActive { get; set; }
         public int? GPModeCode { get; set; }
         public int NumberOfMember { get; set; }

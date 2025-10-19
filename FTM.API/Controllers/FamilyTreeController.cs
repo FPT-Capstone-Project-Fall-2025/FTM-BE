@@ -30,7 +30,8 @@ namespace FTM.API.Controllers
         /// <param name="request">Thông tin gia phả</param>
         /// <returns>Chi tiết gia phả vừa tạo</returns>
         [HttpPost("add")]
-        public async Task<IActionResult> Add([FromBody] UpsertFamilyTreeRequest request)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> Add([FromForm] UpsertFamilyTreeRequest request)
         {
             try
             {
@@ -94,7 +95,8 @@ namespace FTM.API.Controllers
         /// <param name="request">Thông tin cập nhật</param>
         /// <returns>Chi tiết gia phả sau khi cập nhật</returns>
         [HttpPost("edit/{id}")]
-        public async Task<IActionResult> Edit(Guid id, [FromBody] UpsertFamilyTreeRequest request)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> Edit(Guid id, [FromForm] UpsertFamilyTreeRequest request)
         {
             try
             {

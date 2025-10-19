@@ -19,7 +19,6 @@ namespace FTM.Infrastructure.Configurations
             builder.Property(x => x.Name).IsRequired();
             builder.Property(x => x.Owner).IsRequired();
             builder.Property(x => x.OwnerId).IsRequired();
-            builder.Property(x => x.Picture).IsRequired(false);
         }
     }
 }
