@@ -42,6 +42,9 @@ namespace FTM.Application.Helpers
             CreateMap<MprovinceDto, Mprovince>().ReverseMap();
             CreateMap<FTMemberFileDto, FTMemberFile>().ReverseMap();
             CreateMap<UpsertFTRelationshipRequest, FTRelationship>().ReverseMap();
+
+            CreateMap<FamilyTree, FamilyTreeDataTableDto>()
+                .ForMember(dest => dest.MemberCount, opt => opt.MapFrom(src => src.FTMembers.Any() ? src.FTMembers.Count : 0));
         }
     }
 }

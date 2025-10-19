@@ -29,19 +29,19 @@ namespace FTM.API.Controllers
             return Ok(new ApiSuccess("Tạo thành viên gia phả thành công", result));
         }
 
+        [HttpGet("{ftid}/get-by-userid")]
+        public async Task<IActionResult> GetDetailedMemberOfFamilyTreeByUserId([FromRoute] Guid ftid, [FromQuery] Guid userId)
+        {
+            var result = await _fTMemberService.GetByUserId(ftid, userId);
+            return Ok(new ApiSuccess("Lấy thông tin của thành viên gia phả thành công", result));
+        }
+
         private IActionResult ThrowModelErrors()
         {
             var message = string.Join(" | ", ModelState.Values
                                                         .SelectMany(v => v.Errors)
                                                         .Select(e => e.ErrorMessage));
             return BadRequest(new ApiError(message));
-        }
-
-        [HttpGet("{ftid}/get-by-userid")]
-        public async Task<IActionResult> GetDetailedMemberOfFamilyTreeByUserId([FromRoute] Guid ftid, [FromQuery] Guid userId)
-        {
-            var result = await _fTMemberService.GetByUserId(ftid, userId);
-            return Ok(new ApiSuccess("Lấy thông tin của thành viên gia phả thành công", result));
         }
 
     }
