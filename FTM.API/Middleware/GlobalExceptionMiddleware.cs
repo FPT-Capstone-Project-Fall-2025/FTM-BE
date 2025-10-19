@@ -57,17 +57,17 @@ namespace FTM.API.Middleware
 
                 case SecurityException:
                     statusCode = HttpStatusCode.Forbidden;
-                    message = "You do not have permission to access this resource.";
+                    message = "Bạn không có quyền truy cập tài nguyên này.";
                     break;
 
                 case DbUpdateConcurrencyException:
                     statusCode = HttpStatusCode.Conflict;
-                    message = "A concurrency conflict occurred while saving data.";
+                    message = "Lỗi xảy ra trong quá trình lưu dữ liệu";
                     break;
 
                 case DbUpdateException:
                     statusCode = HttpStatusCode.BadRequest;
-                    message = "An error occurred while updating the database.";
+                    message = "Lỗi xảy ra trong quá trình cập nhật dữ liệu.";
                     break;
 
                 case TimeoutException:
@@ -76,10 +76,11 @@ namespace FTM.API.Middleware
 
                 case HttpRequestException:
                     statusCode = HttpStatusCode.BadGateway;
-                    message = "An error occurred while calling an external service.";
+                    message = "Lỗi xảy ra khi kết nối với dịch vụ khác.";
                     break;
 
                 default:
+                    message = "Đã xảy ra lỗi hệ thống.";
                     break;
             }
 
