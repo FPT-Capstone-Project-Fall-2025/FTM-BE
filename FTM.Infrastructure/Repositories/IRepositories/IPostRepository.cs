@@ -1,4 +1,5 @@
 using FTM.Domain.Entities.Posts;
+using FTM.Domain.Specification.Posts;
 using FTM.Infrastructure.Repositories.Interface;
 using System;
 using System.Collections.Generic;
@@ -8,8 +9,8 @@ namespace FTM.Infrastructure.Repositories.IRepositories
 {
     public interface IPostRepository : IGenericRepository<Post>
     {
-        Task<IEnumerable<Post>> GetPostsByFamilyTreeAsync(Guid familyTreeId);
-        Task<IEnumerable<Post>> GetPostsByMemberAsync(Guid memberId);
+        Task<IEnumerable<Post>> GetPostsAsync(PostSpecParams specParams);
+        Task<int> CountPostsAsync(PostSpecParams specParams);
         Task<Post> GetPostWithDetailsAsync(Guid postId);
         Task<Post> GetPostWithAttachmentsAsync(Guid postId);
     }

@@ -59,7 +59,7 @@
         "GOOGLE_CLIENTID": "529464543864-hpkkhuu30kgjs4rnov33nrg3uo8ojgdf.apps.googleusercontent.com",
         "GOOGLE_CLIENTSECRET": "",
         "GOOGLE_CLIENTINFOURL": "https://www.googleapis.com/oauth2/v1/userinfo",
-        "BlobStorage": ""
+        "BLOBSTORAGE": ""
       },
       "API-dev": {
         "commandName": "Project",

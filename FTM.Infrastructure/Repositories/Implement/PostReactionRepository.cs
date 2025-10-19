@@ -1,5 +1,6 @@
 using FTM.Domain.Entities.Posts;
 using FTM.Domain.Enums;
+using FTM.Domain.Specification.Posts;
 using FTM.Infrastructure.Data;
 using FTM.Infrastructure.Repositories.Implement;
 using FTM.Infrastructure.Repositories.Interface;
@@ -19,12 +20,39 @@ namespace FTM.Infrastructure.Repositories
         {
         }
 
-        public async Task<IEnumerable<PostReaction>> GetReactionsByPostAsync(Guid postId)
+        public async Task<IEnumerable<PostReaction>> GetReactionsAsync(ReactionSpecParams specParams)
         {
-            return await Context.PostReactions
+            var query = Context.PostReactions
                 .Include(r => r.GPMember)
-                .Where(r => r.PostId == postId && r.IsDeleted == false)
+                .Where(r => r.IsDeleted == false);
+
+            // Filter by PostId if provided
+            if (specParams.PostId.HasValue)
+            {
+                query = query.Where(r => r.PostId == specParams.PostId.Value);
+            }
+
+            // Apply ordering
+            query = query.OrderByDescending(r => r.CreatedOn);
+
+            // Apply pagination
+            return await query
+                .Skip(specParams.Skip)
+                .Take(specParams.Take)
                 .ToListAsync();
+        }
+
+        public async Task<int> CountReactionsAsync(ReactionSpecParams specParams)
+        {
+            var query = Context.PostReactions.Where(r => r.IsDeleted == false);
+
+            // Filter by PostId if provided
+            if (specParams.PostId.HasValue)
+            {
+                query = query.Where(r => r.PostId == specParams.PostId.Value);
+            }
+
+            return await query.CountAsync();
         }
 
         public async Task<PostReaction> GetReactionByMemberAsync(Guid memberId, Guid postId)
@@ -32,8 +60,7 @@ namespace FTM.Infrastructure.Repositories
             return await Context.PostReactions
                 .FirstOrDefaultAsync(r => 
                     r.GPMemberId == memberId && 
-                    r.PostId == postId && 
-                    r.IsDeleted == false);
+                    r.PostId == postId);
         }
 
         public async Task<Dictionary<ReactionType, int>> GetReactionsSummaryForPostAsync(Guid postId)

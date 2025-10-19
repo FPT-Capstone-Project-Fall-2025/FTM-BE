@@ -1,4 +1,5 @@
 using FTM.Domain.Entities.Posts;
+using FTM.Domain.Specification.Posts;
 using FTM.Infrastructure.Data;
 using FTM.Infrastructure.Repositories.Implement;
 using FTM.Infrastructure.Repositories.Interface;
@@ -18,28 +19,54 @@ namespace FTM.Infrastructure.Repositories
         {
         }
 
-        public async Task<IEnumerable<Post>> GetPostsByFamilyTreeAsync(Guid familyTreeId)
+        public async Task<IEnumerable<Post>> GetPostsAsync(PostSpecParams specParams)
         {
-            return await Context.Posts
+            var query = Context.Posts
                 .Include(p => p.GPMember)
                 .Include(p => p.PostAttachments)
                 .Include(p => p.PostComments)
                 .Include(p => p.PostReactions)
-                .Where(p => p.GPId == familyTreeId && p.IsDeleted == false)
-                .OrderByDescending(p => p.CreatedOn)
+                .Where(p => p.IsDeleted == false);
+
+            // Filter by FamilyTreeId if provided
+            if (specParams.FamilyTreeId.HasValue)
+            {
+                query = query.Where(p => p.GPId == specParams.FamilyTreeId.Value);
+            }
+
+            // Filter by MemberId if provided
+            if (specParams.MemberId.HasValue)
+            {
+                query = query.Where(p => p.GPMemberId == specParams.MemberId.Value);
+            }
+
+            // Apply ordering
+            query = query.OrderByDescending(p => p.CreatedOn);
+
+            // Apply pagination
+            return await query
+                .Skip(specParams.Skip)
+                .Take(specParams.Take)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Post>> GetPostsByMemberAsync(Guid memberId)
+        public async Task<int> CountPostsAsync(PostSpecParams specParams)
         {
-            return await Context.Posts
-                .Include(p => p.GPMember)
-                .Include(p => p.PostAttachments)
-                .Include(p => p.PostComments)
-                .Include(p => p.PostReactions)
-                .Where(p => p.GPMemberId == memberId && p.IsDeleted == false)
-                .OrderByDescending(p => p.CreatedOn)
-                .ToListAsync();
+            var query = Context.Posts.Where(p => p.IsDeleted == false);
+
+            // Filter by FamilyTreeId if provided
+            if (specParams.FamilyTreeId.HasValue)
+            {
+                query = query.Where(p => p.GPId == specParams.FamilyTreeId.Value);
+            }
+
+            // Filter by MemberId if provided
+            if (specParams.MemberId.HasValue)
+            {
+                query = query.Where(p => p.GPMemberId == specParams.MemberId.Value);
+            }
+
+            return await query.CountAsync();
         }
 
         public async Task<Post> GetPostWithDetailsAsync(Guid postId)

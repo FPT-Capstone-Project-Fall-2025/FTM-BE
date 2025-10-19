@@ -1,6 +1,8 @@
+using FTM.API.Helpers;
 using FTM.API.Reponses;
 using FTM.Application.IServices;
 using FTM.Domain.DTOs.Posts;
+using FTM.Domain.Specification.Posts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -104,15 +106,25 @@ namespace FTM.API.Controllers
         }
 
         /// <summary>
-        /// Get all posts by family tree ID
+        /// Get all posts by family tree ID with pagination
         /// </summary>
         [HttpGet("family-tree/{familyTreeId}")]
-        public async Task<IActionResult> GetPostsByFamilyTree(Guid familyTreeId)
+        public async Task<IActionResult> GetPostsByFamilyTree(Guid familyTreeId, [FromQuery] SearchWithPaginationRequest requestParams)
         {
             try
             {
-                var result = await _postService.GetPostsByFamilyTreeAsync(familyTreeId);
-                return Ok(new ApiSuccess(result));
+                var specParams = new PostSpecParams()
+                {
+                    FamilyTreeId = familyTreeId,
+                    Skip = (requestParams.PageIndex - 1) * requestParams.PageSize,
+                    Take = requestParams.PageSize
+                };
+
+                var result = await _postService.GetPostsByFamilyTreeAsync(specParams);
+                var totalItems = await _postService.CountPostsByFamilyTreeAsync(specParams);
+
+                return Ok(new ApiSuccess("Lấy danh sách bài viết thành công", 
+                    new Pagination<PostResponseDto>(requestParams.PageIndex, requestParams.PageSize, totalItems, result.ToList())));
             }
             catch (Exception ex)
             {
@@ -121,15 +133,25 @@ namespace FTM.API.Controllers
         }
 
         /// <summary>
-        /// Get all posts by member ID
+        /// Get all posts by member ID with pagination
         /// </summary>
         [HttpGet("member/{memberId}")]
-        public async Task<IActionResult> GetPostsByMember(Guid memberId)
+        public async Task<IActionResult> GetPostsByMember(Guid memberId, [FromQuery] SearchWithPaginationRequest requestParams)
         {
             try
             {
-                var result = await _postService.GetPostsByMemberAsync(memberId);
-                return Ok(new ApiSuccess(result));
+                var specParams = new PostSpecParams()
+                {
+                    MemberId = memberId,
+                    Skip = (requestParams.PageIndex - 1) * requestParams.PageSize,
+                    Take = requestParams.PageSize
+                };
+
+                var result = await _postService.GetPostsByMemberAsync(specParams);
+                var totalItems = await _postService.CountPostsByMemberAsync(specParams);
+
+                return Ok(new ApiSuccess("Lấy danh sách bài viết thành công", 
+                    new Pagination<PostResponseDto>(requestParams.PageIndex, requestParams.PageSize, totalItems, result.ToList())));
             }
             catch (Exception ex)
             {
@@ -202,15 +224,25 @@ namespace FTM.API.Controllers
         }
 
         /// <summary>
-        /// Get all comments for a post (root level comments with nested replies)
+        /// Get all comments for a post (root level comments with nested replies) with pagination
         /// </summary>
         [HttpGet("{postId}/comments")]
-        public async Task<IActionResult> GetCommentsByPost(Guid postId)
+        public async Task<IActionResult> GetCommentsByPost(Guid postId, [FromQuery] SearchWithPaginationRequest requestParams)
         {
             try
             {
-                var result = await _postService.GetCommentsByPostAsync(postId);
-                return Ok(new ApiSuccess(result));
+                var specParams = new CommentSpecParams()
+                {
+                    PostId = postId,
+                    Skip = (requestParams.PageIndex - 1) * requestParams.PageSize,
+                    Take = requestParams.PageSize
+                };
+
+                var result = await _postService.GetCommentsByPostAsync(specParams);
+                var totalItems = await _postService.CountCommentsByPostAsync(specParams);
+
+                return Ok(new ApiSuccess("Lấy danh sách bình luận thành công", 
+                    new Pagination<PostCommentDto>(requestParams.PageIndex, requestParams.PageSize, totalItems, result.ToList())));
             }
             catch (Exception ex)
             {
@@ -279,15 +311,25 @@ namespace FTM.API.Controllers
         }
 
         /// <summary>
-        /// Get all reactions for a post
+        /// Get all reactions for a post with pagination
         /// </summary>
         [HttpGet("{postId}/reactions")]
-        public async Task<IActionResult> GetReactionsByPost(Guid postId)
+        public async Task<IActionResult> GetReactionsByPost(Guid postId, [FromQuery] SearchWithPaginationRequest requestParams)
         {
             try
             {
-                var result = await _postService.GetReactionsByPostAsync(postId);
-                return Ok(new ApiSuccess(result));
+                var specParams = new ReactionSpecParams()
+                {
+                    PostId = postId,
+                    Skip = (requestParams.PageIndex - 1) * requestParams.PageSize,
+                    Take = requestParams.PageSize
+                };
+
+                var result = await _postService.GetReactionsByPostAsync(specParams);
+                var totalItems = await _postService.CountReactionsByPostAsync(specParams);
+
+                return Ok(new ApiSuccess("Lấy danh sách reactions thành công", 
+                    new Pagination<PostReactionDto>(requestParams.PageIndex, requestParams.PageSize, totalItems, result.ToList())));
             }
             catch (Exception ex)
             {
