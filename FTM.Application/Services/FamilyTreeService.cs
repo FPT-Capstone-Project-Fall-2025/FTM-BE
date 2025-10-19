@@ -1,9 +1,13 @@
+using AutoMapper;
 using FTM.Application.IServices;
 using FTM.Domain.Constants;
 using FTM.Domain.DTOs.FamilyTree;
 using FTM.Domain.Entities.FamilyTree;
 using FTM.Domain.Entities.Identity;
+using FTM.Domain.Specification.FamilyTrees;
+using FTM.Domain.Specification.FTMembers;
 using FTM.Infrastructure.Data;
+using FTM.Infrastructure.Repositories.Implement;
 using FTM.Infrastructure.Repositories.Interface;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -26,14 +30,18 @@ namespace FTM.Application.Services
         private readonly IRoleRepository _roleRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<ApplicationRole> _roleManager;
+        private readonly IGenericRepository<FamilyTree> _familyTreeRepository;
+        private readonly IMapper _mapper;
 
         public FamilyTreeService(
             FTMDbContext context,
             AppIdentityDbContext appIdentityDbContext,
             ICurrentUserResolver currentUserResolver,
             IUnitOfWork unitOfWork,
+            IMapper mapper,
             IUserRepository userRepository,
             IRoleRepository roleRepository,
+            IGenericRepository<FamilyTree> familyTreeRepository,
             UserManager<ApplicationUser> userManager,
             RoleManager<ApplicationRole> roleManager)
         {
@@ -41,6 +49,8 @@ namespace FTM.Application.Services
             _appIdentityDbContext = appIdentityDbContext;
             _currentUserResolver = currentUserResolver;
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
+            _familyTreeRepository = familyTreeRepository;
             _userRepository = userRepository;
             _roleRepository = roleRepository;
             _userManager = userManager;
@@ -249,35 +259,12 @@ namespace FTM.Application.Services
             }
         }
 
-        public async Task<List<FamilyTreeDataTableDto>> GetFamilyTreesAsync()
+        public async Task<IReadOnlyList<FamilyTreeDataTableDto>> GetFamilyTreesAsync(FamilyTreeSpecParams specParams)
         {
-            try
-            {
-                return await _context.FamilyTrees
-                    .Where(ft => ft.IsDeleted != true && ft.IsActive == true)
-                    .Select(ft => new FamilyTreeDataTableDto
-                    {
-                        Id = ft.Id,
-                        Name = ft.Name,
-                        OwnerId = ft.OwnerId,
-                        Owner = ft.Owner,
-                        Description = ft.Description,
-                        Picture = ft.Picture,
-                        IsActive = ft.IsActive ?? true,
-                        GPModeCode = ft.GPModeCode,
-                        CreatedAt = ft.CreatedOn.DateTime,
-                        LastModifiedAt = ft.LastModifiedOn.DateTime,
-                        CreatedBy = ft.CreatedBy,
-                        LastModifiedBy = ft.LastModifiedBy,
-                        MemberCount = ft.FTMembers.Count(m => m.IsDeleted != true)
-                    })
-                    .OrderByDescending(ft => ft.CreatedAt)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Lỗi khi lấy danh sách gia phả: {ex.Message}");
-            }
+            var spec = new FamilyTreeSpecification(specParams);
+            var fts = await _familyTreeRepository.ListAsync(spec);
+
+            return _mapper.Map<IReadOnlyList<FamilyTreeDataTableDto>>(fts);
         }
 
         public async Task<List<FamilyTreeDataTableDto>> GetMyFamilyTreesAsync()
@@ -311,6 +298,12 @@ namespace FTM.Application.Services
             {
                 throw new Exception($"Lỗi khi lấy danh sách gia phả của tôi: {ex.Message}");
             }
+        }
+
+        public async Task<int> CountFamilyTreesAsync(FamilyTreeSpecParams specParams)
+        {
+            var spec = new FamilyTreeForCountSpecification(specParams);
+            return await _familyTreeRepository.CountAsync(spec);
         }
     }
 }

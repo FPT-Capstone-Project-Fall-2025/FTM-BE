@@ -1,11 +1,14 @@
+using FTM.API.Helpers;
+using FTM.API.Reponses;
 using FTM.Application.IServices;
 using FTM.Domain.DTOs.FamilyTree;
-using FTM.API.Reponses;
+using FTM.Domain.Specification.FamilyTrees;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FTM.API.Controllers
 {
@@ -157,17 +160,23 @@ namespace FTM.API.Controllers
         /// </summary>
         /// <returns>Danh sách gia phả</returns>
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        [AllowAnonymous]
+        public async Task<ActionResult<Pagination<FamilyTreeDataTableDto>>> GetAll([FromQuery] SearchWithPaginationRequest requestParams)
         {
-            try
+            var specParams = new FamilyTreeSpecParams()
             {
-                var result = await _familyTreeService.GetFamilyTreesAsync();
-                return Ok(new ApiSuccess(result));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ApiError($"Lỗi hệ thống: {ex.Message}"));
-            }
+                Search = requestParams.Search ?? string.Empty,
+                PropertyFilters = requestParams.PropertyFilters ?? string.Empty,
+                OrderBy = requestParams.OrderBy ?? string.Empty,
+                Skip = ((requestParams.PageIndex) - 1) * (requestParams.PageSize),
+                Take = requestParams.PageSize
+            };
+
+            var data = await _familyTreeService.GetFamilyTreesAsync(specParams);
+            var totalItems = await _familyTreeService.CountFamilyTreesAsync(specParams);
+
+            return Ok(new ApiSuccess("Lấy danh sách gia phả thành công", new Pagination<FamilyTreeDataTableDto>(requestParams.PageIndex,
+                requestParams.PageSize, totalItems, data)));
         }
 
         /// <summary>
@@ -187,5 +196,6 @@ namespace FTM.API.Controllers
                 return StatusCode(500, new ApiError($"Lỗi hệ thống: {ex.Message}"));
             }
         }
+
     }
 }
