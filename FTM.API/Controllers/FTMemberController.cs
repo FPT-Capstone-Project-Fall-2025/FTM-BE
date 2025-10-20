@@ -37,6 +37,13 @@ namespace FTM.API.Controllers
             return Ok(new ApiSuccess("Lấy thông tin của thành viên gia phả thành công", result));
         }
 
+        [HttpGet("{ftid}/get-by-memberid")]
+        public async Task<IActionResult> GetDetailedMemberOfFamilyTreeByMemberId([FromRoute] Guid ftid, [FromQuery] Guid memberId)
+        {
+            var result = await _fTMemberService.GetByMemberId(ftid, memberId);
+            return Ok(new ApiSuccess("Lấy thông tin của thành viên gia phả thành công", result));
+        }
+
         [HttpGet("member-tree")]
         public async Task<IActionResult> GetMembersTreeViewAsync([FromQuery] Guid ftId)
         {
