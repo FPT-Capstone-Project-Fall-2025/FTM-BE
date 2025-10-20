@@ -4,6 +4,7 @@ using FTM.Application.IServices;
 using FTM.Domain.DTOs.FamilyTree;
 using FTM.Domain.Entities.FamilyTree;
 using FTM.Domain.Enums;
+using FTM.Domain.Models;
 using FTM.Domain.Specification;
 using FTM.Domain.Specification.FTMembers;
 using FTM.Infrastructure.Repositories.Implement;
@@ -159,7 +160,7 @@ namespace FTM.Application.Services
         {
             var firstPartner = await _fTRelationshipRepository.GetQuery()
                                         .Include(x => x.ToFTMember)
-                                        .FirstOrDefaultAsync(x => x.FromFTMemberId == request.RootId 
+                                        .FirstOrDefaultAsync(x => x.FromFTMemberId == request.RootId
                                                             && x.CategoryCode == FTRelationshipCategory.PARTNER);
 
             if (firstPartner != null && firstPartner.ToFTMember.StatusCode == FTMemberStatus.UNDEFINED)
@@ -312,13 +313,37 @@ namespace FTM.Application.Services
 
             var spec = new FTMemberSpecification(FTId, specParams);
             var members = await _fTMemberRepository.ListAsync(spec);
-            
-            if(members.Count() == 0)
+
+            if (members.Count() == 0)
             {
                 throw new ArgumentException("Không tìm thấy thành viên gia phả với UserId này");
             }
 
             return _mapper.Map<FTMemberDetailsDto>(members.First());
+        }
+
+        public async Task<FTMemberTreeDto> GetMembersTree(Guid ftId)
+        {
+            var members = await _fTMemberRepository.GetMembersTree(ftId);
+
+            if (!members.Any(m => m.IsRoot == true)) return new FTMemberTreeDto();
+
+            var membersTreeDetails = members.Select(_mapper.Map<FTMemberTreeDetailsDto>);
+            var partnerIds = membersTreeDetails.SelectMany(m => m.Partners).ToList();
+
+            return new FTMemberTreeDto()
+            {
+                Root = members.First(m => m.IsRoot == true).Id,
+                Datalist = membersTreeDetails.Select(m =>
+                {
+                    m.IsPartner = partnerIds.Any(p => p == m.Id);
+                    return new KeyValueModel
+                    {
+                        Key = m.Id,
+                        Value = m
+                    };
+                }).ToList()
+            };
         }
     }
 }

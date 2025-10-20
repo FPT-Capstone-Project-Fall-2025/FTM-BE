@@ -2,11 +2,13 @@
 using FTM.Domain.DTOs.FamilyTree;
 using FTM.Domain.Entities.Applications;
 using FTM.Domain.Entities.FamilyTree;
+using FTM.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static FTM.Domain.Constants.Constants;
 
 namespace FTM.Application.Helpers
 {
@@ -14,6 +16,23 @@ namespace FTM.Application.Helpers
     {
         public MappingProfiles()
         {
+            CreateMap<FTMember, FTMemberTreeDetailsDto>()
+                .ForMember(dest => dest.Partners, opt => opt.MapFrom(src =>
+                    src.FTRelationshipFrom
+                            .Where(rFrom => rFrom.CategoryCode == FTRelationshipCategory.PARTNER)
+                            .Select(rFrom => rFrom.ToFTMemberId)
+                            .ToArray()))
+                .ForMember(dest => dest.Children, opt => opt.MapFrom(src =>
+                    src.FTRelationshipFrom
+                            .Where(rFrom => rFrom.CategoryCode == FTRelationshipCategory.CHILDREN && rFrom.FromFTMemberPartnerId != null)
+                            .GroupBy(rFrom => rFrom.FromFTMemberPartnerId)
+                            .Select(gr =>
+                                new KeyValueModel
+                                {
+                                    Key = gr.Key,
+                                    Value = gr.OrderBy(x => x.ToFTMember.Birthday).Select(rFrom => rFrom.ToFTMember.Id).ToArray()
+                                })))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Fullname));
 
             CreateMap<UpsertFTMemberRequest, FTMember>()
                 .ForMember(dest => dest.FTMemberFiles, opt => opt.MapFrom(src => src.FTMemberFiles))

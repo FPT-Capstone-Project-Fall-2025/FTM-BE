@@ -162,7 +162,6 @@ namespace FTM.API.Controllers
         /// </summary>
         /// <returns>Danh sách gia phả</returns>
         [HttpGet]
-        [AllowAnonymous]
         public async Task<ActionResult<Pagination<FamilyTreeDataTableDto>>> GetAll([FromQuery] SearchWithPaginationRequest requestParams)
         {
             var specParams = new FamilyTreeSpecParams()

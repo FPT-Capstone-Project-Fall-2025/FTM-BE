@@ -2,6 +2,7 @@
 using FTM.Application.IServices;
 using FTM.Application.Services;
 using FTM.Domain.DTOs.FamilyTree;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -34,6 +35,13 @@ namespace FTM.API.Controllers
         {
             var result = await _fTMemberService.GetByUserId(ftid, userId);
             return Ok(new ApiSuccess("Lấy thông tin của thành viên gia phả thành công", result));
+        }
+
+        [HttpGet("member-tree")]
+        public async Task<IActionResult> GetMembersTreeViewAsync([FromQuery] Guid ftId)
+        {
+            var members = await _fTMemberService.GetMembersTree(ftId);
+            return Ok(new ApiSuccess("Lấy cây gia phả thành công",members));
         }
 
         private IActionResult ThrowModelErrors()
