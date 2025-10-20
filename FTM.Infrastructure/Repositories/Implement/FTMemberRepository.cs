@@ -32,5 +32,16 @@ namespace FTM.Infrastructure.Repositories.Implement
                               .Include(m => m.FTMemberFiles)
                               .FirstOrDefaultAsync(m =>  m.Id == id);
         }
+
+        public async Task<List<FTMember>> GetMembersTree(Guid ftId)
+        {
+            return await _context.FTMembers
+                .Include(m => m.FTRelationshipFrom)
+                .Include(m => m.FTRelationshipTo)
+                .Include(m => m.FTMemberFiles)
+                .Where(x => x.FTId == ftId)
+                .OrderBy(m => m.Birthday)
+                .ToListAsync();
+        }
     }
 }

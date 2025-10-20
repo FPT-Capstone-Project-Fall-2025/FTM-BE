@@ -11,5 +11,6 @@ namespace FTM.Application.IServices
     {
         Task<FTMemberDetailsDto> GetByUserId(Guid FTId, Guid userId);
         Task<FTMemberDetailsDto> Add(Guid FTId, UpsertFTMemberRequest request);
+        Task<FTMemberTreeDto> GetMembersTree(Guid ftId);
     }
 }
