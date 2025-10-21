@@ -61,6 +61,13 @@ namespace FTM.API.Extensions
             serrvices.AddScoped<IPostCommentRepository, PostCommentRepository>();
             serrvices.AddScoped<IPostReactionRepository, PostReactionRepository>();
             serrvices.AddScoped<IPostService, PostService>();
+            
+            // Honor Boards
+            serrvices.AddScoped<IAcademicHonorRepository, AcademicHonorRepository>();
+            serrvices.AddScoped<ICareerHonorRepository, CareerHonorRepository>();
+            serrvices.AddScoped<IAcademicHonorService, AcademicHonorService>();
+            serrvices.AddScoped<ICareerHonorService, CareerHonorService>();
+            
             // Generic 
             serrvices.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         }

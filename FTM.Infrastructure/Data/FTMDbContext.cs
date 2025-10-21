@@ -1,6 +1,7 @@
 ﻿using FTM.Domain.DTOs.Authen;
 using FTM.Domain.Entities.Applications;
 using FTM.Domain.Entities.FamilyTree;
+using FTM.Domain.Entities.HonorBoard;
 using FTM.Domain.Entities.Identity;
 using FTM.Domain.Entities.Posts;
 using FTM.Infrastructure.Configurations;
@@ -39,6 +40,10 @@ namespace FTM.Infrastructure.Data
         public virtual DbSet<PostReaction> PostReactions { get; set; }
         public virtual DbSet<PostAttachment> PostAttachments { get; set; }
 
+        // Honor Boards
+        public virtual DbSet<AcademicHonor> AcademicHonors { get; set; }
+        public virtual DbSet<CareerHonor> CareerHonors { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.ApplyConfiguration(new MEthicConfiguration());
@@ -54,6 +59,8 @@ namespace FTM.Infrastructure.Data
             builder.ApplyConfiguration(new PostCommentConfiguration());
             builder.ApplyConfiguration(new PostReactionConfiguration());
             builder.ApplyConfiguration(new PostAttachmentConfiguration());
+            builder.ApplyConfiguration(new AcademicHonorConfiguration());
+            builder.ApplyConfiguration(new CareerHonorConfiguration());
             base.OnModelCreating(builder);
         }
 
