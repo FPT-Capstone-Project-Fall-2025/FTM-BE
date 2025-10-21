@@ -6,6 +6,7 @@ using FTM.Domain.Entities.FamilyTree;
 using FTM.Domain.Enums;
 using FTM.Domain.Models;
 using FTM.Domain.Specification;
+using FTM.Domain.Specification.FamilyTrees;
 using FTM.Domain.Specification.FTMembers;
 using FTM.Infrastructure.Repositories.Implement;
 using FTM.Infrastructure.Repositories.Interface;
@@ -17,6 +18,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using XAct;
+using XAct.Users;
 using static FTM.Domain.Constants.Constants;
 
 namespace FTM.Application.Services
@@ -282,44 +284,7 @@ namespace FTM.Application.Services
 
         public async Task<FTMemberDetailsDto> GetByUserId(Guid FTId, Guid userId)
         {
-            PropertyFilter[] propertyFilters = new PropertyFilter[]
-            {
-                new PropertyFilter
-                {
-                    Name = "FTId",
-                    Operation = "EQUAL",
-                    Value = FTId
-                },
-                new PropertyFilter
-                {
-                    Name = "UserId",
-                    Operation = "EQUAL",
-                    Value = userId
-                },
-                new PropertyFilter
-                {
-                    Name = "IsDeleted",
-                    Operation = "EQUAL",
-                    Value = false
-                }
-            };
-
-            var serializedFilters = JsonConvert.SerializeObject(propertyFilters);
-
-            FTMemberSpecParams specParams = new FTMemberSpecParams
-            {
-                PropertyFilters = serializedFilters
-            };
-
-            var spec = new FTMemberSpecification(FTId, specParams);
-            var members = await _fTMemberRepository.ListAsync(spec);
-
-            if (members.Count() == 0)
-            {
-                throw new ArgumentException("Không tìm thấy thành viên gia phả với UserId này");
-            }
-
-            return _mapper.Map<FTMemberDetailsDto>(members.First());
+            return await GetById(FTId, userId, isMemberId: false);
         }
 
         public async Task<FTMemberTreeDto> GetMembersTree(Guid ftId)
@@ -344,6 +309,67 @@ namespace FTM.Application.Services
                     };
                 }).ToList()
             };
+        }
+
+        public async Task<FTMemberDetailsDto> GetByMemberId(Guid ftid, Guid memberId)
+        {
+            return await GetById(ftid, memberId, isMemberId: true);
+        }
+
+        private async Task<FTMemberDetailsDto> GetById(Guid ftid, Guid id, bool isMemberId)
+        {
+            PropertyFilter[] propertyFilters = new PropertyFilter[]
+            {
+                new PropertyFilter
+                {
+                    Name = "FTId",
+                    Operation = "EQUAL",
+                    Value = ftid
+                },
+                new PropertyFilter
+                {
+                    Name = isMemberId? "Id": "UserId",
+                    Operation = "EQUAL",
+                    Value = id
+                },
+                new PropertyFilter
+                {
+                    Name = "IsDeleted",
+                    Operation = "EQUAL",
+                    Value = false
+                }
+            };
+
+            var serializedFilters = JsonConvert.SerializeObject(propertyFilters);
+
+            FTMemberSpecParams specParams = new FTMemberSpecParams
+            {
+                PropertyFilters = serializedFilters
+            };
+
+            var spec = new FTMemberSpecification(ftid, specParams);
+            var members = await _fTMemberRepository.ListAsync(spec);
+
+            if (members.Count() == 0)
+            {
+                throw new ArgumentException("Không tìm thấy thành viên gia phả với UserId này");
+            }
+
+            return _mapper.Map<FTMemberDetailsDto>(members.First());
+        }
+
+        public async Task<IReadOnlyList<FTMemberSimpleDto>> GetListOfMembers(FTMemberSpecParams specParams)
+        {
+            var spec = new FTMemberSimpleSpecification(specParams);
+            var ftms = await _fTMemberRepository.ListAsync(spec);
+
+            return _mapper.Map<IReadOnlyList<FTMemberSimpleDto>>(ftms);
+        }
+
+        public async Task<int> CountMembers(FTMemberSpecParams specParams)
+        {
+            var spec = new FTMemberForCountSpecification(specParams);
+            return await _fTMemberRepository.CountAsync(spec);
         }
     }
 }

@@ -52,7 +52,7 @@ namespace FTM.Application.Helpers
                 .ForMember(dest => dest.BurialWard, opt => opt.MapFrom(src => src.BurialWard))
                 .ForMember(dest => dest.FTMemberFiles, opt => opt.MapFrom(src => src.FTMemberFiles));
 
-
+            CreateMap<FTMember, FTMemberSimpleDto>();
             CreateMap<FTMemberFileRequest, FTMemberFile>().ReverseMap();
             CreateMap<MReligionDto, MReligion>().ReverseMap();
             CreateMap<MEthnicDto, MEthnic>().ReverseMap();

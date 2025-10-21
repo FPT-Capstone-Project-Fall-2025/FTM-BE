@@ -1,7 +1,10 @@
-﻿using FTM.API.Reponses;
+﻿using FTM.API.Helpers;
+using FTM.API.Reponses;
 using FTM.Application.IServices;
 using FTM.Application.Services;
 using FTM.Domain.DTOs.FamilyTree;
+using FTM.Domain.Specification.FamilyTrees;
+using FTM.Domain.Specification.FTMembers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -17,8 +20,9 @@ namespace FTM.API.Controllers
         {
             _fTMemberService = fTMemberService;
         }
+
         [HttpPost("{ftId}/add")]
-        public async Task<IActionResult> Add(Guid ftId, [FromBody] UpsertFTMemberRequest request)
+        public async Task<IActionResult> Add([FromRoute] Guid ftId, [FromBody] UpsertFTMemberRequest request)
         {
             if (!ModelState.IsValid)
             {
@@ -30,10 +34,36 @@ namespace FTM.API.Controllers
             return Ok(new ApiSuccess("Tạo thành viên gia phả thành công", result));
         }
 
+        [HttpGet("/list")]
+        public async Task<IActionResult> GetListOfMembers([FromQuery] SearchWithPaginationRequest requestParams)
+        {
+            var specParams = new FTMemberSpecParams()
+            {
+                Search = requestParams.Search ?? string.Empty,
+                PropertyFilters = requestParams.PropertyFilters ?? string.Empty,
+                OrderBy = requestParams.OrderBy ?? string.Empty,
+                Skip = ((requestParams.PageIndex) - 1) * (requestParams.PageSize),
+                Take = requestParams.PageSize
+            };
+
+            var data = await _fTMemberService.GetListOfMembers(specParams);
+            var totalItems = await _fTMemberService.CountMembers(specParams);
+
+            return Ok(new ApiSuccess("Lấy danh sách thành viên của gia phả thành công", new Pagination<FTMemberSimpleDto>(requestParams.PageIndex,
+                requestParams.PageSize, totalItems, data)));
+        }
+
         [HttpGet("{ftid}/get-by-userid")]
         public async Task<IActionResult> GetDetailedMemberOfFamilyTreeByUserId([FromRoute] Guid ftid, [FromQuery] Guid userId)
         {
             var result = await _fTMemberService.GetByUserId(ftid, userId);
+            return Ok(new ApiSuccess("Lấy thông tin của thành viên gia phả thành công", result));
+        }
+
+        [HttpGet("{ftid}/get-by-memberid")]
+        public async Task<IActionResult> GetDetailedMemberOfFamilyTreeByMemberId([FromRoute] Guid ftid, [FromQuery] Guid memberId)
+        {
+            var result = await _fTMemberService.GetByMemberId(ftid, memberId);
             return Ok(new ApiSuccess("Lấy thông tin của thành viên gia phả thành công", result));
         }
 

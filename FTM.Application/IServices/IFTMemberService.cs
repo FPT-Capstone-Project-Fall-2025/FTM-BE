@@ -1,4 +1,6 @@
 ﻿using FTM.Domain.DTOs.FamilyTree;
+using FTM.Domain.Specification.FamilyTrees;
+using FTM.Domain.Specification.FTMembers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,5 +14,8 @@ namespace FTM.Application.IServices
         Task<FTMemberDetailsDto> GetByUserId(Guid FTId, Guid userId);
         Task<FTMemberDetailsDto> Add(Guid FTId, UpsertFTMemberRequest request);
         Task<FTMemberTreeDto> GetMembersTree(Guid ftId);
+        Task<FTMemberDetailsDto> GetByMemberId(Guid ftid, Guid memberId);
+        Task<IReadOnlyList<FTMemberSimpleDto>> GetListOfMembers(FTMemberSpecParams specParams);
+        Task<int> CountMembers(FTMemberSpecParams specParams);
     }
 }

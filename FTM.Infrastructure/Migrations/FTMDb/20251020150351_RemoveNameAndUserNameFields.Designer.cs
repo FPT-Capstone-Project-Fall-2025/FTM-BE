@@ -3,6 +3,7 @@ using System;
 using FTM.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FTM.Infrastructure.Migrations.FTMDb
 {
     [DbContext(typeof(FTMDbContext))]
-    partial class FTMDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251020150351_RemoveNameAndUserNameFields")]
+    partial class RemoveNameAndUserNameFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -214,156 +217,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.HasKey("Id");
 
                     b.ToTable("MProvinces", (string)null);
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.AcademicHonor", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AchievementTitle")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DegreeOrCertificate")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<Guid>("FamilyTreeId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("GPMemberId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("InstitutionName")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)");
-
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsDisplayed")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
-
-                    b.Property<string>("LastModifiedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("LastModifiedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("PhotoUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<int>("YearOfAchievement")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FamilyTreeId");
-
-                    b.HasIndex("GPMemberId");
-
-                    b.HasIndex("IsDisplayed");
-
-                    b.HasIndex("YearOfAchievement");
-
-                    b.ToTable("AcademicHonors", (string)null);
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.CareerHonor", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AchievementTitle")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<Guid>("FamilyTreeId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("GPMemberId")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsDisplayed")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
-
-                    b.Property<string>("LastModifiedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("LastModifiedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("OrganizationName")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)");
-
-                    b.Property<string>("PhotoUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("Position")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<int>("YearOfAchievement")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FamilyTreeId");
-
-                    b.HasIndex("GPMemberId");
-
-                    b.HasIndex("IsDisplayed");
-
-                    b.HasIndex("YearOfAchievement");
-
-                    b.ToTable("CareerHonors", (string)null);
                 });
 
             modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.FTAuthorization", b =>
@@ -927,44 +780,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                         .IsUnique();
 
                     b.ToTable("PostReactions", (string)null);
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.AcademicHonor", b =>
-                {
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FamilyTree", "FamilyTree")
-                        .WithMany()
-                        .HasForeignKey("FamilyTreeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "GPMember")
-                        .WithMany()
-                        .HasForeignKey("GPMemberId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("FamilyTree");
-
-                    b.Navigation("GPMember");
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.CareerHonor", b =>
-                {
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FamilyTree", "FamilyTree")
-                        .WithMany()
-                        .HasForeignKey("FamilyTreeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "GPMember")
-                        .WithMany()
-                        .HasForeignKey("GPMemberId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("FamilyTree");
-
-                    b.Navigation("GPMember");
                 });
 
             modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.FTAuthorization", b =>
