@@ -16,14 +16,6 @@ namespace FTM.Infrastructure.Configurations
             builder.ToTable("FTAuthorizations")
                    .HasKey(a => a.Id);
 
-            builder.Property(a => a.Username)
-                   .IsRequired()
-                   .HasMaxLength(100);
-
-            builder.Property(a => a.FullName)
-                   .IsRequired()
-                   .HasMaxLength(200);
-
             builder.Property(a => a.MethodCode)
                    .HasConversion<string>()
                    .IsRequired();
@@ -31,7 +23,6 @@ namespace FTM.Infrastructure.Configurations
             builder.Property(a => a.FeatureCode)
                    .HasConversion<string>()
                    .IsRequired(); ;
-
 
             builder.HasOne(a => a.AuthorizedMember)
                 .WithMany(m => m.FTAuthorizations)

@@ -6,6 +6,7 @@ using FTM.Domain.Entities.FamilyTree;
 using FTM.Domain.Enums;
 using FTM.Domain.Models;
 using FTM.Domain.Specification;
+using FTM.Domain.Specification.FamilyTrees;
 using FTM.Domain.Specification.FTMembers;
 using FTM.Infrastructure.Repositories.Implement;
 using FTM.Infrastructure.Repositories.Interface;
@@ -355,6 +356,20 @@ namespace FTM.Application.Services
             }
 
             return _mapper.Map<FTMemberDetailsDto>(members.First());
+        }
+
+        public async Task<IReadOnlyList<FTMemberSimpleDto>> GetListOfMembers(FTMemberSpecParams specParams)
+        {
+            var spec = new FTMemberSimpleSpecification(specParams);
+            var ftms = await _fTMemberRepository.ListAsync(spec);
+
+            return _mapper.Map<IReadOnlyList<FTMemberSimpleDto>>(ftms);
+        }
+
+        public async Task<int> CountMembers(FTMemberSpecParams specParams)
+        {
+            var spec = new FTMemberForCountSpecification(specParams);
+            return await _fTMemberRepository.CountAsync(spec);
         }
     }
 }
