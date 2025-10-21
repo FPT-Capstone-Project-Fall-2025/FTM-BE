@@ -60,8 +60,7 @@ namespace FTM.Infrastructure.Repositories
             return await Context.PostReactions
                 .FirstOrDefaultAsync(r => 
                     r.GPMemberId == memberId && 
-                    r.PostId == postId && 
-                    r.IsDeleted == false);
+                    r.PostId == postId);
         }
 
         public async Task<Dictionary<ReactionType, int>> GetReactionsSummaryForPostAsync(Guid postId)
