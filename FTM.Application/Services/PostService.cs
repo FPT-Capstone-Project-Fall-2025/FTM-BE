@@ -322,8 +322,9 @@ namespace FTM.Application.Services
 
             if (existingReaction != null)
             {
-                // Update existing reaction
+                // Update existing reaction (restore if deleted)
                 existingReaction.ReactionType = request.ReactionType;
+                existingReaction.IsDeleted = false; // Restore if was deleted
                 existingReaction.LastModifiedOn = DateTimeOffset.UtcNow;
                 _reactionRepository.Update(existingReaction);
             }
@@ -344,8 +345,11 @@ namespace FTM.Application.Services
 
             await _unitOfWork.CompleteAsync();
 
-            // Return the reaction with member info
-            var reaction = await _reactionRepository.GetByIdAsync(existingReaction.Id);
+            // Return the reaction with member info - query again to include GPMember
+            var reaction = await _context.PostReactions
+                .Include(r => r.GPMember)
+                .FirstOrDefaultAsync(r => r.Id == existingReaction.Id);
+            
             return MapToPostReactionDto(reaction);
         }
 
