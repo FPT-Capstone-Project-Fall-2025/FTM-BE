@@ -292,41 +292,55 @@ namespace FTM.Application.Services
             return _mapper.Map<IReadOnlyList<FamilyTreeDataTableDto>>(fts);
         }
 
-        public async Task<List<FamilyTreeDataTableDto>> GetMyFamilyTreesAsync()
+        public async Task<IReadOnlyList<FamilyTreeDataTableDto>> GetMyFamilyTreesAsync(FamilyTreeSpecParams specParams)
         {
-            try
-            {
-                return await _context.FamilyTrees
-                    .Where(ft => ft.IsDeleted != true && 
-                                ft.IsActive == true && 
-                                ft.CreatedBy == _currentUserResolver.Email)
-                    .Select(ft => new FamilyTreeDataTableDto
-                    {
-                        Id = ft.Id,
-                        Name = ft.Name,
-                        OwnerId = ft.OwnerId,
-                        Owner = ft.Owner,
-                        Description = ft.Description,
-                        IsActive = ft.IsActive ?? true,
-                        GPModeCode = ft.GPModeCode,
-                        CreatedAt = ft.CreatedOn.DateTime,
-                        LastModifiedAt = ft.LastModifiedOn.DateTime,
-                        CreatedBy = ft.CreatedBy,
-                        LastModifiedBy = ft.LastModifiedBy,
-                        MemberCount = ft.FTMembers.Count(m => m.IsDeleted != true)
-                    })
-                    .OrderByDescending(ft => ft.CreatedAt)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Lỗi khi lấy danh sách gia phả của tôi: {ex.Message}");
-            }
+            var spec = new MyFamilyTreeSpecification(_currentUserResolver.UserId,specParams);
+            var fts = await _familyTreeRepository.ListAsync(spec);
+
+            return _mapper.Map<IReadOnlyList<FamilyTreeDataTableDto>>(fts);
         }
+
+        //public async Task<List<FamilyTreeDataTableDto>> GetMyFamilyTreesAsync()
+        //{
+        //    try
+        //    {
+        //        return await _context.FamilyTrees
+        //            .Where(ft => ft.IsDeleted != true && 
+        //                        ft.IsActive == true && 
+        //                        ft.CreatedBy == _currentUserResolver.Email)
+        //            .Select(ft => new FamilyTreeDataTableDto
+        //            {
+        //                Id = ft.Id,
+        //                Name = ft.Name,
+        //                OwnerId = ft.OwnerId,
+        //                Owner = ft.Owner,
+        //                Description = ft.Description,
+        //                IsActive = ft.IsActive ?? true,
+        //                GPModeCode = ft.GPModeCode,
+        //                CreatedAt = ft.CreatedOn.DateTime,
+        //                LastModifiedAt = ft.LastModifiedOn.DateTime,
+        //                CreatedBy = ft.CreatedBy,
+        //                LastModifiedBy = ft.LastModifiedBy,
+        //                MemberCount = ft.FTMembers.Count(m => m.IsDeleted != true)
+        //            })
+        //            .OrderByDescending(ft => ft.CreatedAt)
+        //            .ToListAsync();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new Exception($"Lỗi khi lấy danh sách gia phả của tôi: {ex.Message}");
+        //    }
+        //}
 
         public async Task<int> CountFamilyTreesAsync(FamilyTreeSpecParams specParams)
         {
             var spec = new FamilyTreeForCountSpecification(specParams);
+            return await _familyTreeRepository.CountAsync(spec);
+        }
+
+        public async Task<int> CountMyFamilyTreesAsync(FamilyTreeSpecParams specParams)
+        {
+            var spec = new MyFamilyTreeForCountSpecification(_currentUserResolver.UserId, specParams);
             return await _familyTreeRepository.CountAsync(spec);
         }
     }

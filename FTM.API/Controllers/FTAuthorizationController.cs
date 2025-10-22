@@ -1,4 +1,5 @@
 ﻿using FTM.API.Reponses;
+using FTM.Application.IServices;
 using FTM.Domain.DTOs.FamilyTree;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -9,22 +10,23 @@ namespace FTM.API.Controllers
     [ApiController]
     public class FTAuthorizationController : ControllerBase
     {
-        public FTAuthorizationController()
+        private IFTAuthorizationService _fTAuthorizationService;
+        public FTAuthorizationController(IFTAuthorizationService fTAuthorizationService)
         {
-            
+            _fTAuthorizationService = fTAuthorizationService;
         }
 
-        [HttpPost("{ftId}/add")]
-        public async Task<IActionResult> Add(Guid ftId, [FromBody] UpsertFTAuthorizationRequest request)
+        [HttpPost("add")]
+        public async Task<IActionResult> Add([FromBody] UpsertFTAuthorizationRequest request)
         {
             if (!ModelState.IsValid)
             {
                 ThrowModelErrors();
             }
 
-           // var result = await _fTMemberService.Add(ftId, request);
+            var result = await _fTAuthorizationService.AddAsync(request);
 
-            return Ok(new ApiSuccess());
+            return Ok(new ApiSuccess("Thêm quyền thành công", result));
         }
 
         private void ThrowModelErrors()

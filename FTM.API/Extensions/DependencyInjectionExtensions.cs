@@ -19,9 +19,7 @@ namespace FTM.API.Extensions
             //---------------------------Services----------------------------------------
             serrvices.AddScoped<ITokenProvider, TokenProvider>();
             serrvices.AddScoped<IAccountService, AccountService>();
-            serrvices.AddScoped<IFamilyTreeService, FamilyTreeService>();
             serrvices.AddScoped<ICurrentUserResolver, CurrentUserResolver>();
-            serrvices.AddScoped<IBiographyService, BiographyService>();
             serrvices.AddTransient<IEmailSender, EmailSender>();
             serrvices.AddTransient<IBlobStorageService, BlobStorageService>();
             serrvices.AddSingleton(new SmtpClient("smtp.gmail.com")
@@ -33,20 +31,33 @@ namespace FTM.API.Extensions
             // Application Services
             serrvices.AddScoped<IEducationService, EducationService>();
             serrvices.AddScoped<IWorkService, WorkService>();
+
+            // Bio
+            serrvices.AddScoped<IBiographyService, BiographyService>();
+
             //Family Tree
+            serrvices.AddScoped<IFamilyTreeService, FamilyTreeService>();
             serrvices.AddScoped<IFTMemberService, FTMemberService>();
+
             // Auto Mapper
             serrvices.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+            //FT Authorization
+            serrvices.AddScoped<IFTAuthorizationService, FTAuthorizationService>();
 
 
             //-----------------Repositories-------------------------
             serrvices.AddScoped<IUnitOfWork, UnitOfWork>();
             serrvices.AddScoped<IUserRepository, UserRepository>();
             serrvices.AddScoped<IRoleRepository, RoleRepository>();
+
+            // Bio
             serrvices.AddScoped<IBiographyRepository, BiographyRepository>();
+            
             // Work & Education repositories
             serrvices.AddScoped<IEducationRepository, EducationRepository>();
             serrvices.AddScoped<IWorkRepository, WorkRepository>();
+
             //Family Tree
             serrvices.AddScoped<IFamilyTreeRepository, FamilyTreeRepository>();
             serrvices.AddScoped<IFTMemberRepository, FTMemberRepository>();
@@ -67,7 +78,10 @@ namespace FTM.API.Extensions
             serrvices.AddScoped<ICareerHonorRepository, CareerHonorRepository>();
             serrvices.AddScoped<IAcademicHonorService, AcademicHonorService>();
             serrvices.AddScoped<ICareerHonorService, CareerHonorService>();
-            
+
+            // FT Authorization
+            serrvices.AddScoped<IFTAuthorizationRepository, FTAuthorizationRepository>();
+
             // Generic 
             serrvices.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         }
