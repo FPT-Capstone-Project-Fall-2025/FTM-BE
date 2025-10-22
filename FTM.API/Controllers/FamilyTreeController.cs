@@ -185,17 +185,22 @@ namespace FTM.API.Controllers
         /// </summary>
         /// <returns>Danh sách gia phả của tôi</returns>
         [HttpGet("my-family-trees")]
-        public async Task<IActionResult> GetMyFamilyTrees()
+        public async Task<ActionResult<Pagination<FamilyTreeDataTableDto>>> GetMyFamilyTrees([FromQuery] SearchWithPaginationRequest requestParams)
         {
-            try
+            var specParams = new FamilyTreeSpecParams()
             {
-                var result = await _familyTreeService.GetMyFamilyTreesAsync();
-                return Ok(new ApiSuccess(result));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ApiError($"Lỗi hệ thống: {ex.Message}"));
-            }
+                Search = requestParams.Search ?? string.Empty,
+                PropertyFilters = requestParams.PropertyFilters ?? string.Empty,
+                OrderBy = requestParams.OrderBy ?? string.Empty,
+                Skip = ((requestParams.PageIndex) - 1) * (requestParams.PageSize),
+                Take = requestParams.PageSize
+            };
+
+            var data = await _familyTreeService.GetMyFamilyTreesAsync(specParams);
+            var totalItems = await _familyTreeService.CountMyFamilyTreesAsync(specParams);
+
+            return Ok(new ApiSuccess("Lấy danh sách gia phả của tôi thành công", new Pagination<FamilyTreeDataTableDto>(requestParams.PageIndex,
+                requestParams.PageSize, totalItems, data)));
         }
 
     }

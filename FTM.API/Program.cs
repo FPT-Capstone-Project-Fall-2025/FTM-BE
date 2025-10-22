@@ -29,7 +29,12 @@ builder.Services.AddControllers()
 
         //Example: To make your API send and receive enum names like "View", "Edit", "Delete"
         options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+    })
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.SuppressModelStateInvalidFilter = true;
     });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSwaggerDocumentation();

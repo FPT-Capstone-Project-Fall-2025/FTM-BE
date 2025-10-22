@@ -52,6 +52,9 @@ namespace FTM.Application.Helpers
                 .ForMember(dest => dest.BurialWard, opt => opt.MapFrom(src => src.BurialWard))
                 .ForMember(dest => dest.FTMemberFiles, opt => opt.MapFrom(src => src.FTMemberFiles));
 
+            CreateMap<FamilyTree, FamilyTreeDataTableDto>()
+                .ForMember(dest => dest.MemberCount, opt => opt.MapFrom(src => src.FTMembers.Any() ? src.FTMembers.Count : 0));
+
             CreateMap<FTMember, FTMemberSimpleDto>();
             CreateMap<FTMemberFileRequest, FTMemberFile>().ReverseMap();
             CreateMap<MReligionDto, MReligion>().ReverseMap();
@@ -61,9 +64,9 @@ namespace FTM.Application.Helpers
             CreateMap<MprovinceDto, Mprovince>().ReverseMap();
             CreateMap<FTMemberFileDto, FTMemberFile>().ReverseMap();
             CreateMap<UpsertFTRelationshipRequest, FTRelationship>().ReverseMap();
-
-            CreateMap<FamilyTree, FamilyTreeDataTableDto>()
-                .ForMember(dest => dest.MemberCount, opt => opt.MapFrom(src => src.FTMembers.Any() ? src.FTMembers.Count : 0));
+            CreateMap<UpsertFTAuthorizationRequest, FTAuthorization>();
+            CreateMap<FTAuthorization, FTAuthorizationDto>();
+           
         }
     }
 }

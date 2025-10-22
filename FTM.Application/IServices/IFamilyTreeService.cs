@@ -14,6 +14,7 @@ namespace FTM.Application.IServices
         Task DeleteFamilyTreeAsync(Guid id);
         Task<IReadOnlyList<FamilyTreeDataTableDto>> GetFamilyTreesAsync(FamilyTreeSpecParams specParams);
         Task<int> CountFamilyTreesAsync(FamilyTreeSpecParams specParams);
-        Task<List<FamilyTreeDataTableDto>> GetMyFamilyTreesAsync();
+        Task<int> CountMyFamilyTreesAsync(FamilyTreeSpecParams specParams);
+        Task<IReadOnlyList<FamilyTreeDataTableDto>> GetMyFamilyTreesAsync(FamilyTreeSpecParams specParams);
     }
 }

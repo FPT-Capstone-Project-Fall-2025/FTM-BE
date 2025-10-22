@@ -352,7 +352,7 @@ namespace FTM.Application.Services
 
             if (members.Count() == 0)
             {
-                throw new ArgumentException("Không tìm thấy thành viên gia phả với UserId này");
+                throw new ArgumentException("Không tìm thấy thành viên gia phả.");
             }
 
             return _mapper.Map<FTMemberDetailsDto>(members.First());

@@ -32,7 +32,8 @@ namespace FTM.Infrastructure.Data
         public virtual DbSet<FTMemberFile> FTMemberFiles { get; set; }
         public virtual DbSet<FamilyTree> FamilyTrees { get; set; }
         public virtual DbSet<FTRelationship> FTRelationships { get; set; }
-        
+        public virtual DbSet<FTAuthorization> FTAuthorizations { get; set; }
+
         // Posts
         public virtual DbSet<Post> Posts { get; set; }
         public virtual DbSet<PostComment> PostComments { get; set; }
