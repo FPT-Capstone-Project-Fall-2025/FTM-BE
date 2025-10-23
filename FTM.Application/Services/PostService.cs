@@ -181,7 +181,10 @@ namespace FTM.Application.Services
             if (post == null)
                 return null;
 
-            return await MapToPostResponseDto(post);
+            // Automatically get current user's GPMemberId based on the post's family tree
+            var currentUserGPMemberId = await GetCurrentUserGPMemberId(post.GPId);
+            
+            return await MapToPostResponseDto(post, currentUserGPMemberId);
         }
 
         public async Task<IEnumerable<PostResponseDto>> GetPostsByFamilyTreeAsync(PostSpecParams specParams)
@@ -189,9 +192,16 @@ namespace FTM.Application.Services
             var posts = await _postRepository.GetPostsAsync(specParams);
             var result = new List<PostResponseDto>();
 
+            // Get current user's GPMemberId once for all posts (they're from same family tree)
+            Guid? currentUserGPMemberId = null;
+            if (specParams.FamilyTreeId.HasValue)
+            {
+                currentUserGPMemberId = await GetCurrentUserGPMemberId(specParams.FamilyTreeId.Value);
+            }
+
             foreach (var post in posts)
             {
-                result.Add(await MapToPostResponseDto(post));
+                result.Add(await MapToPostResponseDto(post, currentUserGPMemberId));
             }
 
             return result;
@@ -207,9 +217,17 @@ namespace FTM.Application.Services
             var posts = await _postRepository.GetPostsAsync(specParams);
             var result = new List<PostResponseDto>();
 
+            // Get current user's GPMemberId - try to get from first post's family tree
+            Guid? currentUserGPMemberId = null;
+            var firstPost = posts.FirstOrDefault();
+            if (firstPost != null)
+            {
+                currentUserGPMemberId = await GetCurrentUserGPMemberId(firstPost.GPId);
+            }
+
             foreach (var post in posts)
             {
-                result.Add(await MapToPostResponseDto(post));
+                result.Add(await MapToPostResponseDto(post, currentUserGPMemberId));
             }
 
             return result;
@@ -392,9 +410,22 @@ namespace FTM.Application.Services
 
         #region Mapping Methods
 
-        private async Task<PostResponseDto> MapToPostResponseDto(Post post)
+        private async Task<PostResponseDto> MapToPostResponseDto(Post post, Guid? currentUserGPMemberId = null)
         {
             var reactionsSummary = await GetReactionsSummaryForPostAsync(post.Id);
+            
+            // Get current user's reaction if currentUserGPMemberId is provided
+            PostReactionDto? currentUserReaction = null;
+            if (currentUserGPMemberId.HasValue && currentUserGPMemberId.Value != Guid.Empty)
+            {
+                var userReaction = await _reactionRepository.GetReactionByMemberAsync(
+                    currentUserGPMemberId.Value, post.Id);
+                
+                if (userReaction != null && userReaction.IsDeleted == false)
+                {
+                    currentUserReaction = MapToPostReactionDto(userReaction);
+                }
+            }
 
             return new PostResponseDto
             {
@@ -413,6 +444,7 @@ namespace FTM.Application.Services
                 TotalComments = post.PostComments?.Count(c => c.IsDeleted == false) ?? 0,
                 TotalReactions = post.PostReactions?.Count(r => r.IsDeleted == false) ?? 0,
                 ReactionsSummary = reactionsSummary,
+                CurrentUserReaction = currentUserReaction,
                 Attachments = post.PostAttachments?
                     .Where(a => a.IsDeleted == false)
                     .Select(a => new PostAttachmentDto
@@ -475,6 +507,19 @@ namespace FTM.Application.Services
         {
             var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+        }
+
+        private async Task<Guid?> GetCurrentUserGPMemberId(Guid familyTreeId)
+        {
+            var userId = GetCurrentUserId();
+            if (userId == Guid.Empty)
+                return null;
+
+            // Query FTMember by UserId and FamilyTreeId
+            var member = await _context.FTMembers
+                .FirstOrDefaultAsync(m => m.UserId == userId && m.FTId == familyTreeId && m.IsDeleted == false);
+
+            return member?.Id;
         }
 
         #endregion
