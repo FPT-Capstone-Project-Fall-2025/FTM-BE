@@ -21,6 +21,7 @@ namespace FTM.Domain.DTOs.Posts
         public int TotalComments { get; set; }
         public int TotalReactions { get; set; }
         public Dictionary<string, int> ReactionsSummary { get; set; } = new Dictionary<string, int>();
+        public PostReactionDto? CurrentUserReaction { get; set; }
         
         public List<PostAttachmentDto> Attachments { get; set; } = new List<PostAttachmentDto>();
         public List<PostCommentDto> Comments { get; set; } = new List<PostCommentDto>();
