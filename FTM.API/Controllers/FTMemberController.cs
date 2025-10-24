@@ -22,7 +22,8 @@ namespace FTM.API.Controllers
         }
 
         [HttpPost("{ftId}/add")]
-        public async Task<IActionResult> Add([FromRoute] Guid ftId, [FromBody] UpsertFTMemberRequest request)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> Add([FromRoute] Guid ftId, [FromForm] UpsertFTMemberRequest request)
         {
             if (!ModelState.IsValid)
             {
