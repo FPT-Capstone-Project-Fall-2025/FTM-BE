@@ -35,7 +35,7 @@ namespace FTM.API.Controllers
             return Ok(new ApiSuccess("Tạo thành viên gia phả thành công", result));
         }
 
-        [HttpGet("/list")]
+        [HttpGet("list")]
         public async Task<IActionResult> GetListOfMembers([FromQuery] SearchWithPaginationRequest requestParams)
         {
             var specParams = new FTMemberSpecParams()
