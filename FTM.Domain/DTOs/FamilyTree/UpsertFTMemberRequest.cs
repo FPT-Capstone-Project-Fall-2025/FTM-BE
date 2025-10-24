@@ -16,49 +16,51 @@ namespace FTM.Domain.DTOs.FamilyTree
         [JsonConverter(typeof(StringSensitive))]
         public string Fullname { get; set; }
 
-        public int? Gender { get; set; }
+        [Required]
+        public int Gender { get; set; }
 
         public DateTime? Birthday { get; set; }
-        public bool? IsDeath { get; set; }
+
+        [Required]
+        public bool IsDeath { get; set; }
 
         [JsonConverter(typeof(StringSensitive))]
-        public string DeathDescription { get; set; }
+        public string? DeathDescription { get; set; }
         public DateTime? DeathDate { get; set; }
 
         [JsonConverter(typeof(StringSensitive))]
-        public string BurialAddress { get; set; }
+        public string? BurialAddress { get; set; }
         public Guid? BurialWardId { get; set; }
         public Guid? BurialProvinceId { get; set; }
 
-        public string IdentificationType { get; set; }
+        public string? IdentificationType { get; set; }
 
         [JsonConverter(typeof(StringSensitive))]
-        public string IdentificationNumber { get; set; }
+        public string? IdentificationNumber { get; set; }
         public Guid? EthnicId { get; set; }
         public Guid? ReligionId { get; set; }
+
+        [Required]
         public int CategoryCode { get; set; }
 
         [JsonConverter(typeof(StringSensitive))]
-        public string Address { get; set; }
+        public string? Address { get; set; }
         public Guid? WardId { get; set; }
         public Guid? ProvinceId { get; set; }
 
         [AllowNull]
         [JsonConverter(typeof(EmailSensitive))]
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
         [AllowNull]
         [JsonConverter(typeof(PhoneSensitive))]
-        public string PhoneNumber { get; set; }
+        public string? PhoneNumber { get; set; }
 
-        public string Picture { get; set; }
-
-        public string Content { get; set; }
+        public string? Content { get; set; }
 
         public string? StoryDescription { get; set; }
 
-        public Guid? FTMemberParentId { get; set; }
-
+        [Required]
         public Guid FTId { get; set; }
 
         public Guid? RootId { get; set; }

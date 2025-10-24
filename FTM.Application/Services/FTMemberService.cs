@@ -3,6 +3,7 @@ using AutoMapper.Execution;
 using FTM.Application.IServices;
 using FTM.Domain.DTOs.FamilyTree;
 using FTM.Domain.Entities.FamilyTree;
+using FTM.Domain.Entities.Posts;
 using FTM.Domain.Enums;
 using FTM.Domain.Models;
 using FTM.Domain.Specification;
@@ -11,6 +12,7 @@ using FTM.Domain.Specification.FTMembers;
 using FTM.Infrastructure.Repositories.Implement;
 using FTM.Infrastructure.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -28,6 +30,7 @@ namespace FTM.Application.Services
         private readonly IGenericRepository<FamilyTree> _familyTreeRepository;
         private readonly IFTMemberRepository _fTMemberRepository;
         private readonly IGenericRepository<FTRelationship> _fTRelationshipRepository;
+        private readonly IBlobStorageService _blobStorageService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
@@ -35,6 +38,7 @@ namespace FTM.Application.Services
             IGenericRepository<FamilyTree> familyTreeRepository,
             IFTMemberRepository FTMemberRepository,
             IGenericRepository<FTRelationship> FTRelationshipRepository,
+            IBlobStorageService blobStorageService,
             IUnitOfWork unitOfWork,
             IMapper mapper)
         {
@@ -62,9 +66,23 @@ namespace FTM.Application.Services
             var executionStrategy = _unitOfWork.CreateExecutionStrategy();
             var ftMember = _mapper.Map<FTMember>(request);
             ftMember.FTRole = FTMRole.FTMember;
+
             // Dummy For member file
             //ftMember.FTMemberFiles.First().FilePath = "dummyFilePath";
+            // Handle File
+            if (request.FTMemberFiles != null && request.FTMemberFiles.Any())
+            {
+                for (int i = 0; i < request.FTMemberFiles.Count; i++)
+                {
+                    var item = request.FTMemberFiles[i];
+                    var fileType = string.IsNullOrEmpty(item.FileType)? "1": item.FileType; // Default: Image
 
+                    // Upload to Blob Storage
+                    var fileUrl = await _blobStorageService.UploadFileAsync(item.File, "ftmembers", null);
+                    ftMember.FTMemberFiles.ElementAt(i).FilePath = fileUrl;
+                    ftMember.FTMemberFiles.ElementAt(i).FileType= fileType;
+                }
+            }
             await executionStrategy.ExecuteAsync(
                    async () =>
                    {
@@ -231,11 +249,12 @@ namespace FTM.Application.Services
                 await _fTMemberRepository.AddAsync(ftMember);
 
                 // Create a new partner
+                var definedPosition = (request.Gender) == 0 ? "Vợ của" : "Chồng của";
                 var partnerOfParentUndefined = new FTMember()
                 {
                     StatusCode = FTMemberStatus.UNDEFINED,
                     FTId = request.FTId,
-                    Fullname = $"Người đồng hành với {request.Fullname}",
+                    Fullname = $"{definedPosition} {request.Fullname}",
                     IsRoot = false,
                     FTRole = FTMRole.FTMember,
                     Gender = request.Gender == 1 ? 0 : 1,
