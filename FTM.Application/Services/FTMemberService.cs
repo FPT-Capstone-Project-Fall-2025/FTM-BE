@@ -390,5 +390,14 @@ namespace FTM.Application.Services
             var spec = new FTMemberForCountSpecification(specParams);
             return await _fTMemberRepository.CountAsync(spec);
         }
+
+        public async Task<FTMemberDetailsDto> UpdateDetailsByMemberId(Guid ftId, UpdateFTMemberRequest request)
+        {
+            var existingMember = await _fTMemberRepository.GetByIdAsync(request.ftMemberId);
+            _mapper.Map(request, existingMember);
+            _fTMemberRepository.Update(existingMember);
+            await _unitOfWork.CompleteAsync();
+            return await GetByMemberId(ftId,request.ftMemberId);
+        }
     }
 }
