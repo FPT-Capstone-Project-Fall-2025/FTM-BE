@@ -1,4 +1,5 @@
-﻿using FTM.API.Helpers;
+﻿using AutoMapper.Execution;
+using FTM.API.Helpers;
 using FTM.API.Reponses;
 using FTM.Application.IServices;
 using FTM.Application.Services;
@@ -21,7 +22,7 @@ namespace FTM.API.Controllers
             _fTMemberService = fTMemberService;
         }
 
-        [HttpPost("{ftId}/add")]
+        [HttpPost("{ftId}")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Add([FromRoute] Guid ftId, [FromForm] UpsertFTMemberRequest request)
         {
@@ -73,6 +74,17 @@ namespace FTM.API.Controllers
         {
             var members = await _fTMemberService.GetMembersTree(ftId);
             return Ok(new ApiSuccess("Lấy cây gia phả thành công",members));
+        }
+
+        [HttpPut("{ftId}")]
+        public async Task<IActionResult> UpdateMemberDetails([FromRoute] Guid ftId, UpdateFTMemberRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return ThrowModelErrors();
+            }
+            var result = await _fTMemberService.UpdateDetailsByMemberId(ftId, request);
+            return Ok(new ApiSuccess("Cập nhật thông tin thành viên thành công", result));
         }
 
         private IActionResult ThrowModelErrors()

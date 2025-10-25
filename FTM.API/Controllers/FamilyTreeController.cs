@@ -29,7 +29,7 @@ namespace FTM.API.Controllers
         /// </summary>
         /// <param name="request">Thông tin gia phả</param>
         /// <returns>Chi tiết gia phả vừa tạo</returns>
-        [HttpPost("add")]
+        [HttpPost]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Add([FromForm] UpsertFamilyTreeRequest request)
         {
@@ -94,7 +94,7 @@ namespace FTM.API.Controllers
         /// <param name="id">ID gia phả</param>
         /// <param name="request">Thông tin cập nhật</param>
         /// <returns>Chi tiết gia phả sau khi cập nhật</returns>
-        [HttpPost("edit/{id}")]
+        [HttpPut("{id}")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Edit(Guid id, [FromForm] UpsertFamilyTreeRequest request)
         {
@@ -135,7 +135,7 @@ namespace FTM.API.Controllers
         /// </summary>
         /// <param name="id">ID gia phả</param>
         /// <returns>Kết quả xóa</returns>
-        [HttpPost("delete/{id}")]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
             try

@@ -66,7 +66,22 @@ namespace FTM.Application.Helpers
             CreateMap<UpsertFTRelationshipRequest, FTRelationship>().ReverseMap();
             CreateMap<UpsertFTAuthorizationRequest, FTAuthorization>();
             CreateMap<FTAuthorization, FTAuthorizationDto>();
-           
+
+            CreateMap<UpdateFTMemberRequest, FTMember>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.FTId, opt => opt.Ignore())
+                .ForMember(dest => dest.FT, opt => opt.Ignore())
+                .ForMember(dest => dest.FTRole, opt => opt.Ignore())
+                .ForMember(dest => dest.StatusCode, opt => opt.Ignore())
+                .ForMember(dest => dest.PrivacyData, opt => opt.Ignore())
+                .ForMember(dest => dest.FTMemberFiles, opt => opt.Ignore())
+                .ForMember(dest => dest.FTRelationshipFrom, opt => opt.Ignore())
+                .ForMember(dest => dest.FTRelationshipFromPartner, opt => opt.Ignore())
+                .ForMember(dest => dest.FTRelationshipTo, opt => opt.Ignore())
+                .ForMember(dest => dest.FTAuthorizations, opt => opt.Ignore())
+                // chỉ map khi source != null
+                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+
         }
     }
 }

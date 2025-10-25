@@ -15,6 +15,7 @@ namespace FTM.Application.IServices
         Task<FTMemberDetailsDto> Add(Guid FTId, UpsertFTMemberRequest request);
         Task<FTMemberTreeDto> GetMembersTree(Guid ftId);
         Task<FTMemberDetailsDto> GetByMemberId(Guid ftid, Guid memberId);
+        Task<FTMemberDetailsDto> UpdateDetailsByMemberId(Guid ftId, UpdateFTMemberRequest request);
         Task<IReadOnlyList<FTMemberSimpleDto>> GetListOfMembers(FTMemberSpecParams specParams);
         Task<int> CountMembers(FTMemberSpecParams specParams);
     }
