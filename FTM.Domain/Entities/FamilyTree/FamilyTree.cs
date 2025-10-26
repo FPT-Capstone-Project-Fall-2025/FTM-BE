@@ -21,6 +21,8 @@ namespace FTM.Domain.Entities.FamilyTree
         public bool? IsActive { get; set; } = true;
         public int? GPModeCode { get; set; }
 
+        public virtual ICollection<FTInvitation> FTInvitations { get; set; } = new List<FTInvitation>();
+        public virtual ICollection<FTUser> FTUsers { get; set; } = new List<FTUser>();
         public virtual ICollection<FTMember> FTMembers { get; set; } = new List<FTMember>();
         public virtual ICollection<FTAuthorization> FTAuthorizations { get; set; } = new List<FTAuthorization>();
     }

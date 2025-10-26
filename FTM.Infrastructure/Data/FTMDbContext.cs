@@ -2,6 +2,7 @@
 using FTM.Domain.Entities.Applications;
 using FTM.Domain.Entities.FamilyTree;
 using FTM.Domain.Entities.Identity;
+using FTM.Domain.Entities.Notifications;
 using FTM.Domain.Entities.Posts;
 using FTM.Infrastructure.Configurations;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +25,7 @@ namespace FTM.Infrastructure.Data
         {
         }
 
+        // Family Tree
         public virtual DbSet<Mprovince> Mprovinces { get; set; }
         public virtual DbSet<MWard> MWards { get; set; }
         public virtual DbSet<MEthnic> MEthnics { get; set; }
@@ -33,6 +35,11 @@ namespace FTM.Infrastructure.Data
         public virtual DbSet<FamilyTree> FamilyTrees { get; set; }
         public virtual DbSet<FTRelationship> FTRelationships { get; set; }
         public virtual DbSet<FTAuthorization> FTAuthorizations { get; set; }
+        public virtual DbSet<FTInvitation> FTInvitations { get; set; }
+        public virtual DbSet<FTUser> FTUsers { get; set; }
+
+        // Notifications
+        public virtual DbSet<FTNotification> FTNotifications { get; set; }
 
         // Posts
         public virtual DbSet<Post> Posts { get; set; }
@@ -55,6 +62,9 @@ namespace FTM.Infrastructure.Data
             builder.ApplyConfiguration(new FamilyTreeConfiguration());
             builder.ApplyConfiguration(new FTRelationshipConfiguration());
             builder.ApplyConfiguration(new FTAuthorizationConfiguration());
+            builder.ApplyConfiguration(new FTInvitationConfiguration());
+            builder.ApplyConfiguration(new FTNotificationConfiguration());
+            builder.ApplyConfiguration(new FTUserConfiguration());
             builder.ApplyConfiguration(new PostConfiguration());
             builder.ApplyConfiguration(new PostCommentConfiguration());
             builder.ApplyConfiguration(new PostReactionConfiguration());

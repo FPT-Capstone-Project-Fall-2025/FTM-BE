@@ -9,6 +9,7 @@ namespace FTM.Domain.Enums
     public enum FTMRole
     {
         FTMember = 1,
-        FTGuest = 2
+        FTGuest = 2,
+        FTOwner = 3,
     }
 }
