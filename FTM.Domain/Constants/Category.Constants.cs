@@ -14,6 +14,8 @@ namespace FTM.Domain.Constants
             public const int FT_MEMBER_RELATIONSHIP_CATEGORY = 5;
             public const int FT_AUTHORIZATION_METHOD = 6;
             public const int FT_AUTHORIZATION_FEATURE = 7;
+            public const int FT_INVITATION = 8;
+            public const int FT_NOTIFICATION = 9;
         }
     }
 }
