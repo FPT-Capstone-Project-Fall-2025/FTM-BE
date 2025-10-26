@@ -30,7 +30,22 @@ namespace FTM.Infrastructure.Repositories.Implement
                               .Include(m => m.BurialWard)
                               .Include(m => m.BurialProvince)
                               .Include(m => m.FTMemberFiles)
+                              .Where(m => m.IsDeleted == false)
                               .FirstOrDefaultAsync(m =>  m.Id == id);
+        }
+
+        public async Task<FTMember?> GetMemberById(Guid id)
+        {
+            return await _context.FTMembers.Include(m => m.Ethnic)
+                              .Include(m => m.FT)
+                              .Include(m => m.FTRelationshipFrom)
+                                .ThenInclude(x => x.ToFTMember)
+                              .Include(m => m.FTRelationshipTo)
+                                .ThenInclude(x => x.FromFTMember)
+                                    .ThenInclude(x => x.FTRelationshipFrom)
+                                        .ThenInclude(x => x.FromFTMemberPartner)
+                              .Where(m => m.IsDeleted == false)
+                              .FirstOrDefaultAsync(m => m.Id == id);
         }
 
         public async Task<List<FTMember>> GetMembersTree(Guid ftId)
@@ -39,7 +54,7 @@ namespace FTM.Infrastructure.Repositories.Implement
                 .Include(m => m.FTRelationshipFrom)
                 .Include(m => m.FTRelationshipTo)
                 .Include(m => m.FTMemberFiles)
-                .Where(x => x.FTId == ftId)
+                .Where(x => x.FTId == ftId && x.IsDeleted == false)
                 .OrderBy(m => m.Birthday)
                 .ToListAsync();
         }

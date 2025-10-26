@@ -21,7 +21,7 @@ namespace FTM.Domain.Specification.FamilyTrees
                            x.Name.ToLower().Contains(specParams.Search.ToLower()) ||
                            (x.Description != null && x.Description.ToLower().Contains(specParams.Search.ToLower())) ||
                            (x.Owner != null && x.Owner.ToLower().Contains(specParams.Search.ToLower()))
-                     ))
+                     ) && x.IsDeleted == false)
         {
             AddInclude(x => x.FTMembers);
 

@@ -19,18 +19,18 @@ namespace FTM.Infrastructure.Configurations
             builder.HasOne(r => r.FromFTMember)
                 .WithMany(m => m.FTRelationshipFrom)
                 .HasForeignKey(r => r.FromFTMemberId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(r => r.FromFTMemberPartner)
                 .WithMany(m => m.FTRelationshipFromPartner)
                 .HasForeignKey(r => r.FromFTMemberPartnerId)
                 .IsRequired(false)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(r => r.ToFTMember)
                .WithMany(m => m.FTRelationshipTo)
                .HasForeignKey(r => r.ToFTMemberId)
-               .OnDelete(DeleteBehavior.Restrict);
+               .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

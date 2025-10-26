@@ -20,7 +20,7 @@ namespace FTM.Domain.Specification.FTMembers
                            x.Fullname.ToLower().Contains(specParams.Search.ToLower()) ||
                            (x.Email != null && x.Email.ToLower().Contains(specParams.Search.ToLower())) ||
                            (x.Address != null && x.Address.ToLower().Contains(specParams.Search.ToLower()))
-                     ))
+                     ) && x.IsDeleted == false)
         {
 
             AddInclude(x => x.Ethnic);

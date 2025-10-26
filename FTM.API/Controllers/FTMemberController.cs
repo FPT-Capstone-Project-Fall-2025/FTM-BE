@@ -87,6 +87,14 @@ namespace FTM.API.Controllers
             return Ok(new ApiSuccess("Cập nhật thông tin thành viên thành công", result));
         }
 
+
+        [HttpDelete("{ftMemberId}")]
+        public async Task<IActionResult> DeleteMember([FromRoute] Guid ftMemberId)
+        {
+            await _fTMemberService.Delete(ftMemberId);
+            return Ok(new ApiSuccess("Xoá thành viên của gia phả thành công"));
+        }
+
         private IActionResult ThrowModelErrors()
         {
             var message = string.Join(" | ", ModelState.Values

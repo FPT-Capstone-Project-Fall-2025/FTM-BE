@@ -20,7 +20,7 @@ namespace FTM.Domain.Specification.FTAuthorizations
                            x.AuthorizedMember.Fullname.ToLower().Contains(specParams.Search.ToLower()) ||
                            (x.AuthorizedMember.Email != null && x.AuthorizedMember.Email.ToLower().Contains(specParams.Search.ToLower())) ||
                            (x.FamilyTree.Name != null && x.FamilyTree.Name.ToLower().Contains(specParams.Search.ToLower()))
-                     ))
+                     ) && x.IsDeleted == false)
 
         {
             AddInclude(x => x.FamilyTree);

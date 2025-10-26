@@ -21,7 +21,8 @@ namespace FTM.Domain.Specification.FamilyTrees
                            x.Name.ToLower().Contains(specParams.Search.ToLower()) ||
                            (x.Description != null && x.Description.ToLower().Contains(specParams.Search.ToLower())) ||
                            (x.Owner != null && x.Owner.ToLower().Contains(specParams.Search.ToLower()))
-                     ) && ((x.OwnerId == userId) || (x.FTMembers.Any(m => m.UserId == userId))))
+                     ) && ((x.OwnerId == userId) || (x.FTMembers.Any(m => m.UserId == userId)))
+                       && x.IsDeleted == false)
         {
             ApplyPaging(specParams.Skip, specParams.Take);
 
