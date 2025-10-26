@@ -1,5 +1,6 @@
 ﻿using FTM.Domain.DTOs.Authen;
 using FTM.Domain.Entities.Applications;
+using FTM.Domain.Entities.Events;
 using FTM.Domain.Entities.FamilyTree;
 using FTM.Domain.Entities.Identity;
 using FTM.Domain.Entities.Notifications;
@@ -51,6 +52,11 @@ namespace FTM.Infrastructure.Data
         public virtual DbSet<AcademicHonor> AcademicHonors { get; set; }
         public virtual DbSet<CareerHonor> CareerHonors { get; set; }
 
+        // Family Events
+        public virtual DbSet<FTFamilyEvent> FTFamilyEvents { get; set; }
+        public virtual DbSet<FTFamilyEventMember> FTFamilyEventMembers { get; set; }
+        public virtual DbSet<FTFamilyEventFT> FTFamilyEventFTs { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.ApplyConfiguration(new MEthicConfiguration());
@@ -71,6 +77,9 @@ namespace FTM.Infrastructure.Data
             builder.ApplyConfiguration(new PostAttachmentConfiguration());
             builder.ApplyConfiguration(new AcademicHonorConfiguration());
             builder.ApplyConfiguration(new CareerHonorConfiguration());
+            builder.ApplyConfiguration(new FTFamilyEventConfiguration());
+            builder.ApplyConfiguration(new FTFamilyEventMemberConfiguration());
+            builder.ApplyConfiguration(new FTFamilyEventFTConfiguration());
             base.OnModelCreating(builder);
         }
 
