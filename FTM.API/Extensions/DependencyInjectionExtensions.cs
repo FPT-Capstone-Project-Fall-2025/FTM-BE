@@ -84,6 +84,10 @@ namespace FTM.API.Extensions
             serrvices.AddScoped<IAcademicHonorService, AcademicHonorService>();
             serrvices.AddScoped<ICareerHonorService, CareerHonorService>();
 
+            // Family Events
+            serrvices.AddScoped<IFTFamilyEventRepository, FTFamilyEventRepository>();
+            serrvices.AddScoped<IFTFamilyEventService, FTFamilyEventService>();
+
             // FT Authorization
             serrvices.AddScoped<IFTAuthorizationRepository, FTAuthorizationRepository>();
 
