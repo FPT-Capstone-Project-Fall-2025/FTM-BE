@@ -1,4 +1,5 @@
 ﻿using FTM.Domain.Entities.FamilyTree;
+using FTM.Domain.Entities.Notifications;
 using FTM.Infrastructure.Data;
 using FTM.Infrastructure.Repositories.Interface;
 using System;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace FTM.Infrastructure.Repositories.Implement
 {
-    public class FTNotificationRepository : GenericRepository<FamilyTree>, IFamilyTreeRepository
+    public class FTNotificationRepository : GenericRepository<FTNotification>, IFTNotificationRepository
     {
         private readonly FTMDbContext _context;
         private readonly ICurrentUserResolver _currentUserResolver;

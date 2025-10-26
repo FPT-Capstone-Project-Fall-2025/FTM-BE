@@ -9,5 +9,6 @@ namespace FTM.Infrastructure.Repositories.Interface
 {
     public interface IFTUserRepository : IGenericRepository<FTUser>
     {
+        Task<FTUser?> FindOwnerAsync(Guid ftId);
     }
 }

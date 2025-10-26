@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace FTM.Infrastructure.Repositories.Interface
 {
-    public interface IFTNotification : IGenericRepository<FTNotification>
+    public interface IFTNotificationRepository : IGenericRepository<FTNotification>
     {
     }
 }

@@ -4,6 +4,7 @@ using FTM.Domain.Constants;
 using FTM.Domain.DTOs.FamilyTree;
 using FTM.Domain.Entities.FamilyTree;
 using FTM.Domain.Entities.Identity;
+using FTM.Domain.Enums;
 using FTM.Domain.Specification.FamilyTrees;
 using FTM.Domain.Specification.FTMembers;
 using FTM.Infrastructure.Data;
@@ -31,6 +32,7 @@ namespace FTM.Application.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly IGenericRepository<FamilyTree> _familyTreeRepository;
+        private readonly IFTUserRepository _ftUserRepository;
         private readonly IMapper _mapper;
         private readonly IBlobStorageService _blobStorageService;
 
@@ -43,6 +45,7 @@ namespace FTM.Application.Services
             IUserRepository userRepository,
             IRoleRepository roleRepository,
             IGenericRepository<FamilyTree> familyTreeRepository,
+            IFTUserRepository ftUserRepository,
             UserManager<ApplicationUser> userManager,
             RoleManager<ApplicationRole> roleManager,
             IBlobStorageService blobStorageService)
@@ -53,6 +56,7 @@ namespace FTM.Application.Services
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _familyTreeRepository = familyTreeRepository;
+            _ftUserRepository = ftUserRepository;
             _userRepository = userRepository;
             _roleRepository = roleRepository;
             _userManager = userManager;
@@ -109,33 +113,20 @@ namespace FTM.Application.Services
                     IsDeleted = false
                 };
 
-                _context.FamilyTrees.Add(familyTree);
-                await _context.SaveChangesAsync();
+                await _familyTreeRepository.AddAsync(familyTree);
 
-                // Complete the unit of work for FamilyTree creation
+                // Assign Role
+                var owner = new FTUser
+                {
+                    UserId = _currentUserResolver.UserId,
+                    Name = _currentUserResolver.Name,
+                    Username = _currentUserResolver.Username,
+                    FTId = familyTree.Id,
+                    FTRole = FTMRole.FTOwner
+                };
+                
+                await _ftUserRepository.AddAsync(owner);
                 await _unitOfWork.CompleteAsync();
-
-                //// Simplified: Just assign GPOwner role to user if not already assigned
-                //var currentUser = await _userManager.FindByIdAsync(_currentUserResolver.UserId.ToString());
-                //if (currentUser != null)
-                //{
-                //    // Ensure GPOwner role exists
-                //    var roleExists = await _roleManager.RoleExistsAsync(Roles.GPOwner);
-                //    if (!roleExists)
-                //    {
-                //        await _roleManager.CreateAsync(new ApplicationRole
-                //        {
-                //            Name = Roles.GPOwner,
-                //            NormalizedName = Roles.GPOwner.ToUpper()
-                //        });
-                //    }
-
-                //    var userRoles = await _userManager.GetRolesAsync(currentUser);
-                //    if (!userRoles.Contains(Roles.GPOwner))
-                //    {
-                //        await _userManager.AddToRoleAsync(currentUser, Roles.GPOwner);
-                //    }
-                //}
 
                 return await GetFamilyTreeByIdAsync(familyTree.Id);
             }
@@ -213,6 +204,13 @@ namespace FTM.Application.Services
                         throw new ArgumentException("Không tìm thấy người sở hữu");
                     }
                     newOwner = user.Name;
+                    var owner = await _ftUserRepository.FindOwnerAsync(familyTree.Id);
+
+                    if (owner is null) throw new ArgumentException("Không tìm thấy người sở hữu cây gia phả");
+                    owner.Name = newOwner;
+                    owner.Username = user.UserName;
+                    owner.UserId = user.Id;
+                    _ftUserRepository.Update(owner);
                 }
                 
 
