@@ -1,6 +1,8 @@
 ﻿using FTM.Domain.Entities.FamilyTree;
+using FTM.Domain.Enums;
 using FTM.Infrastructure.Data;
 using FTM.Infrastructure.Repositories.Interface;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +20,11 @@ namespace FTM.Infrastructure.Repositories.Implement
         {
             this._context = context;
             this._currentUserResolver = currentUserResolver;
+        }
+
+        public async Task<FTUser?> FindOwnerAsync(Guid ftId)
+        {
+            return await _context.FTUsers.Where(u => u.FTId == ftId && u.FTRole == FTMRole.FTOwner).FirstOrDefaultAsync();
         }
     }
 }

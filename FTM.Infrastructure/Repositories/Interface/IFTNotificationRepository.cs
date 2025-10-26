@@ -1,4 +1,4 @@
-﻿using FTM.Domain.Entities.FamilyTree;
+﻿using FTM.Domain.Entities.Notifications;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,8 +7,7 @@ using System.Threading.Tasks;
 
 namespace FTM.Infrastructure.Repositories.Interface
 {
-    public interface IFTUserRepository : IGenericRepository<FTUser>
+    public interface IFTNotificationRepository : IGenericRepository<FTNotification>
     {
-        Task<FTUser?> FindOwnerAsync(Guid ftId);
     }
 }
