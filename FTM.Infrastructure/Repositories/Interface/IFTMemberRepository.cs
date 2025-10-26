@@ -11,5 +11,6 @@ namespace FTM.Infrastructure.Repositories.Interface
     {
         Task<FTMember?> GetDetaildedById(Guid id);
         Task<List<FTMember>>  GetMembersTree(Guid ftId);
+        Task<FTMember?> GetMemberById(Guid id);
     }
 }

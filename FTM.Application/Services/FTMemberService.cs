@@ -399,5 +399,75 @@ namespace FTM.Application.Services
             await _unitOfWork.CompleteAsync();
             return await GetByMemberId(ftId,request.ftMemberId);
         }
+
+        public async Task Delete(Guid ftMemberId)
+        {
+            var member = await _fTMemberRepository.GetMemberById(ftMemberId);
+
+            // <----------------------Relationship Validation---------------------->
+            if (member == null)
+                throw new ArgumentException("Không tìm thấy thành viên trong cây gia phả.");
+
+            if (member.FTRelationshipFrom
+                      .Count(x => x.CategoryCode == FTRelationshipCategory.CHILDREN) > 1)
+                throw new ArgumentException(
+                    $"Thành viên {member.Fullname} có nhiều con trong cây gia phả, nên không thể xóa."
+                );
+
+            if (member.FTRelationshipFrom
+                      .Any(x => x.CategoryCode == FTRelationshipCategory.PARTNER &&
+                                x.ToFTMember.StatusCode != FTMemberStatus.UNDEFINED))
+                throw new ArgumentException(
+                    $"Không thể xóa thành viên {member.Fullname} vì họ vẫn còn mối quan hệ vợ/chồng(Người thật) trong gia phả. " +
+                    $"Vui lòng xóa hoặc vô hiệu hóa mối quan hệ đó trước."
+                );
+
+            if (member.FTRelationshipFrom.Any(x => x.CategoryCode == FTRelationshipCategory.CHILDREN) &&
+                member.FTRelationshipTo.Any(x => x.CategoryCode == FTRelationshipCategory.CHILDREN))
+                throw new ArgumentException(
+                    $"Không thể xóa thành viên {member.Fullname} vì họ vừa là mối quan hệ cha/mẹ và con trong gia phả. " +
+                    $"Vui lòng xóa hoặc vô hiệu hóa các mối quan hệ đó trước."
+                );
+
+            // <----------------------Handle Logic---------------------->
+            // Step 1: If the deleted member is partner and have the CHILDREN relationship => Soft Delete 
+            if (member.FTRelationshipTo.Any(x => x.FromFTMember.FTRelationshipFrom.Any(
+                                y => y.CategoryCode == FTRelationshipCategory.CHILDREN && y.FromFTMemberPartnerId == member.Id))){
+                member.Fullname = "Vô Danh";
+                member.StatusCode = FTMemberStatus.UNDEFINED;
+                _fTMemberRepository.Update(member);
+            }
+            else // Member is parent or child => Hard Delete
+            {
+                _fTMemberRepository.Delete(member);
+                _fTMemberRepository.Delete(member.FTRelationshipFrom.Select(x => x.ToFTMember).Where(m => m.StatusCode == FTMemberStatus.UNDEFINED).ToList());
+            }
+
+            // Step 2: Check if the member is a parent, signing root to the member's child
+            var child = member.FTRelationshipFrom.FirstOrDefault(x => x.CategoryCode == FTRelationshipCategory.CHILDREN);
+            if (child != null)
+            {
+                var childMember = child.ToFTMember;
+                childMember.IsRoot = true;
+                _fTMemberRepository.Update(childMember);
+            }
+
+            // Step 3: If deleting a child, check whether the partner of parent is underfine and the parent has a child, if it is true, remove the partner.
+            var parent = member.FTRelationshipTo.FirstOrDefault(x => x.CategoryCode == FTRelationshipCategory.CHILDREN && x.ToFTMemberId == member.Id);
+            if (parent != null && parent.FromFTMember.FTRelationshipFrom.Count(x => x.CategoryCode == FTRelationshipCategory.CHILDREN) == 1
+                && parent.FromFTMemberPartner.StatusCode == FTMemberStatus.UNDEFINED)
+            {
+                 _fTMemberRepository.Delete(parent.FromFTMemberPartner);
+            }
+
+            // Step 4: Check if the member is connected to a user, change user's role to GUEST
+            if (member.UserId.HasValue)
+            {
+                // Handle
+            }
+
+            await _unitOfWork.CompleteAsync();
+        }
+
     }
 }
