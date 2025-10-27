@@ -5,26 +5,30 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
+using System.Xml.Linq;
 
 namespace FTM.Domain.DTOs.FamilyTree
 {
     public class UpsertFTMemberRequest
     {
+        [FromForm(Name = "invitedUserEmail")]
+        public string? InvitedUserEmail {  get; set; }
+
         [Required]
         [JsonConverter(typeof(StringSensitive))]
         [FromForm(Name = "fullname")]
-        public string Fullname { get; set; }
+        public string? Fullname { get; set; }
 
         [Required]
         [FromForm(Name = "gender")]
-        public int Gender { get; set; }
+        public int? Gender { get; set; }
 
         [FromForm(Name = "birthday")]
         public DateTime? Birthday { get; set; }
 
         [Required]
         [FromForm(Name = "isDeath")]
-        public bool IsDeath { get; set; }
+        public bool? IsDeath { get; set; }
 
         [JsonConverter(typeof(StringSensitive))]
         [FromForm(Name = "deathDescription")]
@@ -58,7 +62,7 @@ namespace FTM.Domain.DTOs.FamilyTree
 
         [Required]
         [FromForm(Name = "categoryCode")]
-        public int CategoryCode { get; set; }
+        public int? CategoryCode { get; set; }
 
         [JsonConverter(typeof(StringSensitive))]
         [FromForm(Name = "address")]
@@ -90,7 +94,7 @@ namespace FTM.Domain.DTOs.FamilyTree
 
         [Required]
         [FromForm(Name = "ftId")]
-        public Guid FTId { get; set; }
+        public Guid? FTId { get; set; }
 
         [FromForm(Name = "rootId")]
         public Guid? RootId { get; set; }

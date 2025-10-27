@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
+using AutoMapper.Execution;
 using FTM.Domain.DTOs.FamilyTree;
 using FTM.Domain.Entities.Applications;
 using FTM.Domain.Entities.FamilyTree;
 using FTM.Domain.Models;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,7 +34,12 @@ namespace FTM.Application.Helpers
                                     Key = gr.Key,
                                     Value = gr.OrderBy(x => x.ToFTMember.Birthday).Select(rFrom => rFrom.ToFTMember.Id).ToArray()
                                 })))
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Fullname));
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Fullname))
+                .AfterMap((src, desc) => {
+                    if (desc.Partners.IsNullOrEmpty()) {
+                        desc.Partners = src.FTRelationshipTo.Where(x => x.CategoryCode == FTRelationshipCategory.PARTNER && x.ToFTMemberId == src.Id).Select(x => x.FromFTMember.Id).ToList();
+                    }
+                });
 
             CreateMap<UpsertFTMemberRequest, FTMember>()
                 .ForMember(dest => dest.FTMemberFiles, opt => opt.MapFrom(src => src.FTMemberFiles))

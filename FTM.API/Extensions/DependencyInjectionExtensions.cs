@@ -38,6 +38,7 @@ namespace FTM.API.Extensions
             //Family Tree
             serrvices.AddScoped<IFamilyTreeService, FamilyTreeService>();
             serrvices.AddScoped<IFTMemberService, FTMemberService>();
+            serrvices.AddScoped<IFTInvitationService, FTInvitationService>();
 
             // Auto Mapper
             serrvices.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
