@@ -3,6 +3,7 @@ using AutoMapper.Execution;
 using FTM.Application.IServices;
 using FTM.Domain.DTOs.FamilyTree;
 using FTM.Domain.Entities.FamilyTree;
+using FTM.Domain.Entities.Identity;
 using FTM.Domain.Entities.Posts;
 using FTM.Domain.Enums;
 using FTM.Domain.Models;
@@ -11,6 +12,7 @@ using FTM.Domain.Specification.FamilyTrees;
 using FTM.Domain.Specification.FTMembers;
 using FTM.Infrastructure.Repositories.Implement;
 using FTM.Infrastructure.Repositories.Interface;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
@@ -27,24 +29,37 @@ namespace FTM.Application.Services
 {
     public class FTMemberService : IFTMemberService
     {
+        private readonly IFTInvitationService _fTInvitationService;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IGenericRepository<FamilyTree> _familyTreeRepository;
         private readonly IFTMemberRepository _fTMemberRepository;
         private readonly IGenericRepository<FTRelationship> _fTRelationshipRepository;
+        private readonly ICurrentUserResolver _currentUserResolver;
         private readonly IBlobStorageService _blobStorageService;
+        private readonly IFTInvitationService _invitationService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
+
         public FTMemberService(
+            IFTInvitationService fTInvitationService,
+            UserManager<ApplicationUser> userManager,
             IGenericRepository<FamilyTree> familyTreeRepository,
             IFTMemberRepository FTMemberRepository,
             IGenericRepository<FTRelationship> FTRelationshipRepository,
+            ICurrentUserResolver CurrentUserResolver,
             IBlobStorageService blobStorageService,
+            IFTInvitationService invitationService,
             IUnitOfWork unitOfWork,
             IMapper mapper)
         {
+            _fTInvitationService = fTInvitationService;
+            _userManager = userManager;
             _familyTreeRepository = familyTreeRepository;
             _fTMemberRepository = FTMemberRepository;
             _fTRelationshipRepository = FTRelationshipRepository;
+            _currentUserResolver = CurrentUserResolver;
+            _blobStorageService = blobStorageService;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
@@ -75,12 +90,12 @@ namespace FTM.Application.Services
                 for (int i = 0; i < request.FTMemberFiles.Count; i++)
                 {
                     var item = request.FTMemberFiles[i];
-                    var fileType = string.IsNullOrEmpty(item.FileType)? "1": item.FileType; // Default: Image
+                    var fileType = string.IsNullOrEmpty(item.FileType) ? "1" : item.FileType; // Default: Image
 
                     // Upload to Blob Storage
                     var fileUrl = await _blobStorageService.UploadFileAsync(item.File, "ftmembers", null);
                     ftMember.FTMemberFiles.ElementAt(i).FilePath = fileUrl;
-                    ftMember.FTMemberFiles.ElementAt(i).FileType= fileType;
+                    ftMember.FTMemberFiles.ElementAt(i).FileType = fileType;
                 }
             }
             await executionStrategy.ExecuteAsync(
@@ -116,6 +131,32 @@ namespace FTM.Application.Services
 
                                //----------------Handle MemberFile Entity---------------------
                                //----------------End Handle MemberFile Entity---------------------
+
+                               //----------------Handle Invitation---------------------
+                               if (!string.IsNullOrEmpty(request.InvitedUserEmail))
+                               {
+                                   var invitedUser = await _userManager.FindByEmailAsync(request.InvitedUserEmail);
+
+                                   if (invitedUser == null)
+                                       throw new ArgumentException("Người được mời không tồn tại trong hệ thống.");
+
+                                   var ftInvitation = new FTInvitation
+                                   {
+                                       FTId = request.FTId.Value,
+                                       FTMemberId = ftMember.Id,
+                                       Email = request.InvitedUserEmail,
+                                       InviterUserId = _currentUserResolver.UserId,
+                                       InvitedUserId = invitedUser.Id,
+                                       Token = Guid.NewGuid().ToString(),
+                                       ExpirationDate = DateTime.UtcNow.AddDays(3),
+                                       Status = InvitationStatus.PENDING
+                                   };
+
+                                   await _fTInvitationService.AddAsync(ftInvitation);
+                                   await _fTInvitationService.SendAsync(ftInvitation);
+                               }
+                               //----------------End Handle Invitation---------------------
+
                                await _unitOfWork.CompleteAsync();
                                newFMember = await _fTMemberRepository.GetDetaildedById(ftMember.Id);
                                await transaction.CommitAsync();
@@ -153,7 +194,7 @@ namespace FTM.Application.Services
                 var partnerUndefined = new FTMember()
                 {
                     StatusCode = FTMemberStatus.UNDEFINED,
-                    FTId = request.FTId,
+                    FTId = request.FTId.Value,
                     Fullname = $"Bố hoặc mẹ của {request.Fullname}",
                     IsRoot = false,
                     FTRole = FTMRole.FTMember,
@@ -253,7 +294,7 @@ namespace FTM.Application.Services
                 var partnerOfParentUndefined = new FTMember()
                 {
                     StatusCode = FTMemberStatus.UNDEFINED,
-                    FTId = request.FTId,
+                    FTId = request.FTId.Value,
                     Fullname = $"{definedPosition} {request.Fullname}",
                     IsRoot = false,
                     FTRole = FTMRole.FTMember,
@@ -397,7 +438,7 @@ namespace FTM.Application.Services
             _mapper.Map(request, existingMember);
             _fTMemberRepository.Update(existingMember);
             await _unitOfWork.CompleteAsync();
-            return await GetByMemberId(ftId,request.ftMemberId);
+            return await GetByMemberId(ftId, request.ftMemberId);
         }
 
         public async Task Delete(Guid ftMemberId)
@@ -432,7 +473,8 @@ namespace FTM.Application.Services
             // <----------------------Handle Logic---------------------->
             // Step 1: If the deleted member is partner and have the CHILDREN relationship => Soft Delete 
             if (member.FTRelationshipTo.Any(x => x.FromFTMember.FTRelationshipFrom.Any(
-                                y => y.CategoryCode == FTRelationshipCategory.CHILDREN && y.FromFTMemberPartnerId == member.Id))){
+                                y => y.CategoryCode == FTRelationshipCategory.CHILDREN && y.FromFTMemberPartnerId == member.Id)))
+            {
                 member.Fullname = "Vô Danh";
                 member.StatusCode = FTMemberStatus.UNDEFINED;
                 _fTMemberRepository.Update(member);
@@ -457,7 +499,7 @@ namespace FTM.Application.Services
             if (parent != null && parent.FromFTMember.FTRelationshipFrom.Count(x => x.CategoryCode == FTRelationshipCategory.CHILDREN) == 1
                 && parent.FromFTMemberPartner.StatusCode == FTMemberStatus.UNDEFINED)
             {
-                 _fTMemberRepository.Delete(parent.FromFTMemberPartner);
+                _fTMemberRepository.Delete(parent.FromFTMemberPartner);
             }
 
             // Step 4: Check if the member is connected to a user, change user's role to GUEST
