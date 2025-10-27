@@ -8,5 +8,6 @@ namespace FTM.Application.IServices
         Task<bool> DeleteFileAsync(string containerName, string fileName);
         Task<string> GetFileUrlAsync(string containerName, string fileName);
         string GenerateUniqueFileName(string originalFileName);
+        Task<string> UploadEventImageAsync(IFormFile file, string containerName);
     }
 }

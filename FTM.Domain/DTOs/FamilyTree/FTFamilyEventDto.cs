@@ -45,15 +45,4 @@ namespace FTM.Domain.DTOs.FamilyTree
         public Guid EventId { get; set; }
         public Guid MemberId { get; set; }
     }
-
-    public class EventFilterRequest
-    {
-        public Guid FTId { get; set; }
-        public DateTimeOffset? StartDate { get; set; }
-        public DateTimeOffset? EndDate { get; set; }
-        public EventType? EventType { get; set; }
-        public bool? IsLunar { get; set; }
-        public int PageIndex { get; set; } = 1;
-        public int PageSize { get; set; } = 20;
-    }
 }
