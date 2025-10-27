@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 
@@ -13,7 +14,7 @@ namespace FTM.Domain.DTOs.FamilyTree
         public int RecurrenceType { get; set; } = 0; // 0 = None
         public Guid FTId { get; set; }
         public string? Description { get; set; }
-        public string? ImageUrl { get; set; }
+        public IFormFile? ImageFile { get; set; } // File upload for event image
         public Guid? ReferenceEventId { get; set; }
         public string? Address { get; set; }
         public string? LocationName { get; set; }

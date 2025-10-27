@@ -22,7 +22,7 @@ namespace FTM.Application.Services
             _blobServiceClient = new BlobServiceClient(connectionString);
         }
 
-        public async Task<string> UploadFileAsync(IFormFile file, string containerName, string fileName = null)
+        public async Task<string> UploadFileAsync(IFormFile file, string containerName, string? fileName = null)
         {
             if (file == null || file.Length == 0)
                 throw new ArgumentException("File không hợp lệ", nameof(file));
@@ -152,9 +152,58 @@ namespace FTM.Application.Services
             {
                 return "documents";
             }
-            
+
             // Default fallback
             return "others";
+        }
+
+        /// <summary>
+        /// Upload file to event folder specifically
+        /// </summary>
+        public async Task<string> UploadEventImageAsync(IFormFile file, string containerName)
+        {
+            if (file == null || file.Length == 0)
+                throw new ArgumentException("File không hợp lệ", nameof(file));
+
+            // Validate file type - Only images for events
+            var allowedTypes = new[]
+            {
+                "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/bmp", "image/svg+xml"
+            };
+
+            if (!allowedTypes.Contains(file.ContentType.ToLower()))
+                throw new ArgumentException($"Loại file không được hỗ trợ: {file.ContentType}. Chỉ chấp nhận ảnh cho sự kiện.");
+
+            // Validate file size - 5MB for event images
+            const long maxFileSize = 5 * 1024 * 1024; // 5MB
+            if (file.Length > maxFileSize)
+                throw new ArgumentException($"Kích thước file không được vượt quá {maxFileSize / (1024 * 1024)}MB");
+
+            var fileName = GenerateUniqueFileName(file.FileName);
+
+            // Use "event" folder for all event images
+            string blobPath = $"event/{fileName}";
+
+            var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+
+            // Create container if it doesn't exist
+            await containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob);
+
+            var blobClient = containerClient.GetBlobClient(blobPath);
+
+            using var stream = file.OpenReadStream();
+
+            var blobHttpHeaders = new BlobHttpHeaders
+            {
+                ContentType = file.ContentType
+            };
+
+            await blobClient.UploadAsync(stream, new BlobUploadOptions
+            {
+                HttpHeaders = blobHttpHeaders
+            });
+
+            return blobClient.Uri.ToString();
         }
     }
 }

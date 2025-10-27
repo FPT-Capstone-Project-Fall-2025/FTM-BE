@@ -23,8 +23,6 @@ namespace FTM.Application.IServices
         Task<IEnumerable<FTFamilyEventDto>> FilterEventsAsync(EventFilterRequest request);
         
         // Grouped events
-        Task<Dictionary<string, List<FTFamilyEventDto>>> GetEventsGroupedByPeriodAsync(Guid FTId, Period period, DateTimeOffset? startDate = null, DateTimeOffset? endDate = null);
-        
         // Separate grouped APIs
         Task<List<FTFamilyEventDto>> GetEventsGroupedByYearAsync(Guid FTId, int year);
         Task<List<FTFamilyEventDto>> GetEventsGroupedByMonthAsync(Guid FTId, int year, int month);
