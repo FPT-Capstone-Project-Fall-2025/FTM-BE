@@ -29,7 +29,7 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpPost]
         //[Authorize]
-        public async Task<IActionResult> CreateEvent([FromBody] CreateFTFamilyEventRequest request)
+        public async Task<IActionResult> CreateEvent([FromForm] CreateFTFamilyEventRequest request)
         {
             try
             {
@@ -47,7 +47,7 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpPut("{id}")]
         //[Authorize]
-        public async Task<IActionResult> UpdateEvent(Guid id, [FromBody] UpdateFTFamilyEventRequest request)
+        public async Task<IActionResult> UpdateEvent(Guid id, [FromForm] UpdateFTFamilyEventRequest request)
         {
             try
             {
