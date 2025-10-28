@@ -47,7 +47,8 @@ namespace FTM.Application.Helpers
                 .ForMember(dest => dest.FTRelationshipFrom, opt => opt.Ignore())
                 .ForMember(dest => dest.FTRelationshipFromPartner, opt => opt.Ignore())
                 .ForMember(dest => dest.FTRelationshipTo, opt => opt.Ignore())
-                .ForMember(dest => dest.FTAuthorizations, opt => opt.Ignore());
+                .ForMember(dest => dest.FTAuthorizations, opt => opt.Ignore())
+                .ForMember(dest => dest.UserId, opt => opt.Ignore());
 
             CreateMap<FTMember, FTMemberDetailsDto>()
                 .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => !src.IsDeleted))
@@ -78,6 +79,7 @@ namespace FTM.Application.Helpers
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.FTId, opt => opt.Ignore())
                 .ForMember(dest => dest.FT, opt => opt.Ignore())
+                .ForMember(dest => dest.UserId, opt => opt.Ignore())
                 .ForMember(dest => dest.FTRole, opt => opt.Ignore())
                 .ForMember(dest => dest.StatusCode, opt => opt.Ignore())
                 .ForMember(dest => dest.PrivacyData, opt => opt.Ignore())

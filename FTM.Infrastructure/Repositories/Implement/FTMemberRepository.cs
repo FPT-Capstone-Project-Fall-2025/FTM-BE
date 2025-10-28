@@ -58,5 +58,10 @@ namespace FTM.Infrastructure.Repositories.Implement
                 .OrderBy(m => m.Birthday)
                 .ToListAsync();
         }
+
+        public async Task<bool> IsConnectedTo(Guid ftId, Guid userId)
+        {
+            return await _context.FTMembers.AnyAsync(m => m.FTId == ftId && m.UserId == userId && m.IsDeleted == false);
+        }
     }
 }

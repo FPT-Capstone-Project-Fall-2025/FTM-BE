@@ -1,7 +1,11 @@
 ﻿using FTM.Application.IServices;
 using FTM.Domain.Entities.FamilyTree;
+using FTM.Domain.Entities.Identity;
+using FTM.Domain.Enums;
 using FTM.Infrastructure.Repositories.Interface;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Server.IIS.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,18 +17,86 @@ namespace FTM.Application.Services
     public class FTInvitationService : IFTInvitationService
     {
         private readonly IEmailSender _emailSender;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ICurrentUserResolver _currentUserResolver;
         private readonly IFTInvitationRepository _fTInvitationRepository;
-        public FTInvitationService(IEmailSender emailSender, ICurrentUserResolver currentUserResolver, IFTInvitationRepository fTInvitationRepository)
+        private readonly IFTUserRepository _fTUserRepository;
+        private readonly IFTMemberRepository _fTMemberRepository;
+        public FTInvitationService(
+            IEmailSender emailSender,
+            IUnitOfWork unitOfWork,
+            UserManager<ApplicationUser> userManager,
+            ICurrentUserResolver currentUserResolver,
+            IFTInvitationRepository fTInvitationRepository,
+            IFTUserRepository fTUserRepository,
+            IFTMemberRepository fTmemberRepository
+            )
         {
             _emailSender = emailSender;
+            _unitOfWork = unitOfWork;
+            _userManager = userManager;
             _currentUserResolver = currentUserResolver;
             _fTInvitationRepository = fTInvitationRepository;
+            _fTUserRepository = fTUserRepository;
+            _fTMemberRepository = fTmemberRepository;
         }
 
         public async Task AddAsync(FTInvitation invitation)
         {
             await _fTInvitationRepository.AddAsync(invitation);
+        }
+
+        public async Task HandleRespondAsync(string token, bool accepted)
+        {
+            var invitation = await _fTInvitationRepository.GetInvitationAsync(token);
+
+            if (invitation == null)
+                throw new ArgumentException("Lời mời không tồn tại.");
+
+            if (invitation.ExpirationDate < DateTime.UtcNow)
+                throw new ArgumentException("Lời mời đã hết hạn.");
+
+            if (invitation.Status != InvitationStatus.PENDING)
+                throw new ArgumentException("Lời mời này đã được phản hồi.");
+
+            invitation.Status = accepted ? InvitationStatus.ACCEPTED : InvitationStatus.REJECTED;
+
+            if (invitation.Status == InvitationStatus.ACCEPTED)
+            {
+                var invitedUser = await _userManager.FindByIdAsync(invitation.InvitedUserId.ToString());
+                var isUserExistedInFamilyTree = await _fTUserRepository.IsUserExistingInFamilyTreeAsync(invitation.FTId, invitation.InvitedUserId);
+                var connectedFTMember = await _fTMemberRepository.GetByIdAsync(invitation.FTMemberId);
+                var isConnectedToMember = await _fTMemberRepository.IsConnectedTo(invitation.FTId, invitation.InvitedUserId);
+
+                if (invitedUser != null && connectedFTMember != null)
+                {
+                    if (isConnectedToMember)
+                    {
+                        throw new ArgumentException("Nguời dùng đã được liên kết với một thành viên khác trong gia phả");
+                    }
+
+                    connectedFTMember.UserId = invitedUser.Id;
+
+                    if (!isUserExistedInFamilyTree)
+                    {
+                        var ftUser = new FTUser
+                        {
+                            UserId = invitedUser.Id,
+                            Name = invitedUser.Name,
+                            Username = invitedUser.UserName,
+                            FTId = invitation.FTId,
+                            FTRole = FTMRole.FTMember,
+                        };
+                        await _fTUserRepository.AddAsync(ftUser);
+                    }
+                }
+                else
+                {
+                    throw new ArgumentException("Người được mời hoặc thành viên trong cây gia phả không tồn tại.");
+                }
+            }
+            await _unitOfWork.CompleteAsync();
         }
 
         public async Task SendAsync(FTInvitation invitation)

@@ -11,8 +11,8 @@ namespace FTM.Domain.DTOs.FamilyTree
 {
     public class UpsertFTMemberRequest
     {
-        [FromForm(Name = "invitedUserEmail")]
-        public string? InvitedUserEmail {  get; set; }
+        [FromForm(Name = "userId")]
+        public Guid? UserId {  get; set; }
 
         [Required]
         [JsonConverter(typeof(StringSensitive))]
