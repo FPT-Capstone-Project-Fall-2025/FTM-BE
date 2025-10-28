@@ -141,7 +141,7 @@ namespace FTM.API.Controllers
             try
             {
                 await _familyTreeService.DeleteFamilyTreeAsync(id);
-                return Ok(new ApiSuccess("Xóa gia phả thành công"));
+                return Ok(new ApiSuccess("Xóa gia phả thành công", string.Empty));
             }
             catch (ArgumentException ex)
             {
