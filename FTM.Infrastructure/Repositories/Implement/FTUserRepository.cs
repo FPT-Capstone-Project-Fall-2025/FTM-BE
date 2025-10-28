@@ -22,9 +22,19 @@ namespace FTM.Infrastructure.Repositories.Implement
             this._currentUserResolver = currentUserResolver;
         }
 
+        public async Task<bool> IsUserExistingInFamilyTreeAsync(Guid ftId, Guid userId)
+        {
+            return await _context.FTUsers.AnyAsync(u => u.FTId == ftId && u.UserId == userId && u.IsDeleted == false);
+        }
+
         public async Task<FTUser?> FindOwnerAsync(Guid ftId)
         {
-            return await _context.FTUsers.Where(u => u.FTId == ftId && u.FTRole == FTMRole.FTOwner).FirstOrDefaultAsync();
+            return await _context.FTUsers.Where(u => u.FTId == ftId && u.FTRole == FTMRole.FTOwner && u.IsDeleted == false).FirstOrDefaultAsync();
+        }
+
+        public async Task<FTUser?> FindAsync(Guid ftId, Guid userId)
+        {
+            return await _context.FTUsers.Where(u => u.FTId == ftId && u.UserId == userId && u.IsDeleted == false).FirstOrDefaultAsync();
         }
     }
 }

@@ -18,13 +18,13 @@ namespace FTM.Domain.DTOs.FamilyTree
         public Guid? UserId { get; set; }
 
         [JsonConverter(typeof(StringSensitive))]
-        public string Fullname { get; set; }
+        public string? Fullname { get; set; }
 
-        public int Gender { get; set; }
+        public int? Gender { get; set; }
 
         public DateTime? Birthday { get; set; }
 
-        public bool IsDeath { get; set; }
+        public bool? IsDeath { get; set; }
 
         [JsonConverter(typeof(StringSensitive))]
         public string? DeathDescription { get; set; }

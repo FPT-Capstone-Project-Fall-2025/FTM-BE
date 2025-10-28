@@ -14,6 +14,7 @@ using FTM.Infrastructure.Repositories.Implement;
 using FTM.Infrastructure.Repositories.Interface;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using System;
@@ -37,6 +38,7 @@ namespace FTM.Application.Services
         private readonly ICurrentUserResolver _currentUserResolver;
         private readonly IBlobStorageService _blobStorageService;
         private readonly IFTInvitationService _invitationService;
+        private readonly IFTUserRepository _fTUserRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
@@ -50,6 +52,7 @@ namespace FTM.Application.Services
             ICurrentUserResolver CurrentUserResolver,
             IBlobStorageService blobStorageService,
             IFTInvitationService invitationService,
+            IFTUserRepository fTUserRepository,
             IUnitOfWork unitOfWork,
             IMapper mapper)
         {
@@ -60,6 +63,7 @@ namespace FTM.Application.Services
             _fTRelationshipRepository = FTRelationshipRepository;
             _currentUserResolver = CurrentUserResolver;
             _blobStorageService = blobStorageService;
+            _fTUserRepository = fTUserRepository;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
@@ -133,18 +137,25 @@ namespace FTM.Application.Services
                                //----------------End Handle MemberFile Entity---------------------
 
                                //----------------Handle Invitation---------------------
-                               if (!string.IsNullOrEmpty(request.InvitedUserEmail))
+                               if (request.UserId != null && request.UserId != Guid.Empty)
                                {
-                                   var invitedUser = await _userManager.FindByEmailAsync(request.InvitedUserEmail);
+                                   var invitedUser = await _userManager.FindByIdAsync(request.UserId.ToString());
 
                                    if (invitedUser == null)
                                        throw new ArgumentException("Người được mời không tồn tại trong hệ thống.");
 
+                                   var isConnectedToMember = await _fTMemberRepository.IsConnectedTo(FTId, invitedUser.Id);
+
+                                   if (isConnectedToMember)
+                                   {
+                                       throw new ArgumentException("Nguời dùng đã được liên kết với một thành viên khác trong gia phả");
+                                   }
+
                                    var ftInvitation = new FTInvitation
                                    {
-                                       FTId = request.FTId,
+                                       FTId = request.FTId.Value,
                                        FTMemberId = ftMember.Id,
-                                       Email = request.InvitedUserEmail,
+                                       Email = invitedUser.Email,
                                        InviterUserId = _currentUserResolver.UserId,
                                        InvitedUserId = invitedUser.Id,
                                        Token = Guid.NewGuid().ToString(),
@@ -194,7 +205,7 @@ namespace FTM.Application.Services
                 var partnerUndefined = new FTMember()
                 {
                     StatusCode = FTMemberStatus.UNDEFINED,
-                    FTId = request.FTId,
+                    FTId = request.FTId.Value,
                     Fullname = $"Bố hoặc mẹ của {request.Fullname}",
                     IsRoot = false,
                     FTRole = FTMRole.FTMember,
@@ -294,7 +305,7 @@ namespace FTM.Application.Services
                 var partnerOfParentUndefined = new FTMember()
                 {
                     StatusCode = FTMemberStatus.UNDEFINED,
-                    FTId = request.FTId,
+                    FTId = request.FTId.Value,
                     Fullname = $"{definedPosition} {request.Fullname}",
                     IsRoot = false,
                     FTRole = FTMRole.FTMember,
@@ -435,9 +446,43 @@ namespace FTM.Application.Services
         public async Task<FTMemberDetailsDto> UpdateDetailsByMemberId(Guid ftId, UpdateFTMemberRequest request)
         {
             var existingMember = await _fTMemberRepository.GetByIdAsync(request.ftMemberId);
+
+            if (existingMember == null) throw new ArgumentException("Thành viên không tồn tại trong gia phả");
+
+            if(existingMember.UserId.HasValue && request.UserId.HasValue && existingMember.UserId != request.UserId.Value)
+            {
+                var invitedUser = await _userManager.FindByIdAsync(request.UserId.ToString());
+
+                if (invitedUser == null)
+                    throw new ArgumentException("Người được mời không tồn tại trong hệ thống.");
+
+                var isConnectedToMember = await _fTMemberRepository.IsConnectedTo(ftId, invitedUser.Id);
+
+                if (isConnectedToMember)
+                {
+                    throw new ArgumentException("Nguời dùng đã được liên kết với một thành viên khác trong gia phả");
+                }
+
+                var ftInvitation = new FTInvitation
+                {
+                    FTId = existingMember.FTId,
+                    FTMemberId = existingMember.Id,
+                    Email = invitedUser.Email,
+                    InviterUserId = _currentUserResolver.UserId,
+                    InvitedUserId = invitedUser.Id,
+                    Token = Guid.NewGuid().ToString(),
+                    ExpirationDate = DateTime.UtcNow.AddDays(3),
+                    Status = InvitationStatus.PENDING
+                };
+
+                await _fTInvitationService.AddAsync(ftInvitation);
+                await _fTInvitationService.SendAsync(ftInvitation);
+            }
+
             _mapper.Map(request, existingMember);
             _fTMemberRepository.Update(existingMember);
             await _unitOfWork.CompleteAsync();
+
             return await GetByMemberId(ftId, request.ftMemberId);
         }
 
@@ -505,7 +550,13 @@ namespace FTM.Application.Services
             // Step 4: Check if the member is connected to a user, change user's role to GUEST
             if (member.UserId.HasValue)
             {
-                // Handle
+                var connectedUser = _userManager.FindByIdAsync(member.UserId.ToString());
+                if (connectedUser != null) {
+                    var ftUser = await _fTUserRepository.FindAsync(member.FTId, member.UserId.Value);
+                    if (ftUser != null) {
+                        ftUser.FTRole = FTMRole.FTGuest;
+                    }
+                }
             }
 
             await _unitOfWork.CompleteAsync();

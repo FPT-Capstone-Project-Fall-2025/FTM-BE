@@ -12,5 +12,7 @@ namespace FTM.Application.IServices
         Task SendAsync(FTInvitation invitation);
 
         Task AddAsync(FTInvitation invitation);
+
+        Task HandleRespondAsync(string token, bool accepted);
     }
 }

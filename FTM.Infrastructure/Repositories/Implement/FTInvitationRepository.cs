@@ -1,6 +1,7 @@
 ﻿using FTM.Domain.Entities.FamilyTree;
 using FTM.Infrastructure.Data;
 using FTM.Infrastructure.Repositories.Interface;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,11 @@ namespace FTM.Infrastructure.Repositories.Implement
         {
             this._context = context;
             this._currentUserResolver = currentUserResolver;
+        }
+
+        public async Task<FTInvitation?> GetInvitationAsync(string token)
+        {
+            return await _context.FTInvitations.FirstOrDefaultAsync(i => i.Token.Equals(token));
         }
     }
 }
