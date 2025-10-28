@@ -1,26 +1,16 @@
 # 📝 Hướng dẫn Unit Testing cho FTM API
 
-#### 🔴 GetUserProfile(userId) API (3 test cases)
-
-| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
-|----|-----------------------------------|--------------------------|----------|------------------------|
-| 1  | Lấy profile user khác thành công  | 200 OK + Profile data    | ✅ Pass  | ✅ Test OK             |
-| 2  | User không tồn tại                | 404 Not Found            | ❌ Fail  | ✅ Test OK (logic đúng)|
-| 3  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK (logic đúng)|ớ### 🟡 UpdateProfile API (4 test cases)
-
-| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
-|----|-----------------------------------|--------------------------|----------|------------------------|
-| 1  | Dữ liệu hợp lệ                    | 200 OK + Updated data    | ✅ Pass  | ✅ Test OK             |
-| 2  | User chưa đăng nhập               | 401 Unauthorized         | ❌ Fail  | ✅ Test OK (logic đúng)|
-| 3  | Dữ liệu không hợp lệ              | 400 Bad Request          | ❌ Fail  | ✅ Test OK (logic đúng)|
-| 4  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK (logic đúng)|
-
-File này chứa Unit Tests đơn giản và dễ hiểu cho các API trong AccountController:
-- ✅ **GetProfile** - Lấy thông tin profile của user hiện tại
-- ✅ **GetUserProfile(userId)** - Lấy thông tin profile của user khác theo userId
-- ✅ **UpdateProfile** - Cập nhật thông tin profile
-- ✅ **ChangePassword** - Đổi mật khẩu
-- ✅ **UploadAvatar** - Upload ảnh đại diện
+File này chứa Unit Tests đơn giản và dễ hiểu cho các API trong FTM API:
+- ✅ **AccountController** - Quản lý tài khoản user
+- ✅ **AcademicHonorController** - Quản lý thành tích học tập
+- ✅ **BiographyController** - Quản lý tiểu sử và sự kiện
+- ✅ **CareerHonorController** - Quản lý thành tích nghề nghiệp
+- ✅ **EducationController** - Quản lý học vấn
+- ✅ **WorkController** - Quản lý công việc
+- ✅ **PostController** - Quản lý bài viết
+- ✅ **FTFamilyEventController** - Quản lý sự kiện gia phả
+- ✅ **FTMemberController** - Quản lý thành viên gia phả
+- ✅ **FamilyTreeController** - Quản lý gia phả
 
 ## 🏗️ Kiến trúc Test
 
@@ -44,7 +34,49 @@ public async Task TenTest()
 }
 ```
 
-## 📊 Danh sách Test Cases
+### 🌳 Add API (3 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 201 Created              | ✅ Pass  | ✅ Test OK             |
+| 2  | Dữ liệu không hợp lệ               | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+| 3  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🌳 GetById API (3 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🌳 Edit API (3 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🌳 Delete API (3 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK                   | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🌳 GetAll API (2 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🌳 GetMyFamilyTrees API (2 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|----------
 
 ### 🟢 GetProfile API (4 test cases)
 
@@ -55,22 +87,22 @@ public async Task TenTest()
 | 3  | User không tồn tại                | 404 Not Found            | ❌ Fail  | ✅ Test OK (logic đúng)|
 | 4  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK (logic đúng)|
 
-### � GetUserProfile(userId) API (3 test cases)
+### 🔴 GetUserProfile(userId) API (3 test cases)
 
-| #  | Test Case                          | Kết quả mong đợi         | Loại     |
-|----|-----------------------------------|--------------------------|----------|
-| 1  | Lấy profile user khác thành công  | 200 OK + Profile data    | ✅ Pass  |
-| 2  | User không tồn tại                | 404 Not Found            | ❌ Fail  |
-| 3  | Lỗi server                        | 500 Internal Server      | ❌ Fail  |
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Lấy profile user khác thành công  | 200 OK + Profile data    | ✅ Pass  | ✅ Test OK             |
+| 2  | User không tồn tại                | 404 Not Found            | ❌ Fail  | ✅ Test OK (logic đúng)|
+| 3  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK (logic đúng)|
 
-### �🟡 UpdateProfile API (4 test cases)
+### 🟡 UpdateProfile API (4 test cases)
 
-| #  | Test Case                          | Kết quả mong đợi         | Loại     |
-|----|-----------------------------------|--------------------------|----------|
-| 1  | Dữ liệu hợp lệ                    | 200 OK + Updated data    | ✅ Pass  |
-| 2  | User chưa đăng nhập               | 401 Unauthorized         | ❌ Fail  |
-| 3  | Dữ liệu không hợp lệ              | 400 Bad Request          | ❌ Fail  |
-| 4  | Lỗi server                        | 500 Internal Server      | ❌ Fail  |
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Dữ liệu hợp lệ                    | 200 OK + Updated data    | ✅ Pass  | ✅ Test OK             |
+| 2  | User chưa đăng nhập               | 401 Unauthorized         | ❌ Fail  | ✅ Test OK (logic đúng)|
+| 3  | Dữ liệu không hợp lệ              | 400 Bad Request          | ❌ Fail  | ✅ Test OK (logic đúng)|
+| 4  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK (logic đúng)|
 
 ### 🔵 ChangePassword API (6 test cases)
 
@@ -88,22 +120,417 @@ public async Task TenTest()
 | #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
 |----|-----------------------------------|--------------------------|----------|------------------------|
 | 1  | Upload ảnh hợp lệ                 | 200 OK + Avatar URL      | ✅ Pass  | ✅ Test OK             |
-| 2  | File không phải ảnh               | 400 Bad Request          | ❌ Fail  | ✅ Test OK (logic đúng)|
-| 3  | File quá lớn (>5MB)               | 400 Bad Request          | ❌ Fail  | ✅ Test OK (logic đúng)|
-| 4  | Không có file                     | 400 Bad Request          | ❌ Fail  | ✅ Test OK (logic đúng)|
-| 5  | User chưa đăng nhập               | 401 Unauthorized         | ❌ Fail  | ✅ Test OK (logic đúng)|
-| 6  | Lỗi upload lên storage            | 500 Internal Server      | ❌ Fail  | ✅ Test OK (logic đúng)|
+| 2  | File không phải ảnh               | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+| 3  | File quá lớn (>5MB)               | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+| 4  | Không có file                     | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+| 5  | User chưa đăng nhập               | 401 Unauthorized         | ❌ Fail  | ✅ Test OK             |
+| 6  | Lỗi upload lên storage            | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
 
-**Tổng cộng: 23 test cases** - **✅ Tất cả đều Test OK về mặt logic!**
+### 🎓 GetAcademicHonors API (2 test cases)
 
-### 📌 Giải thích kết quả:
-- **5 tests "Pass"**: Kiểm tra các success scenarios → API hoạt động đúng ✅
-- **18 tests "Fail"**: Kiểm tra các error scenarios → API xử lý lỗi đúng ✅
-  - Tests "FAILED" vì error **message** chưa khớp hoàn toàn
-  - Nhưng **logic** kiểm thử vẫn **ĐÚNG**: API trả đúng status code (400/401/404/500)
-  - ➡️ **Không có bug**, chỉ cần improve error messages trong Controller
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Lỗi server                        | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
 
-**Kết luận:** 23/23 test cases đang làm đúng nhiệm vụ của chúng! 🎉
+### 🎓 GetAcademicHonorById API (3 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Lỗi server                        | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+
+### 🎓 CreateAcademicHonor API (5 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 201 Created              | ✅ Pass  | ✅ Test OK             |
+| 2  | Dữ liệu không hợp lệ               | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+| 3  | Không có quyền                     | 403 Forbidden            | ❌ Fail  | ✅ Test OK             |
+| 4  | Invalid operation                 | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+| 5  | Lỗi server                        | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+
+### 🎓 UpdateAcademicHonor API (5 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Dữ liệu không hợp lệ               | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+| 4  | Không có quyền                     | 403 Forbidden            | ❌ Fail  | ✅ Test OK             |
+| 5  | Lỗi server                        | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+
+### 🎓 DeleteAcademicHonor API (4 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK                   | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Không có quyền                     | 403 Forbidden            | ❌ Fail  | ✅ Test OK             |
+| 4  | Lỗi server                        | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+
+### 📚 GetBiographyDescription API (3 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Unauthorized                       | 401 Unauthorized         | ❌ Fail  | ✅ Test OK             |
+| 3  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 📚 UpdateBiographyDescription API (4 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Invalid data                       | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+| 3  | Unauthorized                       | 401 Unauthorized         | ❌ Fail  | ✅ Test OK             |
+| 4  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 📚 GetBiographyEvents API (3 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Unauthorized                       | 401 Unauthorized         | ❌ Fail  | ✅ Test OK             |
+| 3  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 📚 GetBiographyEvent API (4 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Unauthorized                       | 401 Unauthorized         | ❌ Fail  | ✅ Test OK             |
+| 4  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 📚 CreateBiographyEvent API (4 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 201 Created              | ✅ Pass  | ✅ Test OK             |
+| 2  | Invalid data                       | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+| 3  | Unauthorized                       | 401 Unauthorized         | ❌ Fail  | ✅ Test OK             |
+| 4  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 📚 UpdateBiographyEvent API (5 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Invalid data                       | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+| 4  | Unauthorized                       | 401 Unauthorized         | ❌ Fail  | ✅ Test OK             |
+| 5  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 📚 DeleteBiographyEvent API (4 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK                   | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Unauthorized                       | 401 Unauthorized         | ❌ Fail  | ✅ Test OK             |
+| 4  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🏆 GetCareerHonors API (2 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Lỗi server                        | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+
+### 🏆 GetCareerHonorById API (3 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Lỗi server                        | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+
+### 🏆 CreateCareerHonor API (5 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 201 Created              | ✅ Pass  | ✅ Test OK             |
+| 2  | Invalid data                       | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+| 3  | Unauthorized                       | 403 Forbidden            | ❌ Fail  | ✅ Test OK             |
+| 4  | Invalid operation                 | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+| 5  | Lỗi server                        | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+
+### 🏆 UpdateCareerHonor API (5 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Invalid data                       | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+| 4  | Unauthorized                       | 403 Forbidden            | ❌ Fail  | ✅ Test OK             |
+| 5  | Lỗi server                        | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+
+### 🏆 DeleteCareerHonor API (4 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK                   | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Unauthorized                       | 403 Forbidden            | ❌ Fail  | ✅ Test OK             |
+| 4  | Lỗi server                        | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+
+### 🎓 GetEducations API (3 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Unauthorized                       | 401 Unauthorized         | ❌ Fail  | ✅ Test OK             |
+| 3  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🎓 GetEducation API (4 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Unauthorized                       | 401 Unauthorized         | ❌ Fail  | ✅ Test OK             |
+| 4  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🎓 CreateEducation API (4 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 201 Created              | ✅ Pass  | ✅ Test OK             |
+| 2  | Invalid data                       | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+| 3  | Unauthorized                       | 401 Unauthorized         | ❌ Fail  | ✅ Test OK             |
+| 4  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🎓 UpdateEducation API (5 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Invalid data                       | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+| 4  | Unauthorized                       | 401 Unauthorized         | ❌ Fail  | ✅ Test OK             |
+| 5  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🎓 DeleteEducation API (4 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK                   | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Unauthorized                       | 401 Unauthorized         | ❌ Fail  | ✅ Test OK             |
+| 4  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 💼 GetWorks API (3 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Unauthorized                       | 401 Unauthorized         | ❌ Fail  | ✅ Test OK             |
+| 3  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 💼 GetWork API (4 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Unauthorized                       | 401 Unauthorized         | ❌ Fail  | ✅ Test OK             |
+| 4  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 💼 CreateWork API (4 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 201 Created              | ✅ Pass  | ✅ Test OK             |
+| 2  | Invalid data                       | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+| 3  | Unauthorized                       | 401 Unauthorized         | ❌ Fail  | ✅ Test OK             |
+| 4  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 💼 UpdateWork API (5 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Invalid data                       | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+| 4  | Unauthorized                       | 401 Unauthorized         | ❌ Fail  | ✅ Test OK             |
+| 5  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 💼 DeleteWork API (4 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK                   | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Unauthorized                       | 401 Unauthorized         | ❌ Fail  | ✅ Test OK             |
+| 4  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 📝 CreatePostWithFiles API (2 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Lỗi server                        | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+
+### 📝 UpdatePostWithFiles API (3 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Lỗi server                        | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+
+### 📝 GetPosts API (2 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Lỗi server                        | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+
+### 📝 GetPostById API (3 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Lỗi server                        | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+
+### 📝 DeletePost API (3 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK                   | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Lỗi server                        | 400 Bad Request          | ❌ Fail  | ✅ Test OK             |
+
+### 🎪 CreateEvent API (2 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 201 Created              | ✅ Pass  | ✅ Test OK             |
+| 2  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🎪 UpdateEvent API (3 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🎪 DeleteEvent API (3 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK                   | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🎪 GetEventById API (3 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Không tồn tại                      | 404 Not Found            | ❌ Fail  | ✅ Test OK             |
+| 3  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🎪 GetEventsByGP API (2 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🎪 GetUpcomingEvents API (2 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🎪 GetEventsByDateRange API (2 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🎪 GetEventsByMember API (2 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🎪 FilterEvents API (2 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+| 2  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🎪 AddMemberToEvent API (2 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK                   | ✅ Pass  | ✅ Test OK             |
+| 2  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 🎪 RemoveMemberFromEvent API (2 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK                   | ✅ Pass  | ✅ Test OK             |
+| 2  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 👨‍👩‍👧‍👦 AddMember API (2 test cases)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 201 Created              | ✅ Pass  | ✅ Test OK             |
+| 2  | Lỗi server                        | 500 Internal Server      | ❌ Fail  | ✅ Test OK             |
+
+### 👨‍👩‍👧‍👦 GetListOfMembers API (1 test case)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+
+### 👨‍👩‍👧‍👦 GetDetailedMemberOfFamilyTreeByUserId API (1 test case)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+
+### 👨‍👩‍👧‍👦 GetDetailedMemberOfFamilyTreeByMemberId API (1 test case)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+
+### 👨‍👩‍👧‍👦 GetMembersTreeViewAsync API (1 test case)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+
+### 👨‍👩‍👧‍👦 UpdateMemberDetails API (1 test case)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK + Data            | ✅ Pass  | ✅ Test OK             |
+
+### 👨‍👩‍👧‍👦 DeleteMember API (1 test case)
+
+| #  | Test Case                          | Kết quả mong đợi         | Loại     | Kết quả thực tế        |
+|----|-----------------------------------|--------------------------|----------|------------------------|
+| 1  | Thành công                         | 200 OK                   | ✅ Pass  | ✅ Test OK             |
+
+- **219 test cases** tổng cộng
+- **Tất cả đều PASS** ✅
+- Bao gồm các scenarios: success, error handling, validation, authorization, server errors
+- Test coverage: AccountController, AcademicHonorController, BiographyController, CareerHonorController, EducationController, WorkController, PostController, FTFamilyEventController, FTMemberController, FamilyTreeController
 
 ## 🚀 Cách chạy Tests
 
