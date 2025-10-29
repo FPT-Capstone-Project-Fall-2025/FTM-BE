@@ -77,7 +77,8 @@ namespace FTM.API.Controllers
         }
 
         [HttpPut("{ftId}")]
-        public async Task<IActionResult> UpdateMemberDetails([FromRoute] Guid ftId, UpdateFTMemberRequest request)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UpdateMemberDetails([FromRoute] Guid ftId, [FromForm] UpdateFTMemberRequest request)
         {
             if (!ModelState.IsValid)
             {

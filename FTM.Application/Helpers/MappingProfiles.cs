@@ -42,8 +42,7 @@ namespace FTM.Application.Helpers
                 });
 
             CreateMap<UpsertFTMemberRequest, FTMember>()
-                .ForMember(dest => dest.FTMemberFiles, opt => opt.MapFrom(src => src.FTMemberFiles))
-                // Ignore navigation collections that shouldn’t be updated automatically
+                .ForMember(dest => dest.FTMemberFiles, opt => opt.Ignore())
                 .ForMember(dest => dest.FTRelationshipFrom, opt => opt.Ignore())
                 .ForMember(dest => dest.FTRelationshipFromPartner, opt => opt.Ignore())
                 .ForMember(dest => dest.FTRelationshipTo, opt => opt.Ignore())

@@ -29,6 +29,7 @@ namespace FTM.Domain.Specification.FTMembers
             AddInclude(x => x.Province);
             AddInclude(x => x.BurialWard);
             AddInclude(x => x.BurialProvince);
+            AddInclude(x => x.FTMemberFiles);
 
             ApplyPaging(specParams.Skip, specParams.Take);
 

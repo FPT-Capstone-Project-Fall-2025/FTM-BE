@@ -1,4 +1,5 @@
 ﻿using FTM.Domain.Helpers;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System;
@@ -107,5 +108,8 @@ namespace FTM.Domain.DTOs.FamilyTree
 
         [FromForm(Name = "ftMemberFiles")]
         public List<FTMemberFileRequest>? FTMemberFiles { get; set; }
+
+        [FromForm(Name = "avatar")]
+        public IFormFile? File { get; set; }
     }
 }
