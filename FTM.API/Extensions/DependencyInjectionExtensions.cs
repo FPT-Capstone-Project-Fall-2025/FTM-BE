@@ -65,6 +65,7 @@ namespace FTM.API.Extensions
             serrvices.AddScoped<IFTRelationshipRepository, FTRelationshipRepository>();
             serrvices.AddScoped<IFTInvitationRepository, FTInvitationRepository>();
             serrvices.AddScoped<IFTUserRepository, FTUserRepository>();
+            serrvices.AddScoped<IFTMemberFileRepository, FTMemberFileRepository>();
 
             // Notification
             serrvices.AddScoped<IFTNotificationRepository, FTNotificationRepository>();

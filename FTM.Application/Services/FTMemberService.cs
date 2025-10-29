@@ -38,6 +38,7 @@ namespace FTM.Application.Services
         private readonly ICurrentUserResolver _currentUserResolver;
         private readonly IBlobStorageService _blobStorageService;
         private readonly IFTInvitationService _invitationService;
+        private readonly IFTMemberFileRepository _fTMemberFileRepository;
         private readonly IFTUserRepository _fTUserRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
@@ -52,6 +53,7 @@ namespace FTM.Application.Services
             ICurrentUserResolver CurrentUserResolver,
             IBlobStorageService blobStorageService,
             IFTInvitationService invitationService,
+            IFTMemberFileRepository fTMemberFileRepository,
             IFTUserRepository fTUserRepository,
             IUnitOfWork unitOfWork,
             IMapper mapper)
@@ -63,6 +65,7 @@ namespace FTM.Application.Services
             _fTRelationshipRepository = FTRelationshipRepository;
             _currentUserResolver = CurrentUserResolver;
             _blobStorageService = blobStorageService;
+            _fTMemberFileRepository = fTMemberFileRepository;
             _fTUserRepository = fTUserRepository;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
@@ -86,22 +89,6 @@ namespace FTM.Application.Services
             var ftMember = _mapper.Map<FTMember>(request);
             ftMember.FTRole = FTMRole.FTMember;
 
-            // Dummy For member file
-            //ftMember.FTMemberFiles.First().FilePath = "dummyFilePath";
-            // Handle File
-            if (request.FTMemberFiles != null && request.FTMemberFiles.Any())
-            {
-                for (int i = 0; i < request.FTMemberFiles.Count; i++)
-                {
-                    var item = request.FTMemberFiles[i];
-                    var fileType = string.IsNullOrEmpty(item.FileType) ? "1" : item.FileType; // Default: Image
-
-                    // Upload to Blob Storage
-                    var fileUrl = await _blobStorageService.UploadFileAsync(item.File, "ftmembers", null);
-                    ftMember.FTMemberFiles.ElementAt(i).FilePath = fileUrl;
-                    ftMember.FTMemberFiles.ElementAt(i).FileType = fileType;
-                }
-            }
             await executionStrategy.ExecuteAsync(
                    async () =>
                    {
@@ -133,8 +120,26 @@ namespace FTM.Application.Services
                                        break;
                                }
 
-                               //----------------Handle MemberFile Entity---------------------
-                               //----------------End Handle MemberFile Entity---------------------
+                               //----------------Handle Avatar---------------------
+                               if (!request.File.IsNull())
+                               {
+                                   string filePath = await _blobStorageService.UploadFileAsync(request.File, "ftmembers", $"Avatar{ftMember.Id}");
+                                   ftMember.FTMemberFiles = new List<FTMemberFile>()
+                                                           {
+                                                               new FTMemberFile()
+                                                               {
+                                                                   FTMemberId = ftMember.Id,
+                                                                   Title = $"Avatar{ftMember.Id}",
+                                                                   FilePath = filePath,
+                                                                   FileType = "1",
+                                                                   Content = "",
+                                                                   Description = "",
+                                                                   Thumbnail = ""
+                                                               }
+                                                           };
+
+                               }
+                               //----------------End Handle Avatar---------------------
 
                                //----------------Handle Invitation---------------------
                                if (request.UserId != null && request.UserId != Guid.Empty)
@@ -446,10 +451,12 @@ namespace FTM.Application.Services
         public async Task<FTMemberDetailsDto> UpdateDetailsByMemberId(Guid ftId, UpdateFTMemberRequest request)
         {
             var existingMember = await _fTMemberRepository.GetByIdAsync(request.ftMemberId);
-
             if (existingMember == null) throw new ArgumentException("Thành viên không tồn tại trong gia phả");
+            _mapper.Map(request, existingMember);
 
-            if(existingMember.UserId.HasValue && request.UserId.HasValue && existingMember.UserId != request.UserId.Value)
+            //----------------Handle Invitation---------------------
+            if ((existingMember.UserId.HasValue && request.UserId.HasValue && existingMember.UserId != request.UserId.Value)
+                || (!existingMember.UserId.HasValue && request.UserId.HasValue))
             {
                 var invitedUser = await _userManager.FindByIdAsync(request.UserId.ToString());
 
@@ -478,8 +485,36 @@ namespace FTM.Application.Services
                 await _fTInvitationService.AddAsync(ftInvitation);
                 await _fTInvitationService.SendAsync(ftInvitation);
             }
+            //----------------End Handle Invitation---------------------
 
-            _mapper.Map(request, existingMember);
+            //----------------Handle Avatar---------------------
+            if (!request.File.IsNull())
+            {
+                var avatar = await _fTMemberFileRepository.FindAvatarAsync(existingMember.Id);
+                string filePath = await _blobStorageService.UploadFileAsync(request.File, "ftmembers", $"Avatar{existingMember.Id}");
+                if (avatar == null)
+                {
+                   await _fTMemberFileRepository.AddAsync(new FTMemberFile()
+                                                            {
+                                                                FTMemberId = existingMember.Id,
+                                                                Title = $"Avatar{existingMember.Id}",
+                                                                FilePath = filePath,
+                                                                FileType = "1",
+                                                                Content = "",
+                                                                Description = "",
+                                                                Thumbnail = ""
+                   });
+                }
+                else
+                {
+                    await _blobStorageService.DeleteFileAsync("ftmembers", $"Avatar{existingMember.Id}");
+                    avatar.FilePath = filePath;
+                    _fTMemberFileRepository.Update(avatar);
+                }
+            }
+            //----------------End Handle Avatar---------------------
+
+
             _fTMemberRepository.Update(existingMember);
             await _unitOfWork.CompleteAsync();
 
