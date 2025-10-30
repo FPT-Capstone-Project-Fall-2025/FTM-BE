@@ -1,5 +1,6 @@
 using FTM.Domain.DTOs.FamilyTree;
 using FTM.Domain.Entities.Events;
+using FTM.Domain.Enums;
 using FTM.Domain.Specification;
 using FTM.Domain.Specification.FamilyTrees;
 using FTM.Infrastructure.Data;
@@ -365,6 +366,30 @@ namespace FTM.Infrastructure.Repositories
             return true;
         }
 
+        public async Task<bool> HardDeleteEventAsync(Guid eventId)
+        {
+            var eventEntity = await Context.FTFamilyEvents
+                .Include(e => e.EventMembers)
+                .Include(e => e.EventFTs)
+                .FirstOrDefaultAsync(e => e.Id == eventId);
+
+            if (eventEntity == null)
+                return false;
+
+            // Hard delete all related members
+            Context.FTFamilyEventMembers.RemoveRange(eventEntity.EventMembers);
+
+            // Hard delete all related FTs
+            Context.FTFamilyEventFTs.RemoveRange(eventEntity.EventFTs);
+
+            // Hard delete the main event
+            Context.FTFamilyEvents.Remove(eventEntity);
+
+            await Context.SaveChangesAsync();
+
+            return true;
+        }
+
         public async Task<bool> FamilyTreeExistsAsync(Guid ftId)
         {
             return await Context.FamilyTrees.AnyAsync(ft => ft.Id == ftId && ft.IsDeleted == false);
@@ -388,6 +413,45 @@ namespace FTM.Infrastructure.Repositories
         public async Task<int> SaveChangesAsync()
         {
             return await Context.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<FTFamilyEvent>> GetRecurringEventInstancesAsync(Guid originalEventId)
+        {
+            // First try to find by ReferenceEventId
+            var instances = await Context.FTFamilyEvents
+                .Where(e => e.ReferenceEventId == originalEventId && e.IsDeleted == false)
+                .OrderBy(e => e.StartTime)
+                .ToListAsync();
+
+            if (instances.Any())
+            {
+                return instances;
+            }
+
+            // If no instances found by ReferenceEventId, try to find by metadata
+            // Get the original event to get its metadata
+            var originalEvent = await Context.FTFamilyEvents
+                .FirstOrDefaultAsync(e => e.Id == originalEventId && e.IsDeleted == false);
+
+            if (originalEvent != null && originalEvent.RecurrenceType != RecurrenceType.None && originalEvent.RecurrenceEndTime.HasValue)
+            {
+                // Find events with same FTId, Name, EventType, and within recurrence period
+                var metadataInstances = await Context.FTFamilyEvents
+                    .Where(e => e.FTId == originalEvent.FTId &&
+                               e.Name == originalEvent.Name &&
+                               e.EventType == originalEvent.EventType &&
+                               e.ReferenceEventId != null && // Has ReferenceEventId (is instance)
+                               e.StartTime >= originalEvent.StartTime &&
+                               e.StartTime <= originalEvent.RecurrenceEndTime.Value &&
+                               e.IsDeleted == false &&
+                               e.Id != originalEventId) // Exclude original
+                    .OrderBy(e => e.StartTime)
+                    .ToListAsync();
+
+                return metadataInstances;
+            }
+
+            return new List<FTFamilyEvent>();
         }
     }
 }
