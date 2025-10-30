@@ -28,10 +28,12 @@ namespace FTM.Infrastructure.Repositories.IRepositories
         Task<IEnumerable<FTFamilyEventMemberDto>> GetEventMembersAsync(Guid eventId);
         Task<bool> AddMemberToEventAsync(Guid eventId, Guid memberId, Guid currentUserId);
         Task<bool> RemoveMemberFromEventAsync(Guid eventId, Guid memberId);
+        Task<bool> HardDeleteEventAsync(Guid eventId);
         Task<bool> FamilyTreeExistsAsync(Guid ftId);
         Task<bool> MemberExistsAsync(Guid memberId);
         Task<bool> MemberBelongsToFTAsync(Guid memberId, Guid ftId);
         Task<bool> UserIsMemberOfFTAsync(Guid userId, Guid ftId);
         Task<int> SaveChangesAsync();
+        Task<IEnumerable<FTFamilyEvent>> GetRecurringEventInstancesAsync(Guid originalEventId);
     }
 }

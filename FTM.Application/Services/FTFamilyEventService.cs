@@ -46,10 +46,11 @@ namespace FTM.Application.Services
             return _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
         }
 
-        private async Task<Guid> GetUserMemberIdAsync(Guid userId, Guid ftId)
+        private Guid GetUserMemberIdAsync(Guid userId, Guid ftId)
         {
             // This is a simplified implementation - in real scenario you'd need to get this from repository
             // For now, we'll assume the user has a member record
+            // TODO: Implement proper member lookup
             return Guid.NewGuid(); // Placeholder - need proper implementation
         }
 
@@ -71,7 +72,7 @@ namespace FTM.Application.Services
             if (userIsMember)
             {
                 var hasPermission = await _authorizationRepository.IsAuthorizationExisting(
-                    request.FTId, await GetUserMemberIdAsync(currentUserId, request.FTId), FeatureType.EVENT, MethodType.ADD);
+                    request.FTId, GetUserMemberIdAsync(currentUserId, request.FTId), FeatureType.EVENT, MethodType.ADD);
                 if (!hasPermission && currentUserRole != "GPOwner")
                     throw new Exception("User does not have permission to create events in this family tree");
             }
@@ -275,6 +276,35 @@ namespace FTM.Application.Services
             if (eventEntity == null)
                 throw new Exception("Event not found");
 
+            Guid seriesOriginalEventId;
+            FTFamilyEvent seriesOriginalEvent;
+
+            // Determine if this is an original recurring event or an instance
+            if (eventEntity.RecurrenceType != RecurrenceType.None && eventEntity.RecurrenceEndTime.HasValue)
+            {
+                // This is the original event
+                seriesOriginalEventId = id;
+                seriesOriginalEvent = eventEntity;
+            }
+            else if (eventEntity.ReferenceEventId.HasValue)
+            {
+                // This is an instance, find the original event
+                seriesOriginalEventId = eventEntity.ReferenceEventId.Value;
+                seriesOriginalEvent = await _eventRepository.GetByIdAsync(seriesOriginalEventId);
+                if (seriesOriginalEvent == null || seriesOriginalEvent.RecurrenceType == RecurrenceType.None)
+                {
+                    // Original event not found or not recurring, treat as single event
+                    seriesOriginalEventId = id;
+                    seriesOriginalEvent = eventEntity;
+                }
+            }
+            else
+            {
+                // Single non-recurring event
+                seriesOriginalEventId = id;
+                seriesOriginalEvent = eventEntity;
+            }
+
             var currentUserId = GetCurrentUserId();
             var currentUserRole = GetCurrentUserRole();
 
@@ -286,7 +316,7 @@ namespace FTM.Application.Services
             if (userIsMember)
             {
                 var hasPermission = await _authorizationRepository.IsAuthorizationExisting(
-                    eventEntity.FTId, await GetUserMemberIdAsync(currentUserId, eventEntity.FTId), FeatureType.EVENT, MethodType.UPDATE);
+                    eventEntity.FTId, GetUserMemberIdAsync(currentUserId, eventEntity.FTId), FeatureType.EVENT, MethodType.UPDATE);
                 if (!hasPermission && currentUserRole != "GPOwner")
                     throw new Exception("User does not have permission to update events in this family tree");
             }
@@ -309,7 +339,7 @@ namespace FTM.Application.Services
                 var memberExists = await _eventRepository.MemberExistsAsync(request.TargetMemberId.Value);
                 if (!memberExists)
                     throw new Exception($"Target member with ID {request.TargetMemberId} not found");
-                
+
                 var memberBelongsToFT = await _eventRepository.MemberBelongsToFTAsync(request.TargetMemberId.Value, eventEntity.FTId);
                 if (!memberBelongsToFT)
                     throw new Exception("Target member does not belong to this family tree");
@@ -327,7 +357,7 @@ namespace FTM.Application.Services
                     var memberExists = await _eventRepository.MemberExistsAsync(memberId);
                     if (!memberExists)
                         throw new Exception($"Member with ID {memberId} not found");
-                    
+
                     var memberBelongsToFT = await _eventRepository.MemberBelongsToFTAsync(memberId, eventEntity.FTId);
                     if (!memberBelongsToFT)
                         throw new Exception($"Member with ID {memberId} does not belong to this family tree");
@@ -339,13 +369,13 @@ namespace FTM.Application.Services
             {
                 // Upload new image
                 var newImageUrl = await _blobStorageService.UploadEventImageAsync(request.ImageFile, "events");
-                
+
                 // Store old image URL for potential cleanup
                 var oldImageUrl = eventEntity.ImageUrl;
-                
+
                 // Update with new image URL
                 eventEntity.ImageUrl = newImageUrl;
-                
+
                 // TODO: Optionally delete old image from blob storage if it exists
                 // This would require extracting the blob path from the old URL
             }
@@ -404,20 +434,102 @@ namespace FTM.Application.Services
                 await _eventRepository.UpdateEventMembersAsync(id, newMembers);
             }
 
-            return await GetEventByIdAsync(id);
-        }
+            // If this is a recurring event series, update all events in the series
+            if (seriesOriginalEvent.RecurrenceType != RecurrenceType.None && seriesOriginalEvent.RecurrenceEndTime.HasValue)
+            {
+                // Get all events in the series: original + all instances
+                var allEventsInSeries = new List<FTFamilyEvent> { seriesOriginalEvent };
+                var recurringInstances = await _eventRepository.GetRecurringEventInstancesAsync(seriesOriginalEventId);
+                allEventsInSeries.AddRange(recurringInstances);
 
-        public async Task<bool> DeleteEventAsync(Guid eventId)
+                // Update all events in the series with metadata changes (keep original times for instances)
+                foreach (var seriesEvent in allEventsInSeries.Where(e => e.Id != id)) // Exclude current event as it's already updated
+                {
+                    // Update metadata fields for instances (keep original times)
+                    if (request.Name != null)
+                        seriesEvent.Name = request.Name;
+                    if (request.EventType.HasValue)
+                        seriesEvent.EventType = (FTM.Domain.Enums.EventType)request.EventType.Value;
+                    if (request.Location != null)
+                        seriesEvent.Location = request.Location;
+                    if (request.Description != null)
+                        seriesEvent.Description = request.Description;
+                    if (request.Address != null)
+                        seriesEvent.Address = request.Address;
+                    if (request.LocationName != null)
+                        seriesEvent.LocationName = request.LocationName;
+                    if (request.IsAllDay.HasValue)
+                        seriesEvent.IsAllDay = request.IsAllDay.Value;
+                    if (request.IsLunar.HasValue)
+                        seriesEvent.IsLunar = request.IsLunar.Value;
+                    if (request.TargetMemberId.HasValue)
+                        seriesEvent.TargetMemberId = request.TargetMemberId.Value;
+                    if (request.IsPublic.HasValue)
+                        seriesEvent.IsPublic = request.IsPublic.Value;
+
+                    seriesEvent.LastModifiedOn = DateTimeOffset.UtcNow;
+                    seriesEvent.LastModifiedBy = currentUserId.ToString();
+
+                    _eventRepository.Update(seriesEvent);
+
+                    // Update members for all events in series if provided
+                    if (request.MemberIds != null)
+                    {
+                        var seriesMembers = request.MemberIds.Select(memberId => new FTFamilyEventMember
+                        {
+                            Id = Guid.NewGuid(),
+                            FTFamilyEventId = seriesEvent.Id,
+                            FTMemberId = memberId,
+                            CreatedOn = DateTimeOffset.UtcNow,
+                            CreatedByUserId = currentUserId,
+                            IsDeleted = false
+                        }).ToList();
+
+                        await _eventRepository.UpdateEventMembersAsync(seriesEvent.Id, seriesMembers);
+                    }
+                }
+            }
+
+            await _eventRepository.SaveChangesAsync();
+
+            return await GetEventByIdAsync(id);
+        }        public async Task<bool> DeleteEventAsync(Guid eventId)
         {
             var eventEntity = await _eventRepository.GetByIdAsync(eventId);
             if (eventEntity == null)
                 return false;
 
-            eventEntity.IsDeleted = true;
-            eventEntity.LastModifiedOn = DateTimeOffset.UtcNow;
+            Guid eventToDeleteId = eventId;
 
-            _eventRepository.Update(eventEntity);
-            await _eventRepository.SaveChangesAsync();
+            // If this is an instance, find the original event and delete the entire series
+            if (eventEntity.ReferenceEventId.HasValue)
+            {
+                eventToDeleteId = eventEntity.ReferenceEventId.Value;
+                // Get the original event
+                var originalEvent = await _eventRepository.GetByIdAsync(eventToDeleteId);
+                if (originalEvent == null)
+                {
+                    // If original event not found, just delete this instance
+                    return await _eventRepository.HardDeleteEventAsync(eventId);
+                }
+                eventEntity = originalEvent;
+            }
+
+            // Get all recurring instances if this is the original event
+            var recurringInstances = new List<FTFamilyEvent>();
+            if (!eventEntity.ReferenceEventId.HasValue) // This is the original event
+            {
+                recurringInstances = (await _eventRepository.GetRecurringEventInstancesAsync(eventEntity.Id)).ToList();
+            }
+
+            // Hard delete the main event
+            await _eventRepository.HardDeleteEventAsync(eventEntity.Id);
+
+            // Hard delete all recurring instances
+            foreach (var instance in recurringInstances)
+            {
+                await _eventRepository.HardDeleteEventAsync(instance.Id);
+            }
 
             return true;
         }
