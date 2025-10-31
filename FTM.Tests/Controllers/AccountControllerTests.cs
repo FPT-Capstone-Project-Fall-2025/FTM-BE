@@ -845,6 +845,7 @@ namespace FTM.Tests.Controllers
             // Arrange
             var userId = Guid.NewGuid();
             var token = "valid-confirmation-token";
+            Environment.SetEnvironmentVariable("FE_URL", "http://localhost:3000/");
 
             _mockAccountService
                 .Setup(s => s.ConfirmEmail(userId, token))
@@ -854,9 +855,8 @@ namespace FTM.Tests.Controllers
             var result = await _controller.ConfirmEmail(userId, token);
 
             // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            var apiSuccess = Assert.IsType<ApiSuccess>(okResult.Value);
-            Assert.Equal("Xác nhận email thành công.", apiSuccess.Message);
+            var redirectResult = Assert.IsType<RedirectResult>(result);
+            Assert.Contains("http://localhost:3000/", redirectResult.Url);
 
             _output.WriteLine("✅ PASSED - ConfirmEmail - Thành công - Xác nhận email");
         }
@@ -867,6 +867,7 @@ namespace FTM.Tests.Controllers
             // Arrange
             var userId = Guid.NewGuid();
             var token = "invalid-token";
+            Environment.SetEnvironmentVariable("FE_URL", "http://localhost:3000/");
 
             _mockAccountService
                 .Setup(s => s.ConfirmEmail(userId, token))
@@ -876,8 +877,8 @@ namespace FTM.Tests.Controllers
             var result = await _controller.ConfirmEmail(userId, token);
 
             // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            Assert.Equal(200, okResult.StatusCode);
+            var redirectResult = Assert.IsType<RedirectResult>(result);
+            Assert.Contains("http://localhost:3000//error?message=Xác nhận email thất bại", redirectResult.Url);
 
             _output.WriteLine("✅ PASSED - ConfirmEmail - Thất bại - Token không hợp lệ");
         }
