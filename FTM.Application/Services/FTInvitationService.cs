@@ -1,11 +1,18 @@
-﻿using FTM.Application.IServices;
+﻿using AutoMapper;
+using FTM.Application.Hubs;
+using FTM.Application.IServices;
+using FTM.Domain.DTOs.FamilyTree;
+using FTM.Domain.DTOs.Notifications;
 using FTM.Domain.Entities.FamilyTree;
 using FTM.Domain.Entities.Identity;
+using FTM.Domain.Entities.Notifications;
 using FTM.Domain.Enums;
 using FTM.Infrastructure.Repositories.Interface;
+using Humanizer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Server.IIS.Core;
+using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +30,10 @@ namespace FTM.Application.Services
         private readonly IFTInvitationRepository _fTInvitationRepository;
         private readonly IFTUserRepository _fTUserRepository;
         private readonly IFTMemberRepository _fTMemberRepository;
+        private readonly IFTNotificationRepository _fTNotificationRepository;
+        private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IMapper _mapper;
+
         public FTInvitationService(
             IEmailSender emailSender,
             IUnitOfWork unitOfWork,
@@ -30,7 +41,10 @@ namespace FTM.Application.Services
             ICurrentUserResolver currentUserResolver,
             IFTInvitationRepository fTInvitationRepository,
             IFTUserRepository fTUserRepository,
-            IFTMemberRepository fTmemberRepository
+            IFTMemberRepository fTmemberRepository,
+            IFTNotificationRepository fTNotificationRepository,
+            IHubContext<NotificationHub> hubContext,
+            IMapper mapper
             )
         {
             _emailSender = emailSender;
@@ -40,16 +54,20 @@ namespace FTM.Application.Services
             _fTInvitationRepository = fTInvitationRepository;
             _fTUserRepository = fTUserRepository;
             _fTMemberRepository = fTmemberRepository;
+            _fTNotificationRepository = fTNotificationRepository;
+            _hubContext = hubContext;
+            _mapper = mapper;
         }
 
         public async Task AddAsync(FTInvitation invitation)
         {
-            await _fTInvitationRepository.AddAsync(invitation);
+            await _fTInvitationRepository.AddAsync(invitation);       
         }
 
-        public async Task HandleRespondAsync(string token, bool accepted)
+        public async Task HandleRespondAsync(Guid invitationId, bool accepted)
         {
-            var invitation = await _fTInvitationRepository.GetInvitationAsync(token);
+
+            var invitation = await _fTInvitationRepository.GetByIdAsync(invitationId);
 
             if (invitation == null)
                 throw new ArgumentException("Lời mời không tồn tại.");
@@ -96,19 +114,40 @@ namespace FTM.Application.Services
                     throw new ArgumentException("Người được mời hoặc thành viên trong cây gia phả không tồn tại.");
                 }
             }
+
+            // Send invitation response to inviter
+            var invitationResponse = accepted ? "chấp nhận" : "từ chối";
+            var notification = new FTNotification
+            {
+                UserId = invitation.InviterUserId,
+                Title = $"Phản hồi lời mời từ {invitation.InvitedName}",
+                Message = $"<p><b>{invitation.InvitedName}</b> đã <b>{invitationResponse}</b> lời mời của bạn tham gia gia phả <em>{invitation.FTName}</em>.</p>",
+                Type = NotificationType.INVITE,
+                IsRead = false,
+                IsActionable = false,
+                RelatedId = invitation.Id,
+            };
+            await _fTNotificationRepository.AddAsync(notification);
+
+            var fTNotificationDto = _mapper.Map<FTNotificationDto>(notification);
+
+            await _hubContext.Clients.User(invitation.InviterUserId.ToString())
+                .SendAsync("ReceiveNotification", fTNotificationDto);
+
             await _unitOfWork.CompleteAsync();
         }
 
         public async Task SendAsync(FTInvitation invitation)
         {
-            string beURL = Environment.GetEnvironmentVariable("BE_URL");
+            // Send By Email
+                string beURL = Environment.GetEnvironmentVariable("BE_URL");
             string acceptUrl = $"{beURL}/api/invitation/respond?token={invitation.Token}&accepted=true";
             string rejectUrl = $"{beURL}/api/invitation/respond?token={invitation.Token}&accepted=false";
 
             string body = $@"
             <div style='font-family: Arial; color:#333'>
                 <h2>Lời mời liên kết thành viên trong cây gia phả</h2>
-                <p><b>{_currentUserResolver.Name}</b> đã mời bạn liên kết với một thành viên trong cây gia phả.</p>
+                <p><b>{_currentUserResolver.Name}</b> đã mời bạn tham gia gia phả <b>Dòng họ {invitation.FTName}</b> với thành viên <b>{invitation.FTMemberName}</b>.</p>
                 <p>Bạn có muốn chấp nhận lời mời này không?</p>
                 <div style='margin-top:20px'>
                     <a href='{acceptUrl}' 
@@ -124,8 +163,24 @@ namespace FTM.Application.Services
             </div>";
 
             await _emailSender.SendEmailAsync(invitation.Email, "Lời mời tham gia gia phả", body);
+
+            //Send By Signal R
+            var notification = new FTNotification
+            {
+                UserId = invitation.InvitedUserId,
+                Title = "Bạn đã được mời",
+                Message = $"<p><b>{invitation.InviterName}</b> mời bạn liên kết với <b>{invitation.FTMemberName}</b> trong cây <em>{invitation.FTName}</em>.</p>",
+                Type = NotificationType.INVITE,
+                IsRead = false,
+                IsActionable = true,
+                RelatedId = invitation.Id,
+            };
+            await _fTNotificationRepository.AddAsync(notification); 
+            var fTNotificationDto = _mapper.Map<FTNotificationDto>(notification);
+            await _hubContext.Clients.User(notification.UserId.ToString())
+            .SendAsync("ReceiveNotification", fTNotificationDto);
+
+            await _unitOfWork.CompleteAsync();
         }
-
-
     }
 }

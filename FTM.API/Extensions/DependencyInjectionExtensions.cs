@@ -1,13 +1,15 @@
-﻿using FTM.Application.IServices;
+﻿using FTM.Application.Hubs;
+using FTM.Application.IServices;
 using FTM.Application.Services;
 using FTM.Domain.Entities.Identity;
 using FTM.Infrastructure.Data;
+using FTM.Infrastructure.Repositories;
 using FTM.Infrastructure.Repositories.Implement;
 using FTM.Infrastructure.Repositories.Interface;
 using FTM.Infrastructure.Repositories.IRepositories;
-using FTM.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.SignalR;
 using System.Net;
 using System.Net.Mail;
 
@@ -40,6 +42,9 @@ namespace FTM.API.Extensions
             serrvices.AddScoped<IFTMemberService, FTMemberService>();
             serrvices.AddScoped<IFTInvitationService, FTInvitationService>();
 
+            // Notification ~ Signal R
+            serrvices.AddScoped<IFTNotificationService, FTNotificationService>();
+
             // Auto Mapper
             serrvices.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
@@ -67,8 +72,9 @@ namespace FTM.API.Extensions
             serrvices.AddScoped<IFTUserRepository, FTUserRepository>();
             serrvices.AddScoped<IFTMemberFileRepository, FTMemberFileRepository>();
 
-            // Notification
+            // Notification ~ Signal R
             serrvices.AddScoped<IFTNotificationRepository, FTNotificationRepository>();
+            serrvices.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 
             // Application Services
             serrvices.AddScoped<IEducationService, EducationService>();

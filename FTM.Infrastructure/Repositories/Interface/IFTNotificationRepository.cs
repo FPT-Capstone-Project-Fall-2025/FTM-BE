@@ -1,4 +1,5 @@
-﻿using FTM.Domain.Entities.Notifications;
+﻿using FTM.Domain.DTOs.Notifications;
+using FTM.Domain.Entities.Notifications;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,5 +10,6 @@ namespace FTM.Infrastructure.Repositories.Interface
 {
     public interface IFTNotificationRepository : IGenericRepository<FTNotification>
     {
+        Task<List<FTNotification>> FindByuserIdAsync(Guid userId);
     }
 }

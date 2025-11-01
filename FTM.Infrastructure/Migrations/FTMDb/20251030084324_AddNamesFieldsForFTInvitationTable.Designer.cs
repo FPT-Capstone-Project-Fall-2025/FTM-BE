@@ -3,6 +3,7 @@ using System;
 using FTM.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FTM.Infrastructure.Migrations.FTMDb
 {
     [DbContext(typeof(FTMDbContext))]
-    partial class FTMDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251030084324_AddNamesFieldsForFTInvitationTable")]
+    partial class AddNamesFieldsForFTInvitationTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -214,196 +217,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.HasKey("Id");
 
                     b.ToTable("MProvinces", (string)null);
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.Events.FTFamilyEvent", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Address")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<DateTimeOffset?>("EndTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("EventType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<Guid>("FTId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ImageUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<bool>("IsAllDay")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsLunar")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
-                    b.Property<bool>("IsPublic")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
-
-                    b.Property<string>("LastModifiedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("LastModifiedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Location")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("LocationName")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<DateTimeOffset?>("RecurrenceEndTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("RecurrenceType")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
-
-                    b.Property<Guid?>("ReferenceEventId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("StartTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("TargetMemberId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FTId");
-
-                    b.HasIndex("TargetMemberId");
-
-                    b.ToTable("FTFamilyEvents", (string)null);
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.Events.FTFamilyEventFT", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("FTFamilyEventId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("FTId")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("LastModifiedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("LastModifiedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FTId");
-
-                    b.HasIndex("FTFamilyEventId", "FTId")
-                        .IsUnique();
-
-                    b.ToTable("FTFamilyEventFTs", (string)null);
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.Events.FTFamilyEventMember", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("FTFamilyEventId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("FTMemberId")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("LastModifiedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("LastModifiedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FTMemberId");
-
-                    b.HasIndex("FTFamilyEventId", "FTMemberId")
-                        .IsUnique();
-
-                    b.ToTable("FTFamilyEventMembers", (string)null);
                 });
 
             modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.AcademicHonor", b =>
@@ -1315,62 +1128,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.ToTable("PostReactions", (string)null);
                 });
 
-            modelBuilder.Entity("FTM.Domain.Entities.Events.FTFamilyEvent", b =>
-                {
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FamilyTree", "FT")
-                        .WithMany()
-                        .HasForeignKey("FTId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "TargetMember")
-                        .WithMany()
-                        .HasForeignKey("TargetMemberId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("FT");
-
-                    b.Navigation("TargetMember");
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.Events.FTFamilyEventFT", b =>
-                {
-                    b.HasOne("FTM.Domain.Entities.Events.FTFamilyEvent", "FTFamilyEvent")
-                        .WithMany("EventFTs")
-                        .HasForeignKey("FTFamilyEventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FamilyTree", "FT")
-                        .WithMany()
-                        .HasForeignKey("FTId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("FT");
-
-                    b.Navigation("FTFamilyEvent");
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.Events.FTFamilyEventMember", b =>
-                {
-                    b.HasOne("FTM.Domain.Entities.Events.FTFamilyEvent", "FTFamilyEvent")
-                        .WithMany("EventMembers")
-                        .HasForeignKey("FTFamilyEventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "FTMember")
-                        .WithMany()
-                        .HasForeignKey("FTMemberId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("FTFamilyEvent");
-
-                    b.Navigation("FTMember");
-                });
-
             modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.AcademicHonor", b =>
                 {
                     b.HasOne("FTM.Domain.Entities.FamilyTree.FamilyTree", "FamilyTree")
@@ -1638,13 +1395,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.Navigation("BurialFTMembers");
 
                     b.Navigation("FTMembers");
-                });
-
-            modelBuilder.Entity("FTM.Domain.Entities.Events.FTFamilyEvent", b =>
-                {
-                    b.Navigation("EventFTs");
-
-                    b.Navigation("EventMembers");
                 });
 
             modelBuilder.Entity("FTM.Domain.Entities.FamilyTree.FTMember", b =>

@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using AutoMapper.Execution;
 using FTM.Domain.DTOs.FamilyTree;
+using FTM.Domain.DTOs.Notifications;
 using FTM.Domain.Entities.Applications;
 using FTM.Domain.Entities.FamilyTree;
+using FTM.Domain.Entities.Notifications;
 using FTM.Domain.Models;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -73,6 +75,8 @@ namespace FTM.Application.Helpers
             CreateMap<UpsertFTRelationshipRequest, FTRelationship>().ReverseMap();
             CreateMap<UpsertFTAuthorizationRequest, FTAuthorization>();
             CreateMap<FTAuthorization, FTAuthorizationDto>();
+            CreateMap<FTInvitation, FTInvitationDto>();
+            CreateMap<FTNotification, FTNotificationDto>();
 
             CreateMap<UpdateFTMemberRequest, FTMember>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
