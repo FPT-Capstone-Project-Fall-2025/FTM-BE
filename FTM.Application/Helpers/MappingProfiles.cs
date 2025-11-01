@@ -37,6 +37,7 @@ namespace FTM.Application.Helpers
                                     Value = gr.OrderBy(x => x.ToFTMember.Birthday).Select(rFrom => rFrom.ToFTMember.Id).ToArray()
                                 })))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Fullname))
+                .ForMember(dest => dest.Avatar, opt => opt.MapFrom(src => src.FTMemberFiles.FirstOrDefault(f => f.Title.Contains("Avatar"))))
                 .AfterMap((src, desc) => {
                     if (desc.Partners.IsNullOrEmpty()) {
                         desc.Partners = src.FTRelationshipTo.Where(x => x.CategoryCode == FTRelationshipCategory.PARTNER && x.ToFTMemberId == src.Id).Select(x => x.FromFTMember.Id).ToList();

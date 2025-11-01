@@ -44,6 +44,7 @@ namespace FTM.Infrastructure.Repositories.Implement
                                 .ThenInclude(x => x.FromFTMember)
                                     .ThenInclude(x => x.FTRelationshipFrom)
                                         .ThenInclude(x => x.FromFTMemberPartner)
+                              .Include(m => m.FTMemberFiles)
                               .Where(m => m.IsDeleted == false)
                               .FirstOrDefaultAsync(m => m.Id == id);
         }
