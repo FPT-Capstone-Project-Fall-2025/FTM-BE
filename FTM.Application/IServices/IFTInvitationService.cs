@@ -13,6 +13,6 @@ namespace FTM.Application.IServices
 
         Task AddAsync(FTInvitation invitation);
 
-        Task HandleRespondAsync(string token, bool accepted);
+        Task HandleRespondAsync(Guid invitationId, bool accepted);
     }
 }

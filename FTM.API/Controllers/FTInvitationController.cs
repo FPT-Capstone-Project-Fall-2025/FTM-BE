@@ -17,9 +17,9 @@ namespace FTM.API.Controllers
         }
 
         [HttpGet("respond")]
-        public async Task<IActionResult> RespondByEmail([FromQuery] string token, [FromQuery] bool accepted)
+        public async Task<IActionResult> RespondInvitation([FromQuery(Name = "relatedId")] Guid invitationId, [FromQuery] bool accepted)
         {
-            await _fTInvitationService.HandleRespondAsync(token, accepted);
+            await _fTInvitationService.HandleRespondAsync(invitationId, accepted);
             string msg = accepted ? "Bạn đã chấp nhận lời mời thành công." : "Bạn đã từ chối lời mời.";
             string html = $"<div style='font-family:Arial;text-align:center;margin-top:50px'><h3>{msg}</h3><p>Bạn có thể đóng tab này lại.</p></div>";
             return Content(html, "text/html");

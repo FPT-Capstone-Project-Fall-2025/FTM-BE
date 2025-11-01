@@ -16,7 +16,7 @@ namespace FTM.API.Controllers
     [ApiController]
     public class FTMemberController : ControllerBase
     {
-        private IFTMemberService _fTMemberService;
+        private readonly IFTMemberService _fTMemberService;
         public FTMemberController(IFTMemberService fTMemberService)
         {
             _fTMemberService = fTMemberService;
@@ -88,7 +88,7 @@ namespace FTM.API.Controllers
             return Ok(new ApiSuccess("Cập nhật thông tin thành viên thành công", result));
         }
 
-
+         
         [HttpDelete("{ftMemberId}")]
         public async Task<IActionResult> DeleteMember([FromRoute] Guid ftMemberId)
         {

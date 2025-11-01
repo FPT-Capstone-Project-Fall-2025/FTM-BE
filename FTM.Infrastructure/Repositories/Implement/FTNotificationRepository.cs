@@ -20,5 +20,10 @@ namespace FTM.Infrastructure.Repositories.Implement
             this._context = context;
             this._currentUserResolver = currentUserResolver;
         }
+
+        public async Task<List<FTNotification>> FindByuserIdAsync(Guid userId)
+        {
+            return _context.FTNotifications.Where(n => n.UserId == userId && n.IsDeleted == false && n.IsRead == false).OrderByDescending(n => n.CreatedOn).ToList();
+        }
     }
 }

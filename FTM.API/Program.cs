@@ -1,4 +1,6 @@
+using FTM.API.Controllers;
 using FTM.API.Extensions;
+using FTM.Application.Hubs;
 using FTM.Application.Services;
 using FTM.Domain.Entities.Identity;
 using FTM.Infrastructure.Data;
@@ -9,7 +11,7 @@ using System.Net.Mail;
 using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
-
+builder.Services.AddSignalR();
 builder.Services.AddIdentityAppDbContext();
 builder.Services.AddFTMDbContext();
 builder.Services.AddAuthenConfig();
@@ -63,6 +65,7 @@ app.UseAuthorization();
 // Map Health Check endpoint
 app.MapHealthChecks("/health");
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notification");
 
 // Seed data on startup with better error handling
 try
@@ -78,5 +81,4 @@ catch (Exception ex)
     logger.LogError(ex, "Failed to seed data on startup");
     // Don't throw - let app continue running
 }
-
 app.Run();

@@ -159,10 +159,14 @@ namespace FTM.Application.Services
                                    var ftInvitation = new FTInvitation
                                    {
                                        FTId = request.FTId.Value,
+                                       FTName = familyTree.Name,
                                        FTMemberId = ftMember.Id,
-                                       Email = invitedUser.Email,
+                                       FTMemberName = ftMember.Fullname,
                                        InviterUserId = _currentUserResolver.UserId,
+                                       InviterName = _currentUserResolver.Name,
+                                       Email = invitedUser.Email,
                                        InvitedUserId = invitedUser.Id,
+                                       InvitedName = invitedUser.Name,
                                        Token = Guid.NewGuid().ToString(),
                                        ExpirationDate = DateTime.UtcNow.AddDays(3),
                                        Status = InvitationStatus.PENDING

@@ -41,6 +41,24 @@ namespace FTM.API.Extensions
                         Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_SIGNING_KEY")!)
                     )
                 };
+
+                // Allow Signal R read JWT Token
+                options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/notification"))
+                        {
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
+
             }).AddGoogle(options =>
             {
                 options.ClientId = Environment.GetEnvironmentVariable("GOOGLE_CLIENTID")!;
@@ -60,7 +78,8 @@ namespace FTM.API.Extensions
                 {
                     policy.WithOrigins(Environment.GetEnvironmentVariable("FE_URL")?? "http://localhost:8900", "http://localhost:5500")
                           .AllowAnyHeader()
-                          .AllowAnyMethod();
+                          .AllowAnyMethod()
+                          .AllowCredentials();
                 });
             });
 
