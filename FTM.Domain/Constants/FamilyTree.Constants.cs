@@ -11,10 +11,8 @@ namespace FTM.Domain.Constants
 
         public static class FTMemberStatus
         {
-            public const int ACTIVE = 1;
-            public const int INACTIVE = 2;
-            public const int PENDING = 3;
             public const int UNDEFINED = Category.FT_MEMBER_STATUS_CATEGORY * 1000 + 1;
+            public const int DIVORCED = Category.FT_MEMBER_STATUS_CATEGORY * 1000 + 2;
         }
 
         public static class FTRelationshipCategory

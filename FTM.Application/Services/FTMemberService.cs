@@ -244,6 +244,8 @@ namespace FTM.Application.Services
                                         .FirstOrDefaultAsync(x => x.FromFTMemberId == request.RootId
                                                             && x.CategoryCode == FTRelationshipCategory.PARTNER);
 
+            if (firstPartner != null && !firstPartner.ToFTMember.IsDivorced) throw new ArgumentException("Mỗi người chồng chỉ được có một người vợ.");
+
             if (firstPartner != null && firstPartner.ToFTMember.StatusCode == FTMemberStatus.UNDEFINED)
             {
                 var partnerToUpdate = await _fTMemberRepository.GetByIdAsync(firstPartner.ToFTMemberId);
@@ -498,16 +500,16 @@ namespace FTM.Application.Services
                 string filePath = await _blobStorageService.UploadFileAsync(request.File, "ftmembers", $"Avatar{existingMember.Id}");
                 if (avatar == null)
                 {
-                   await _fTMemberFileRepository.AddAsync(new FTMemberFile()
-                                                            {
-                                                                FTMemberId = existingMember.Id,
-                                                                Title = $"Avatar{existingMember.Id}",
-                                                                FilePath = filePath,
-                                                                FileType = "1",
-                                                                Content = "",
-                                                                Description = "",
-                                                                Thumbnail = ""
-                   });
+                    await _fTMemberFileRepository.AddAsync(new FTMemberFile()
+                    {
+                        FTMemberId = existingMember.Id,
+                        Title = $"Avatar{existingMember.Id}",
+                        FilePath = filePath,
+                        FileType = "1",
+                        Content = "",
+                        Description = "",
+                        Thumbnail = ""
+                    });
                 }
                 else
                 {
@@ -590,9 +592,11 @@ namespace FTM.Application.Services
             if (member.UserId.HasValue)
             {
                 var connectedUser = _userManager.FindByIdAsync(member.UserId.ToString());
-                if (connectedUser != null) {
+                if (connectedUser != null)
+                {
                     var ftUser = await _fTUserRepository.FindAsync(member.FTId, member.UserId.Value);
-                    if (ftUser != null) {
+                    if (ftUser != null)
+                    {
                         ftUser.FTRole = FTMRole.FTGuest;
                     }
                 }
@@ -601,5 +605,13 @@ namespace FTM.Application.Services
             await _unitOfWork.CompleteAsync();
         }
 
+        public async Task<MemberRelationshipDto> CheckRelationship(Guid ftMemberId)
+        {
+            var _ftMember = await _fTMemberRepository.GetMemberById(ftMemberId);
+
+            if (_ftMember == null) throw new ArgumentException("Thành viên không tồn tại");
+
+            return _mapper.Map<MemberRelationshipDto>(_ftMember);
+        }
     }
 }

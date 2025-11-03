@@ -17,6 +17,7 @@ namespace FTM.Domain.DTOs.FamilyTree
         public DateTime? Birthday { get; set; }
         public int StatusCode { get; set; }
         public bool? IsRoot { get; set; }
+        public bool? IsDivorced { get; set; }
         public List<Guid> Partners { get; set; }
         public List<KeyValueModel> Children { get; set; }
         public bool IsCurrentMember { get; set; }

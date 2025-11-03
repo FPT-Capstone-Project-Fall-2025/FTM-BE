@@ -111,5 +111,8 @@ namespace FTM.Domain.DTOs.FamilyTree
 
         [FromForm(Name = "avatar")]
         public IFormFile? File { get; set; }
+
+        [FromForm(Name = "isDivorced")]
+        public bool IsDivorced { get; set; }
     }
 }
