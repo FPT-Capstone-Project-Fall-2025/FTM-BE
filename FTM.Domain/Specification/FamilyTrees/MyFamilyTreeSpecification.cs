@@ -24,6 +24,7 @@ namespace FTM.Domain.Specification.FamilyTrees
                      ) && ((x.OwnerId == userId) || (x.FTMembers.Any(m => m.UserId == userId)))
                        && x.IsDeleted == false)
         {
+            AddInclude(x => x.FTMembers);
             ApplyPaging(specParams.Skip, specParams.Take);
 
             if (!string.IsNullOrEmpty(specParams.OrderBy))
