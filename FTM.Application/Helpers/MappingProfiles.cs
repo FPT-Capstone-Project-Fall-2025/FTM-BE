@@ -70,7 +70,7 @@ namespace FTM.Application.Helpers
                 .ForMember(dest => dest.FTMemberFiles, opt => opt.MapFrom(src => src.FTMemberFiles));
 
             CreateMap<FamilyTree, FamilyTreeDataTableDto>()
-                .ForMember(dest => dest.MemberCount, opt => opt.MapFrom(src => src.FTMembers.Any() ? src.FTMembers.Count : 0));
+                .ForMember(dest => dest.MemberCount, opt => opt.MapFrom(src => src.FTMembers.Any(m => m.IsDeleted == false) ? src.FTMembers.Count(m => m.IsDeleted == false) : 0));
 
             CreateMap<FTMember, FTMemberSimpleDto>();
             CreateMap<FTMemberFileRequest, FTMemberFile>().ReverseMap();
