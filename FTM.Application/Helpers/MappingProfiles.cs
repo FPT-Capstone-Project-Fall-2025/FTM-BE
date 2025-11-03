@@ -102,6 +102,41 @@ namespace FTM.Application.Helpers
                 // chỉ map khi source != null
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
+
+            CreateMap<FTMember, MemberRelationshipDto>()
+                .ForMember(dest => dest.HasFather, opt => opt.MapFrom(src =>
+                                                                           src.FTRelationshipTo != null
+                                                                           && src.FTRelationshipTo.Any(r =>
+                                                                                                          r.CategoryCode == FTRelationshipCategory.CHILDREN
+                                                                                                          && (r.FromFTMember.Gender == 0 || (r.FromFTMemberPartner.Gender == 0 && r.FromFTMemberPartner.StatusCode != FTMemberStatus.UNDEFINED)))))
+                .ForMember(dest => dest.HasMother, opt => opt.MapFrom(src =>
+                                                                           src.FTRelationshipTo != null
+                                                                           && src.FTRelationshipTo.Any(r =>
+                                                                                                          r.CategoryCode == FTRelationshipCategory.CHILDREN
+                                                                                                          && (r.FromFTMember.Gender == 1 || (r.FromFTMemberPartner.Gender == 1 && r.FromFTMemberPartner.StatusCode != FTMemberStatus.UNDEFINED)))))
+                .ForMember(dest => dest.HasSiblings, opt => opt.MapFrom(src =>
+                                                                           src.FTRelationshipTo != null
+                                                                           && src.FTRelationshipTo.Any(r => 
+                                                                                                         r.CategoryCode == FTRelationshipCategory.CHILDREN
+                                                                                                         && ((r.FromFTMember.FTRelationshipFrom.Count(fr => fr.CategoryCode == FTRelationshipCategory.CHILDREN) > 1)
+                                                                                                            ||(r.FromFTMemberPartner.FTRelationshipFrom.Count(fr => fr.CategoryCode == FTRelationshipCategory.CHILDREN ) > 1)
+                                                                                                            ||(r.FromFTMember.FTRelationshipFrom.Count(fr => fr.CategoryCode == FTRelationshipCategory.CHILDREN) + r.FromFTMemberPartner.FTRelationshipFrom.Count(fr => fr.CategoryCode == FTRelationshipCategory.CHILDREN) > 1)))))
+                .ForMember(dest => dest.HasPartner, opt => opt.MapFrom(src =>
+                                                                           (src.FTRelationshipFrom != null
+                                                                                        && src.FTRelationshipFrom.Any(r =>
+                                                                                                          r.CategoryCode == FTRelationshipCategory.PARTNER
+                                                                                                          && r.ToFTMember.StatusCode != FTMemberStatus.UNDEFINED
+                                                                                                          && !r.ToFTMember.IsDivorced))
+                                                                           || (src.FTRelationshipTo != null
+                                                                                        && src.FTRelationshipTo.Any(r =>
+                                                                                                          r.CategoryCode == FTRelationshipCategory.PARTNER
+                                                                                                          && r.FromFTMember.StatusCode != FTMemberStatus.UNDEFINED
+                                                                                                          && !r.FromFTMember.IsDivorced))))
+                .ForMember(dest => dest.HasChildren, opt => opt.MapFrom(src =>
+                    (src.FTRelationshipFrom != null && src.FTRelationshipFrom.Any(r => r.CategoryCode == FTRelationshipCategory.CHILDREN))
+                    || (src.FTRelationshipFromPartner != null && src.FTRelationshipFromPartner.Any(r => r.CategoryCode == FTRelationshipCategory.CHILDREN))
+                ));
+
         }
     }
 }

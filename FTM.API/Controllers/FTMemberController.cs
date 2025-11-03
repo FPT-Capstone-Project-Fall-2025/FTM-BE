@@ -96,6 +96,13 @@ namespace FTM.API.Controllers
             return Ok(new ApiSuccess("Xoá thành viên của gia phả thành công"));
         }
 
+        [HttpGet("{ftMemberId}/relationship")]
+        public async Task<IActionResult> GetRelationship([FromRoute] Guid ftMemberId)
+        {
+            var result = await _fTMemberService.CheckRelationship(ftMemberId);
+            return Ok(new ApiSuccess("lấy mối quan hệ của thành viên trong gia phả thành công", result));
+        }
+
         private IActionResult ThrowModelErrors()
         {
             var message = string.Join(" | ", ModelState.Values

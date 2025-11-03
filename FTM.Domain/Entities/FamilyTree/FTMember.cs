@@ -39,6 +39,7 @@ namespace FTM.Domain.Entities.FamilyTree
         public string? PrivacyData { get; set; }
 
         public bool IsRoot { get; set; } = false;
+        public bool IsDivorced { get; set; } = false;
 
         public virtual MEthnic Ethnic { get; set; }
         public virtual MReligion Religion { get; set; }

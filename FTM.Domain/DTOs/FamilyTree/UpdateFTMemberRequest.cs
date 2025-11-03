@@ -34,6 +34,9 @@ namespace FTM.Domain.DTOs.FamilyTree
         [FromForm(Name = "isDeath")]
         public bool? IsDeath { get; set; }
 
+        [FromForm(Name = "isDivorced")]
+        public bool? IsDivorced { get; set; }
+
         [JsonConverter(typeof(StringSensitive))]
         [FromForm(Name = "deathDescription")]
         public string? DeathDescription { get; set; }

@@ -36,14 +36,16 @@ namespace FTM.Infrastructure.Repositories.Implement
 
         public async Task<FTMember?> GetMemberById(Guid id)
         {
-            return await _context.FTMembers.Include(m => m.Ethnic)
+            return await _context.FTMembers.Include(m => m.Ethnic) 
                               .Include(m => m.FT)
                               .Include(m => m.FTRelationshipFrom)
                                 .ThenInclude(x => x.ToFTMember)
+                                    .ThenInclude(x => x.FTRelationshipFrom)
                               .Include(m => m.FTRelationshipTo)
                                 .ThenInclude(x => x.FromFTMember)
                                     .ThenInclude(x => x.FTRelationshipFrom)
                                         .ThenInclude(x => x.FromFTMemberPartner)
+                                            .ThenInclude(x => x.FTRelationshipFrom)
                               .Include(m => m.FTMemberFiles)
                               .Where(m => m.IsDeleted == false)
                               .FirstOrDefaultAsync(m => m.Id == id);
