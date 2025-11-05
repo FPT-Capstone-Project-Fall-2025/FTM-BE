@@ -1,4 +1,5 @@
-﻿using FTM.Domain.Entities.FamilyTree;
+﻿using FTM.Domain.DTOs.FamilyTree;
+using FTM.Domain.Entities.FamilyTree;
 using FTM.Domain.Enums;
 using System;
 using System.Collections.Generic;
@@ -11,5 +12,7 @@ namespace FTM.Infrastructure.Repositories.Interface
     public interface IFTAuthorizationRepository : IGenericRepository<FTAuthorization>
     {
         Task<bool> IsAuthorizationExisting(Guid ftId, Guid ftMemberId, FeatureType featureType, MethodType methodType);
+        Task<FTAuthorizationDto?> GetAuthorizationAsync(Guid ftId, Guid ftMemberId);
+        Task<List<FTAuthorization>> GetListAsync(Guid ftId, Guid ftMemberId);
     }
 }

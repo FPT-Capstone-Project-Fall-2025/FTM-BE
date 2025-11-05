@@ -81,7 +81,7 @@ namespace FTM.Application.Helpers
             CreateMap<MprovinceDto, Mprovince>().ReverseMap();
             CreateMap<FTMemberFileDto, FTMemberFile>().ReverseMap();
             CreateMap<UpsertFTRelationshipRequest, FTRelationship>().ReverseMap();
-            CreateMap<UpsertFTAuthorizationRequest, FTAuthorization>();
+            CreateMap<UpsertFTAuthorizationRequest, FTAuthorizationDto>();
             CreateMap<FTAuthorization, FTAuthorizationDto>();
             CreateMap<FTInvitation, FTInvitationDto>();
             CreateMap<FTNotification, FTNotificationDto>();

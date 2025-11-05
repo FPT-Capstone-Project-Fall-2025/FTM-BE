@@ -14,8 +14,6 @@ namespace FTM.Domain.DTOs.FamilyTree
     public class UpsertFTAuthorizationRequest
     {
 
-        public Guid? Id { get; set; }
-
         [Required(ErrorMessage = "Vui lòng nhập id của gia phả")]
         public Guid FTId { get; set; }
 

@@ -5,6 +5,7 @@ using FTM.Domain.Entities.FamilyTree;
 using FTM.Domain.Models;
 using FTM.Domain.Specification;
 using FTM.Domain.Specification.FTAuthorizations;
+using FTM.Domain.Specification.FTMembers;
 using FTM.Infrastructure.Repositories.Interface;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
@@ -38,15 +39,8 @@ namespace FTM.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<FTAuthorizationDto> AddAsync(UpsertFTAuthorizationRequest request)
+        public async Task<FTAuthorizationDto?> AddAsync(UpsertFTAuthorizationRequest request)
         {
-            FTAuthorizationDto result = new FTAuthorizationDto()
-            {
-                FTId = request.FTId,
-                FTMemberId = request.FTMemberId,
-                AuthorizationList = new HashSet<AuthorizationModel>(),
-            };
-
             if (request.AuthorizationList == null || request.AuthorizationList.Count == 0)
                 throw new ArgumentException("Quyền không hợp lệ");
 
@@ -72,13 +66,14 @@ namespace FTM.Application.Services
                         
                         await _fTAuthorizationRepository.AddAsync(newAuthorization);
                         await _unitOfWork.CompleteAsync();
-
-
                     }
                 }
             }
 
-            return _mapper.Map<FTAuthorizationDto>(result);
+            // Clean Authorization
+            // End Clean Authorization
+            var ftAuthorizationDto = await _fTAuthorizationRepository.GetAuthorizationAsync(request.FTId, request.FTMemberId);
+            return ftAuthorizationDto;
         }
 
         public Task<bool> DeleteAsync(Guid authorizationId)
@@ -86,19 +81,62 @@ namespace FTM.Application.Services
             throw new NotImplementedException();
         }
 
-        public Task<FTAuthorizationListViewDto> GetAuthorizationListViewAsync(FTAuthorizationSpecParams specParams)
+        public async Task<FTAuthorizationListViewDto?> GetAuthorizationListViewAsync(FTAuthorizationSpecParams specParams)
         {
-            throw new NotImplementedException();
+            var spec = new FTAuthorizationSpecification(specParams);
+            var authorList = await _fTAuthorizationRepository.ListAsync(spec);
+            var result = authorList
+                                .GroupBy(a => a.FTId)
+                                .Select(ftGroup => new FTAuthorizationListViewDto
+                                {
+                                    FTId = ftGroup.Key,
+                                    Datalist = ftGroup
+                                        .GroupBy(a => a.AuthorizedMember)
+                                        .Select(memberGroup => new KeyValueModel
+                                        {
+                                            Key = new {
+                                                memberGroup.Key.Id,
+                                                memberGroup.Key.Fullname
+                                            }, 
+                                            Value = memberGroup
+                                                .GroupBy(a => a.FeatureCode)
+                                                .Select(featureGroup => new AuthorizationModel
+                                                {
+                                                    FeatureCode = featureGroup.Key,
+                                                    MethodsList = featureGroup
+                                                        .Select(x => x.MethodCode)
+                                                        .Distinct()
+                                                        .ToHashSet()
+                                                })
+                                                .ToList()
+                                        })
+                                        .ToList()
+                                })
+                                .FirstOrDefault();
+
+            return result;
         }
 
-        public Task<IReadOnlyList<FTAuthorizationDto>> GetListDetailsWithSpecificationAsync(FTAuthorizationSpecParams specParams)
+        public async Task<FTAuthorizationDto?> UpdateAsync(UpsertFTAuthorizationRequest request)
         {
-            throw new NotImplementedException();
-        }
+            if (request.AuthorizationList == null || request.AuthorizationList.Count == 0)
+                throw new ArgumentException("Quyền không hợp lệ");
 
-        public Task<FTAuthorizationDto> UpdateAsync(UpsertFTAuthorizationRequest request)
-        {
-            throw new NotImplementedException();
+            if ((await _familyTreeRepository.GetByIdAsync(request.FTId)) is null)
+                throw new ArgumentException($"Không tồn tại gia phả với id {request.FTId}");
+
+            await _fTMemberRepository.GetByMemberId(request.FTId, request.FTMemberId);
+
+            // Delete old Authorization List
+            var oldAuthorList = await _fTAuthorizationRepository.GetListAsync(request.FTId, request.FTMemberId);
+            
+            foreach( var oldAuthor in oldAuthorList)
+            {
+                _fTAuthorizationRepository.Delete(oldAuthor);
+            }
+            // End delete old Authorization List
+
+            return await AddAsync(request);
         }
     }
 }
