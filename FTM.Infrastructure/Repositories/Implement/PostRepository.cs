@@ -22,7 +22,7 @@ namespace FTM.Infrastructure.Repositories
         public async Task<IEnumerable<Post>> GetPostsAsync(PostSpecParams specParams)
         {
             var query = Context.Posts
-                .Include(p => p.GPMember)
+                .Include(p => p.FTMember)
                 .Include(p => p.PostAttachments)
                 .Include(p => p.PostComments)
                 .Include(p => p.PostReactions)
@@ -31,13 +31,13 @@ namespace FTM.Infrastructure.Repositories
             // Filter by FamilyTreeId if provided
             if (specParams.FamilyTreeId.HasValue)
             {
-                query = query.Where(p => p.GPId == specParams.FamilyTreeId.Value);
+                query = query.Where(p => p.FTMemberId == specParams.FamilyTreeId.Value);
             }
 
             // Filter by MemberId if provided
             if (specParams.MemberId.HasValue)
             {
-                query = query.Where(p => p.GPMemberId == specParams.MemberId.Value);
+                query = query.Where(p => p.FTMemberId == specParams.MemberId.Value);
             }
 
             // Apply ordering
@@ -57,13 +57,13 @@ namespace FTM.Infrastructure.Repositories
             // Filter by FamilyTreeId if provided
             if (specParams.FamilyTreeId.HasValue)
             {
-                query = query.Where(p => p.GPId == specParams.FamilyTreeId.Value);
+                query = query.Where(p => p.FTMemberId == specParams.FamilyTreeId.Value);
             }
 
             // Filter by MemberId if provided
             if (specParams.MemberId.HasValue)
             {
-                query = query.Where(p => p.GPMemberId == specParams.MemberId.Value);
+                query = query.Where(p => p.FTMemberId == specParams.MemberId.Value);
             }
 
             return await query.CountAsync();
@@ -72,15 +72,15 @@ namespace FTM.Infrastructure.Repositories
         public async Task<Post> GetPostWithDetailsAsync(Guid postId)
         {
             return await Context.Posts
-                .Include(p => p.GPMember)
+                .Include(p => p.FTMember)
                 .Include(p => p.PostAttachments)
                 .Include(p => p.PostComments)
-                    .ThenInclude(c => c.GPMember)
+                    .ThenInclude(c => c.FTMember)
                 .Include(p => p.PostComments)
                     .ThenInclude(c => c.ChildComments)
-                        .ThenInclude(cc => cc.GPMember)
+                        .ThenInclude(cc => cc.FTMember)
                 .Include(p => p.PostReactions)
-                    .ThenInclude(r => r.GPMember)
+                    .ThenInclude(r => r.FTMember)
                 .FirstOrDefaultAsync(p => p.Id == postId && p.IsDeleted == false);
         }
 
@@ -92,3 +92,6 @@ namespace FTM.Infrastructure.Repositories
         }
     }
 }
+
+
+

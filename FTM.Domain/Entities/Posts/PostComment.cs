@@ -7,7 +7,7 @@ namespace FTM.Domain.Entities.Posts
     public class PostComment : BaseEntity
     {
         public Guid PostId { get; set; }
-        public Guid GPMemberId { get; set; }
+        public Guid FTMemberId { get; set; }
         public string Content { get; set; }
         
         // For nested comments (multi-level threading)
@@ -15,7 +15,7 @@ namespace FTM.Domain.Entities.Posts
 
         // Navigation properties
         public virtual Post Post { get; set; }
-        public virtual FTMember GPMember { get; set; }
+        public virtual FTMember FTMember { get; set; }
         
         // Self-referencing relationship for nested comments
         public virtual PostComment ParentComment { get; set; }

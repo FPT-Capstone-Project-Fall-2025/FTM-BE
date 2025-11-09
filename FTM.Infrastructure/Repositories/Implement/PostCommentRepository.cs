@@ -22,9 +22,9 @@ namespace FTM.Infrastructure.Repositories
         public async Task<IEnumerable<PostComment>> GetCommentsAsync(CommentSpecParams specParams)
         {
             var query = Context.PostComments
-                .Include(c => c.GPMember)
+                .Include(c => c.FTMember)
                 .Include(c => c.ChildComments)
-                    .ThenInclude(cc => cc.GPMember)
+                    .ThenInclude(cc => cc.FTMember)
                 .Where(c => c.IsDeleted == false && c.ParentCommentId == null);
 
             // Filter by PostId if provided
@@ -60,7 +60,7 @@ namespace FTM.Infrastructure.Repositories
         public async Task<IEnumerable<PostComment>> GetCommentsByParentAsync(Guid parentCommentId)
         {
             return await Context.PostComments
-                .Include(c => c.GPMember)
+                .Include(c => c.FTMember)
                 .Where(c => c.ParentCommentId == parentCommentId && c.IsDeleted == false)
                 .OrderBy(c => c.CreatedOn)
                 .ToListAsync();
@@ -69,10 +69,11 @@ namespace FTM.Infrastructure.Repositories
         public async Task<PostComment> GetCommentWithChildrenAsync(Guid commentId)
         {
             return await Context.PostComments
-                .Include(c => c.GPMember)
+                .Include(c => c.FTMember)
                 .Include(c => c.ChildComments)
-                    .ThenInclude(cc => cc.GPMember)
+                    .ThenInclude(cc => cc.FTMember)
                 .FirstOrDefaultAsync(c => c.Id == commentId && c.IsDeleted == false);
         }
     }
 }
+

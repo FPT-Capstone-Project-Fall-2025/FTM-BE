@@ -10,8 +10,8 @@ namespace FTM.Infrastructure.Repositories.Implement
     {
         public CurrentUserResolver(IHttpContextAccessor httpContextAccessor)
         {
-            var currentUser = httpContextAccessor.HttpContext.User;
-            RemoteIpAddress = httpContextAccessor.HttpContext.Connection.RemoteIpAddress?.ToString();
+            var currentUser = httpContextAccessor?.HttpContext?.User;
+            RemoteIpAddress = httpContextAccessor?.HttpContext?.Connection?.RemoteIpAddress?.ToString() ?? string.Empty;
 
             if (currentUser?.Identity?.IsAuthenticated == true)
             {
@@ -25,17 +25,27 @@ namespace FTM.Infrastructure.Repositories.Implement
 
                 // Username (Name or custom)
                 Username = currentUser.FindFirst(JwtClaimTypes.Name)?.Value
-                        ?? currentUser.FindFirst(ClaimTypes.Name)?.Value;
+                        ?? currentUser.FindFirst(ClaimTypes.Name)?.Value
+                        ?? string.Empty;
 
                 // Email
                 Email = currentUser.FindFirst(JwtClaimTypes.Email)?.Value
-                     ?? currentUser.FindFirst(ClaimTypes.Email)?.Value;
+                     ?? currentUser.FindFirst(ClaimTypes.Email)?.Value
+                     ?? string.Empty;
 
                 // Role(s)
                 Role = string.Join(',', currentUser.FindAll(ClaimTypes.Role).Select(x => x.Value));
 
                 // Full Name (custom claim)
-                Name = currentUser.FindFirst(CustomJwtClaimTypes.FullName)?.Value;
+                Name = currentUser.FindFirst(CustomJwtClaimTypes.FullName)?.Value ?? string.Empty;
+            }
+            else
+            {
+                // Not authenticated - set default values
+                Username = string.Empty;
+                Email = string.Empty;
+                Role = string.Empty;
+                Name = string.Empty;
             }
         }
 

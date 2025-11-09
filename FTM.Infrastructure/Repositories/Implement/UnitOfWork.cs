@@ -1,4 +1,4 @@
-﻿using FTM.Domain.Entities;
+using FTM.Domain.Entities;
 using FTM.Infrastructure.Data;
 using FTM.Infrastructure.Repositories.Interface;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -14,10 +14,12 @@ namespace FTM.Infrastructure.Repositories.Implement
     public class UnitOfWork : IUnitOfWork
     {
         private readonly FTMDbContext _context;
+        private readonly ICurrentUserResolver _currentUserResolver;
         private Hashtable _repositories;
-        public UnitOfWork(FTMDbContext context)
+        public UnitOfWork(FTMDbContext context, ICurrentUserResolver currentUserResolver)
         {
             _context = context;
+            _currentUserResolver = currentUserResolver;
         }
 
         public async Task<int> CompleteAsync()
@@ -49,7 +51,7 @@ namespace FTM.Infrastructure.Repositories.Implement
             if (!_repositories.ContainsKey(type))
             {
                 var repositoryType = typeof(GenericRepository<>);
-                var repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(TEntity)), _context);
+                var repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(TEntity)), _context, _currentUserResolver);
 
                 _repositories.Add(type, repositoryInstance);
             }

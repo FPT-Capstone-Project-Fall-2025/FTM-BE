@@ -1,4 +1,4 @@
-﻿using FTM.Application.Hubs;
+using FTM.Application.Hubs;
 using FTM.Application.IServices;
 using FTM.Application.Services;
 using FTM.Domain.Entities.Identity;
@@ -7,6 +7,7 @@ using FTM.Infrastructure.Repositories;
 using FTM.Infrastructure.Repositories.Implement;
 using FTM.Infrastructure.Repositories.Interface;
 using FTM.Infrastructure.Repositories.IRepositories;
+using FTM.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.SignalR;
@@ -98,6 +99,17 @@ namespace FTM.API.Extensions
 
             // FT Authorization
             serrvices.AddScoped<IFTAuthorizationRepository, FTAuthorizationRepository>();
+
+            // Fund Management
+            // serrvices.AddScoped<IFTFundService, FTFundService>(); // TODO: Fix property mapping issues
+
+            // Campaign Management
+            serrvices.AddScoped<IFTCampaignService, FTCampaignService>();
+            serrvices.AddScoped<IFTCampaignDonationService, FTCampaignDonationService>();
+            serrvices.AddScoped<IFTCampaignExpenseService, FTCampaignExpenseService>();
+
+            // PayOS Integration
+            serrvices.AddScoped<IPayOSPaymentService, PayOSPaymentService>();
 
             // Generic 
             serrvices.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));

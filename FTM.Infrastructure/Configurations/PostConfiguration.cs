@@ -26,9 +26,9 @@ namespace FTM.Infrastructure.Configurations
                 .IsRequired();
 
             // Relationships
-            builder.HasOne(p => p.GPMember)
+            builder.HasOne(p => p.FTMember)
                 .WithMany()
-                .HasForeignKey(p => p.GPMemberId)
+                .HasForeignKey(p => p.FTMemberId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasMany(p => p.PostComments)
@@ -47,7 +47,7 @@ namespace FTM.Infrastructure.Configurations
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Indexes
-            builder.HasIndex(p => p.GPMemberId);
+            builder.HasIndex(p => p.FTMemberId);
             builder.HasIndex(p => p.Status);
             builder.HasIndex(p => p.CreatedOn);
         }
