@@ -1040,6 +1040,606 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.ToTable("FamilyTrees", (string)null);
                 });
 
+            modelBuilder.Entity("FTM.Domain.Entities.Funds.FTCampaignDonation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CampaignId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConfirmationNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid?>("ConfirmedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ConfirmedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("DonationAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("DonorName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("DonorNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid?>("FTMemberId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsAnonymous")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LastModifiedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("LastModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("PayOSOrderCode")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("PaymentMethod")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PaymentTransactionId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CampaignId");
+
+                    b.HasIndex("ConfirmedBy");
+
+                    b.HasIndex("FTMemberId");
+
+                    b.ToTable("FTCampaignDonations", (string)null);
+                });
+
+            modelBuilder.Entity("FTM.Domain.Entities.Funds.FTCampaignExpense", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ApprovalNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("ApprovalStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("ApprovedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ApprovedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("AuthorizedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CampaignId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("ExpenseAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTimeOffset>("ExpenseDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ExpenseDescription")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("ExpenseTitle")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LastModifiedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("LastModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("PaymentMethod")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ReceiptImages")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Recipient")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApprovedBy");
+
+                    b.HasIndex("AuthorizedBy");
+
+                    b.HasIndex("CampaignId");
+
+                    b.ToTable("FTCampaignExpenses", (string)null);
+                });
+
+            modelBuilder.Entity("FTM.Domain.Entities.Funds.FTFund", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AccountHolderName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BankAccountNumber")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BankCode")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BankName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("CurrentMoney")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<Guid>("FTId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FundManagers")
+                        .HasColumnType("text");
+
+                    b.Property<string>("FundName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("FundNote")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("IsDeleted")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("LastModifiedBy")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("LastModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedOn");
+
+                    b.HasIndex("FTId");
+
+                    b.HasIndex("IsDeleted");
+
+                    b.ToTable("FTFunds", (string)null);
+                });
+
+            modelBuilder.Entity("FTM.Domain.Entities.Funds.FTFundCampaign", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AccountHolderName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BankAccountNumber")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BankCode")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BankName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CampaignDescription")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid>("CampaignManagerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CampaignName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("CurrentBalance")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<DateTimeOffset>("EndDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("FTId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("FundGoal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool?>("IsDeleted")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsPublic")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("LastModifiedBy")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("LastModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset>("StartDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CampaignManagerId");
+
+                    b.HasIndex("CreatedOn");
+
+                    b.HasIndex("EndDate");
+
+                    b.HasIndex("FTId");
+
+                    b.HasIndex("IsDeleted");
+
+                    b.HasIndex("StartDate");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("FTFundCampaigns", (string)null);
+                });
+
+            modelBuilder.Entity("FTM.Domain.Entities.Funds.FTFundDonation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CampaignId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConfirmationNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid?>("ConfirmedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ConfirmedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("DonationMoney")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("DonorName")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("FTFundId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("FTMemberId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LastModifiedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("LastModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("PayOSOrderCode")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("PaymentMethod")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PaymentNotes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("PaymentTransactionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CampaignId");
+
+                    b.HasIndex("ConfirmedBy");
+
+                    b.HasIndex("CreatedOn");
+
+                    b.HasIndex("FTFundId");
+
+                    b.HasIndex("FTMemberId");
+
+                    b.HasIndex("PaymentMethod");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("FTFundDonations", (string)null);
+                });
+
+            modelBuilder.Entity("FTM.Domain.Entities.Funds.FTFundExpense", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ApprovalFeedback")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid?>("ApprovedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ApprovedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CampaignId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("ExpenseAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ExpenseDescription")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("ExpenseEvent")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("FTFundId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LastModifiedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("LastModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("PlannedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Recipient")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApprovedBy");
+
+                    b.HasIndex("CampaignId");
+
+                    b.HasIndex("CreatedOn");
+
+                    b.HasIndex("FTFundId");
+
+                    b.HasIndex("PlannedDate");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("FTFundExpenses", (string)null);
+                });
+
+            modelBuilder.Entity("FTM.Domain.Entities.Funds.FTPayOSTransaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid?>("DonationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LastModifiedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("LastModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OrderCode")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PayOSStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("PayOSTransactionId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("WebhookData")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedOn");
+
+                    b.HasIndex("DonationId");
+
+                    b.HasIndex("OrderCode")
+                        .IsUnique();
+
+                    b.HasIndex("PayOSStatus");
+
+                    b.HasIndex("PayOSTransactionId");
+
+                    b.ToTable("FTPayOSTransactions", (string)null);
+                });
+
             modelBuilder.Entity("FTM.Domain.Entities.Notifications.FTNotification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1131,10 +1731,10 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.Property<DateTimeOffset>("CreatedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("GPId")
+                    b.Property<Guid>("FTId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("GPMemberId")
+                    b.Property<Guid>("FTMemberId")
                         .HasColumnType("uuid");
 
                     b.Property<bool?>("IsDeleted")
@@ -1161,7 +1761,7 @@ namespace FTM.Infrastructure.Migrations.FTMDb
 
                     b.HasIndex("CreatedOn");
 
-                    b.HasIndex("GPMemberId");
+                    b.HasIndex("FTMemberId");
 
                     b.HasIndex("Status");
 
@@ -1239,7 +1839,7 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.Property<DateTimeOffset>("CreatedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("GPMemberId")
+                    b.Property<Guid>("FTMemberId")
                         .HasColumnType("uuid");
 
                     b.Property<bool?>("IsDeleted")
@@ -1262,7 +1862,7 @@ namespace FTM.Infrastructure.Migrations.FTMDb
 
                     b.HasIndex("CreatedOn");
 
-                    b.HasIndex("GPMemberId");
+                    b.HasIndex("FTMemberId");
 
                     b.HasIndex("ParentCommentId");
 
@@ -1287,7 +1887,7 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.Property<DateTimeOffset>("CreatedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("GPMemberId")
+                    b.Property<Guid>("FTMemberId")
                         .HasColumnType("uuid");
 
                     b.Property<bool?>("IsDeleted")
@@ -1308,11 +1908,11 @@ namespace FTM.Infrastructure.Migrations.FTMDb
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GPMemberId");
+                    b.HasIndex("FTMemberId");
 
                     b.HasIndex("PostId");
 
-                    b.HasIndex("PostId", "GPMemberId")
+                    b.HasIndex("PostId", "FTMemberId")
                         .IsUnique();
 
                     b.ToTable("PostReactions", (string)null);
@@ -1551,15 +2151,161 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.Navigation("FT");
                 });
 
-            modelBuilder.Entity("FTM.Domain.Entities.Posts.Post", b =>
+            modelBuilder.Entity("FTM.Domain.Entities.Funds.FTCampaignDonation", b =>
                 {
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "GPMember")
-                        .WithMany()
-                        .HasForeignKey("GPMemberId")
+                    b.HasOne("FTM.Domain.Entities.Funds.FTFundCampaign", "Campaign")
+                        .WithMany("Donations")
+                        .HasForeignKey("CampaignId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("GPMember");
+                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "Confirmer")
+                        .WithMany()
+                        .HasForeignKey("ConfirmedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "Member")
+                        .WithMany()
+                        .HasForeignKey("FTMemberId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Campaign");
+
+                    b.Navigation("Confirmer");
+
+                    b.Navigation("Member");
+                });
+
+            modelBuilder.Entity("FTM.Domain.Entities.Funds.FTCampaignExpense", b =>
+                {
+                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "Approver")
+                        .WithMany()
+                        .HasForeignKey("ApprovedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "Authorizer")
+                        .WithMany()
+                        .HasForeignKey("AuthorizedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FTM.Domain.Entities.Funds.FTFundCampaign", "Campaign")
+                        .WithMany("Expenses")
+                        .HasForeignKey("CampaignId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Approver");
+
+                    b.Navigation("Authorizer");
+
+                    b.Navigation("Campaign");
+                });
+
+            modelBuilder.Entity("FTM.Domain.Entities.Funds.FTFund", b =>
+                {
+                    b.HasOne("FTM.Domain.Entities.FamilyTree.FamilyTree", "FamilyTree")
+                        .WithMany()
+                        .HasForeignKey("FTId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FamilyTree");
+                });
+
+            modelBuilder.Entity("FTM.Domain.Entities.Funds.FTFundCampaign", b =>
+                {
+                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "CampaignManager")
+                        .WithMany()
+                        .HasForeignKey("CampaignManagerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FTM.Domain.Entities.FamilyTree.FamilyTree", "FamilyTree")
+                        .WithMany()
+                        .HasForeignKey("FTId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CampaignManager");
+
+                    b.Navigation("FamilyTree");
+                });
+
+            modelBuilder.Entity("FTM.Domain.Entities.Funds.FTFundDonation", b =>
+                {
+                    b.HasOne("FTM.Domain.Entities.Funds.FTFundCampaign", "Campaign")
+                        .WithMany()
+                        .HasForeignKey("CampaignId");
+
+                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "Confirmer")
+                        .WithMany()
+                        .HasForeignKey("ConfirmedBy")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("FTM.Domain.Entities.Funds.FTFund", "Fund")
+                        .WithMany("Donations")
+                        .HasForeignKey("FTFundId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "Member")
+                        .WithMany()
+                        .HasForeignKey("FTMemberId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Campaign");
+
+                    b.Navigation("Confirmer");
+
+                    b.Navigation("Fund");
+
+                    b.Navigation("Member");
+                });
+
+            modelBuilder.Entity("FTM.Domain.Entities.Funds.FTFundExpense", b =>
+                {
+                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "Approver")
+                        .WithMany()
+                        .HasForeignKey("ApprovedBy")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("FTM.Domain.Entities.Funds.FTFundCampaign", "Campaign")
+                        .WithMany()
+                        .HasForeignKey("CampaignId");
+
+                    b.HasOne("FTM.Domain.Entities.Funds.FTFund", "Fund")
+                        .WithMany("Expenses")
+                        .HasForeignKey("FTFundId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Approver");
+
+                    b.Navigation("Campaign");
+
+                    b.Navigation("Fund");
+                });
+
+            modelBuilder.Entity("FTM.Domain.Entities.Funds.FTPayOSTransaction", b =>
+                {
+                    b.HasOne("FTM.Domain.Entities.Funds.FTFundDonation", "Donation")
+                        .WithMany()
+                        .HasForeignKey("DonationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Donation");
+                });
+
+            modelBuilder.Entity("FTM.Domain.Entities.Posts.Post", b =>
+                {
+                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "FTMember")
+                        .WithMany()
+                        .HasForeignKey("FTMemberId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FTMember");
                 });
 
             modelBuilder.Entity("FTM.Domain.Entities.Posts.PostAttachment", b =>
@@ -1575,9 +2321,9 @@ namespace FTM.Infrastructure.Migrations.FTMDb
 
             modelBuilder.Entity("FTM.Domain.Entities.Posts.PostComment", b =>
                 {
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "GPMember")
+                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "FTMember")
                         .WithMany()
-                        .HasForeignKey("GPMemberId")
+                        .HasForeignKey("FTMemberId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -1593,7 +2339,7 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("GPMember");
+                    b.Navigation("FTMember");
 
                     b.Navigation("ParentComment");
 
@@ -1602,9 +2348,9 @@ namespace FTM.Infrastructure.Migrations.FTMDb
 
             modelBuilder.Entity("FTM.Domain.Entities.Posts.PostReaction", b =>
                 {
-                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "GPMember")
+                    b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "FTMember")
                         .WithMany()
-                        .HasForeignKey("GPMemberId")
+                        .HasForeignKey("FTMemberId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -1614,7 +2360,7 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("GPMember");
+                    b.Navigation("FTMember");
 
                     b.Navigation("Post");
                 });
@@ -1674,6 +2420,20 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.Navigation("FTMembers");
 
                     b.Navigation("FTUsers");
+                });
+
+            modelBuilder.Entity("FTM.Domain.Entities.Funds.FTFund", b =>
+                {
+                    b.Navigation("Donations");
+
+                    b.Navigation("Expenses");
+                });
+
+            modelBuilder.Entity("FTM.Domain.Entities.Funds.FTFundCampaign", b =>
+                {
+                    b.Navigation("Donations");
+
+                    b.Navigation("Expenses");
                 });
 
             modelBuilder.Entity("FTM.Domain.Entities.Posts.Post", b =>

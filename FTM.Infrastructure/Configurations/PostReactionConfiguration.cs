@@ -23,15 +23,15 @@ namespace FTM.Infrastructure.Configurations
                 .HasForeignKey(pr => pr.PostId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasOne(pr => pr.GPMember)
+            builder.HasOne(pr => pr.FTMember)
                 .WithMany()
-                .HasForeignKey(pr => pr.GPMemberId)
+                .HasForeignKey(pr => pr.FTMemberId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Indexes
             builder.HasIndex(pr => pr.PostId);
-            builder.HasIndex(pr => pr.GPMemberId);
-            builder.HasIndex(pr => new { pr.PostId, pr.GPMemberId })
+            builder.HasIndex(pr => pr.FTMemberId);
+            builder.HasIndex(pr => new { pr.PostId, pr.FTMemberId })
                 .IsUnique();
         }
     }

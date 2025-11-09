@@ -4,6 +4,7 @@ using FTM.Application.Hubs;
 using FTM.Application.Services;
 using FTM.Domain.Entities.Identity;
 using FTM.Infrastructure.Data;
+using FTM.Infrastructure.Configurations;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using System.Net;
@@ -16,6 +17,7 @@ builder.Services.AddIdentityAppDbContext();
 builder.Services.AddFTMDbContext();
 builder.Services.AddAuthenConfig();
 builder.Services.AddDI();
+builder.Services.AddPayOSServices(builder.Configuration); // Add PayOS services
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>
@@ -23,7 +25,7 @@ builder.Services.AddControllers()
         // Example: ignore circular references
         options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
 
-        // Example: don’t preserve object references ($id/$ref will not appear)
+        // Example: donï¿½t preserve object references ($id/$ref will not appear)
         options.SerializerSettings.PreserveReferencesHandling = Newtonsoft.Json.PreserveReferencesHandling.None;
 
         // Example: use camelCase for property names

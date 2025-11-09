@@ -6,10 +6,10 @@ namespace FTM.Domain.DTOs.Posts
     public class PostResponseDto
     {
         public Guid Id { get; set; }
-        public Guid GPId { get; set; }
+        public Guid FTId { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
-        public Guid GPMemberId { get; set; }
+        public Guid FTMemberId { get; set; }
         public string AuthorName { get; set; }
         public string AuthorPicture { get; set; }
         public int Status { get; set; }

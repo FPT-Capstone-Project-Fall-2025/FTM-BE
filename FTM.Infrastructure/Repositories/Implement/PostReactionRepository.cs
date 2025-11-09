@@ -23,7 +23,7 @@ namespace FTM.Infrastructure.Repositories
         public async Task<IEnumerable<PostReaction>> GetReactionsAsync(ReactionSpecParams specParams)
         {
             var query = Context.PostReactions
-                .Include(r => r.GPMember)
+                .Include(r => r.FTMember)
                 .Where(r => r.IsDeleted == false);
 
             // Filter by PostId if provided
@@ -59,7 +59,7 @@ namespace FTM.Infrastructure.Repositories
         {
             return await Context.PostReactions
                 .FirstOrDefaultAsync(r => 
-                    r.GPMemberId == memberId && 
+                    r.FTMemberId == memberId && 
                     r.PostId == postId);
         }
 
@@ -75,3 +75,6 @@ namespace FTM.Infrastructure.Repositories
         }
     }
 }
+
+
+

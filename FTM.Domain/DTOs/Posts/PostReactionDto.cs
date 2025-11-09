@@ -7,7 +7,7 @@ namespace FTM.Domain.DTOs.Posts
     {
         public Guid Id { get; set; }
         public Guid PostId { get; set; }
-        public Guid GPMemberId { get; set; }
+        public Guid FTMemberId { get; set; }
         public string AuthorName { get; set; }
         public string AuthorPicture { get; set; }
         public ReactionType ReactionType { get; set; }

@@ -51,10 +51,10 @@ namespace FTM.Application.Services
             var post = new Post
             {
                 Id = Guid.NewGuid(),
-                GPId = request.GPId,
+                FTId = request.FTId,
                 Title = request.Title,
                 Content = request.Content,
-                GPMemberId = request.GPMemberId,
+                FTMemberId = request.FTMemberId,
                 Status = request.Status,
                 CreatedOn = DateTimeOffset.UtcNow,
                 IsDeleted = false
@@ -181,10 +181,10 @@ namespace FTM.Application.Services
             if (post == null)
                 return null;
 
-            // Automatically get current user's GPMemberId based on the post's family tree
-            var currentUserGPMemberId = await GetCurrentUserGPMemberId(post.GPId);
+            // Automatically get current user's FTMemberId based on the post's family tree
+            var currentUserFTMemberId = await GetCurrentUserFTMemberId(post.FTId);
             
-            return await MapToPostResponseDto(post, currentUserGPMemberId);
+            return await MapToPostResponseDto(post, currentUserFTMemberId);
         }
 
         public async Task<IEnumerable<PostResponseDto>> GetPostsByFamilyTreeAsync(PostSpecParams specParams)
@@ -192,16 +192,16 @@ namespace FTM.Application.Services
             var posts = await _postRepository.GetPostsAsync(specParams);
             var result = new List<PostResponseDto>();
 
-            // Get current user's GPMemberId once for all posts (they're from same family tree)
-            Guid? currentUserGPMemberId = null;
+            // Get current user's FTMemberId once for all posts (they're from same family tree)
+            Guid? currentUserFTMemberId = null;
             if (specParams.FamilyTreeId.HasValue)
             {
-                currentUserGPMemberId = await GetCurrentUserGPMemberId(specParams.FamilyTreeId.Value);
+                currentUserFTMemberId = await GetCurrentUserFTMemberId(specParams.FamilyTreeId.Value);
             }
 
             foreach (var post in posts)
             {
-                result.Add(await MapToPostResponseDto(post, currentUserGPMemberId));
+                result.Add(await MapToPostResponseDto(post, currentUserFTMemberId));
             }
 
             return result;
@@ -217,17 +217,17 @@ namespace FTM.Application.Services
             var posts = await _postRepository.GetPostsAsync(specParams);
             var result = new List<PostResponseDto>();
 
-            // Get current user's GPMemberId - try to get from first post's family tree
-            Guid? currentUserGPMemberId = null;
+            // Get current user's FTMemberId - try to get from first post's family tree
+            Guid? currentUserFTMemberId = null;
             var firstPost = posts.FirstOrDefault();
             if (firstPost != null)
             {
-                currentUserGPMemberId = await GetCurrentUserGPMemberId(firstPost.GPId);
+                currentUserFTMemberId = await GetCurrentUserFTMemberId(firstPost.FTId);
             }
 
             foreach (var post in posts)
             {
-                result.Add(await MapToPostResponseDto(post, currentUserGPMemberId));
+                result.Add(await MapToPostResponseDto(post, currentUserFTMemberId));
             }
 
             return result;
@@ -263,7 +263,7 @@ namespace FTM.Application.Services
             {
                 Id = Guid.NewGuid(),
                 PostId = request.PostId,
-                GPMemberId = request.GPMemberId,
+                FTMemberId = request.FTMemberId,
                 Content = request.Content,
                 ParentCommentId = request.ParentCommentId.HasValue && request.ParentCommentId.Value != Guid.Empty 
                     ? request.ParentCommentId 
@@ -336,7 +336,7 @@ namespace FTM.Application.Services
         {
             // Check if user already reacted
             var existingReaction = await _reactionRepository.GetReactionByMemberAsync(
-                request.GPMemberId, request.PostId);
+                request.FTMemberId, request.PostId);
 
             if (existingReaction != null)
             {
@@ -353,7 +353,7 @@ namespace FTM.Application.Services
                 {
                     Id = Guid.NewGuid(),
                     PostId = request.PostId,
-                    GPMemberId = request.GPMemberId,
+                    FTMemberId = request.FTMemberId,
                     ReactionType = request.ReactionType,
                     CreatedOn = DateTimeOffset.UtcNow,
                     IsDeleted = false
@@ -363,9 +363,9 @@ namespace FTM.Application.Services
 
             await _unitOfWork.CompleteAsync();
 
-            // Return the reaction with member info - query again to include GPMember
+            // Return the reaction with member info - query again to include FTMember
             var reaction = await _context.PostReactions
-                .Include(r => r.GPMember)
+                .Include(r => r.FTMember)
                 .FirstOrDefaultAsync(r => r.Id == existingReaction.Id);
             
             return MapToPostReactionDto(reaction);
@@ -410,16 +410,16 @@ namespace FTM.Application.Services
 
         #region Mapping Methods
 
-        private async Task<PostResponseDto> MapToPostResponseDto(Post post, Guid? currentUserGPMemberId = null)
+        private async Task<PostResponseDto> MapToPostResponseDto(Post post, Guid? currentUserFTMemberId = null)
         {
             var reactionsSummary = await GetReactionsSummaryForPostAsync(post.Id);
             
-            // Get current user's reaction if currentUserGPMemberId is provided
+            // Get current user's reaction if currentUserFTMemberId is provided
             PostReactionDto? currentUserReaction = null;
-            if (currentUserGPMemberId.HasValue && currentUserGPMemberId.Value != Guid.Empty)
+            if (currentUserFTMemberId.HasValue && currentUserFTMemberId.Value != Guid.Empty)
             {
                 var userReaction = await _reactionRepository.GetReactionByMemberAsync(
-                    currentUserGPMemberId.Value, post.Id);
+                    currentUserFTMemberId.Value, post.Id);
                 
                 if (userReaction != null && userReaction.IsDeleted == false)
                 {
@@ -430,12 +430,12 @@ namespace FTM.Application.Services
             return new PostResponseDto
             {
                 Id = post.Id,
-                GPId = post.GPId,
+                FTId = post.FTId,
                 Title = post.Title,
                 Content = post.Content,
-                GPMemberId = post.GPMemberId,
-                AuthorName = post.GPMember?.Fullname ?? "Unknown",
-                AuthorPicture = post.GPMember?.Picture ?? "",
+                FTMemberId = post.FTMemberId,
+                AuthorName = post.FTMember?.Fullname ?? "Unknown",
+                AuthorPicture = post.FTMember?.Picture ?? "",
                 Status = post.Status,
                 ApprovedAt = post.ApprovedAt,
                 ApprovedBy = post.ApprovedBy,
@@ -471,9 +471,9 @@ namespace FTM.Application.Services
             {
                 Id = comment.Id,
                 PostId = comment.PostId,
-                GPMemberId = comment.GPMemberId,
-                AuthorName = comment.GPMember?.Fullname ?? "Unknown",
-                AuthorPicture = comment.GPMember?.Picture ?? "",
+                FTMemberId = comment.FTMemberId,
+                AuthorName = comment.FTMember?.Fullname ?? "Unknown",
+                AuthorPicture = comment.FTMember?.Picture ?? "",
                 Content = comment.Content,
                 ParentCommentId = comment.ParentCommentId,
                 CreatedOn = comment.CreatedOn,
@@ -494,9 +494,9 @@ namespace FTM.Application.Services
             {
                 Id = reaction.Id,
                 PostId = reaction.PostId,
-                GPMemberId = reaction.GPMemberId,
-                AuthorName = reaction.GPMember?.Fullname ?? "Unknown",
-                AuthorPicture = reaction.GPMember?.Picture ?? "",
+                FTMemberId = reaction.FTMemberId,
+                AuthorName = reaction.FTMember?.Fullname ?? "Unknown",
+                AuthorPicture = reaction.FTMember?.Picture ?? "",
                 ReactionType = reaction.ReactionType,
                 CreatedOn = reaction.CreatedOn,
                 HasReacted = true // Always true since this reaction exists
@@ -509,7 +509,7 @@ namespace FTM.Application.Services
             return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
         }
 
-        private async Task<Guid?> GetCurrentUserGPMemberId(Guid familyTreeId)
+        private async Task<Guid?> GetCurrentUserFTMemberId(Guid familyTreeId)
         {
             var userId = GetCurrentUserId();
             if (userId == Guid.Empty)
@@ -525,3 +525,5 @@ namespace FTM.Application.Services
         #endregion
     }
 }
+
+

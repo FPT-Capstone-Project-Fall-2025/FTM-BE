@@ -26,9 +26,9 @@ namespace FTM.Infrastructure.Configurations
                 .HasForeignKey(pc => pc.PostId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasOne(pc => pc.GPMember)
+            builder.HasOne(pc => pc.FTMember)
                 .WithMany()
-                .HasForeignKey(pc => pc.GPMemberId)
+                .HasForeignKey(pc => pc.FTMemberId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Self-referencing relationship for nested comments
@@ -39,7 +39,7 @@ namespace FTM.Infrastructure.Configurations
 
             // Indexes
             builder.HasIndex(pc => pc.PostId);
-            builder.HasIndex(pc => pc.GPMemberId);
+            builder.HasIndex(pc => pc.FTMemberId);
             builder.HasIndex(pc => pc.ParentCommentId);
             builder.HasIndex(pc => pc.CreatedOn);
         }

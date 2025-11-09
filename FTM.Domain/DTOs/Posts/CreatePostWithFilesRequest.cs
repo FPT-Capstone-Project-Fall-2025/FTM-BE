@@ -6,10 +6,10 @@ namespace FTM.Domain.DTOs.Posts
 {
     public class CreatePostWithFilesRequest
     {
-        public Guid GPId { get; set; }
+        public Guid FTId { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
-        public Guid GPMemberId { get; set; }
+        public Guid FTMemberId { get; set; }
         public int Status { get; set; } = 0; // Default: Draft
         public List<IFormFile> Files { get; set; } = new List<IFormFile>();
         public List<string> Captions { get; set; } = new List<string>(); // Captions tương ứng với Files

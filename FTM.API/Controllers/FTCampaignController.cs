@@ -1,0 +1,247 @@
+using FTM.API.Reponses;
+using FTM.Application.IServices;
+using FTM.Domain.DTOs.Funds;
+using FTM.Domain.Entities.Funds;
+using FTM.Domain.Enums;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Threading.Tasks;
+
+namespace FTM.API.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class FTCampaignController : ControllerBase
+    {
+        private readonly IFTCampaignService _campaignService;
+        private readonly ILogger<FTCampaignController> _logger;
+
+        public FTCampaignController(IFTCampaignService campaignService, ILogger<FTCampaignController> logger)
+        {
+            _campaignService = campaignService;
+            _logger = logger;
+        }
+
+        #region CRUD Operations
+
+        /// <summary>
+        /// Get campaign by ID
+        /// </summary>
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetCampaignById(Guid id)
+        {
+            try
+            {
+                var campaign = await _campaignService.GetByIdAsync(id);
+                if (campaign == null)
+                    return NotFound(new ApiError("Campaign not found"));
+
+                return Ok(new ApiSuccess(campaign));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Get campaigns by family tree with pagination
+        /// </summary>
+        [HttpGet("family-tree/{familyTreeId:guid}")]
+        public async Task<IActionResult> GetCampaignsByFamilyTree(
+            Guid familyTreeId,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                var result = await _campaignService.GetCampaignsByFamilyTreeAsync(familyTreeId, page, pageSize);
+                return Ok(new ApiSuccess(result));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Get campaigns managed by specific user
+        /// </summary>
+        [HttpGet("manager/{managerId:guid}")]
+        [Authorize]
+        public async Task<IActionResult> GetCampaignsByManager(
+            Guid managerId,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                var result = await _campaignService.GetCampaignsByManagerAsync(managerId, page, pageSize);
+                return Ok(new ApiSuccess(result));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Get all active campaigns
+        /// </summary>
+        [HttpGet("active")]
+        public async Task<IActionResult> GetActiveCampaigns(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                var result = await _campaignService.GetActiveCampaignsAsync(page, pageSize);
+                return Ok(new ApiSuccess(result));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Create a new campaign
+        /// </summary>
+        [HttpPost]
+        // [Authorize] // TODO: Uncomment for production
+        public async Task<IActionResult> CreateCampaign([FromBody] CreateCampaignRequest? request)
+        {
+            try
+            {
+                // Debug logging
+                _logger.LogInformation("CreateCampaign called. Request is null: {IsNull}", request == null);
+                
+                // Validate request
+                if (request == null)
+                {
+                    _logger.LogWarning("Request body is null");
+                    return BadRequest(new ApiError("Request body is required"));
+                }
+
+                _logger.LogInformation("Request received: FamilyTreeId={FamilyTreeId}, ManagerId={ManagerId}, CampaignName={Name}", 
+                    request.FamilyTreeId, request.CampaignManagerId, request.CampaignName);
+
+                // Validate campaign manager ID
+                if (!request.CampaignManagerId.HasValue || request.CampaignManagerId == Guid.Empty)
+                {
+                    return BadRequest(new ApiError("Campaign manager ID is required"));
+                }
+
+                // Validate family tree ID
+                if (request.FamilyTreeId == Guid.Empty)
+                {
+                    _logger.LogWarning("Family tree ID is empty: {FamilyTreeId}", request.FamilyTreeId);
+                    return BadRequest(new ApiError("Family tree ID is required"));
+                }
+
+                // Map request to entity
+                var campaign = new FTFundCampaign
+                {
+                    FTId = request.FamilyTreeId,
+                    CampaignName = request.CampaignName ?? string.Empty,
+                    CampaignDescription = request.CampaignDescription ?? string.Empty,
+                    CampaignManagerId = request.CampaignManagerId.Value,
+                    StartDate = request.StartDate,
+                    EndDate = request.EndDate,
+                    FundGoal = request.FundGoal,
+                    CurrentBalance = 0,
+                    Status = CampaignStatus.Active,
+                    BankAccountNumber = request.BankAccountNumber,
+                    BankName = request.BankName,
+                    BankCode = request.BankCode,
+                    AccountHolderName = request.AccountHolderName
+                };
+
+                var result = await _campaignService.AddAsync(campaign);
+                return Ok(new ApiSuccess("Campaign created successfully", result));
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = ex.Message;
+                if (ex.InnerException != null)
+                {
+                    errorMessage += " | Inner: " + ex.InnerException.Message;
+                    if (ex.InnerException.InnerException != null)
+                    {
+                        errorMessage += " | Details: " + ex.InnerException.InnerException.Message;
+                    }
+                }
+                _logger?.LogError(ex, "Error creating campaign: {Error}", errorMessage);
+                return BadRequest(new ApiError("Error creating campaign", errorMessage));
+            }
+        }
+
+        /// <summary>
+        /// Update an existing campaign
+        /// </summary>
+        [HttpPut("{id:guid}")]
+        [Authorize]
+        public async Task<IActionResult> UpdateCampaign(Guid id, [FromBody] FTFundCampaign campaign)
+        {
+            try
+            {
+                campaign.Id = id;
+                var result = await _campaignService.UpdateAsync(campaign);
+                return Ok(new ApiSuccess("Campaign updated successfully", result));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
+            }
+        }
+
+        #endregion
+
+        #region Campaign Financial Summary
+
+        /// <summary>
+        /// Get financial summary for a campaign
+        /// </summary>
+        [HttpGet("{campaignId:guid}/financial-summary")]
+        public async Task<IActionResult> GetCampaignFinancialSummary(Guid campaignId)
+        {
+            try
+            {
+                var result = await _campaignService.GetCampaignFinancialSummaryAsync(campaignId);
+                return Ok(new ApiSuccess(result));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
+            }
+        }
+
+        #endregion
+
+        #region Campaign Donations & Expenses (delegated to specific controllers)
+
+        /// <summary>
+        /// Get donations for a campaign (paginated)
+        /// Use /api/FTCampaignDonation/campaign/{campaignId} instead
+        /// </summary>
+        [HttpGet("{campaignId:guid}/donations")]
+        public IActionResult GetCampaignDonations(Guid campaignId)
+        {
+            return Ok(new ApiSuccess("Use /api/FTCampaignDonation/campaign/{campaignId} endpoint"));
+        }
+
+        /// <summary>
+        /// Get expenses for a campaign (paginated)
+        /// Use /api/FTCampaignExpense/campaign/{campaignId} instead
+        /// </summary>
+        [HttpGet("{campaignId:guid}/expenses")]
+        public IActionResult GetCampaignExpenses(Guid campaignId)
+        {
+            return Ok(new ApiSuccess("Use /api/FTCampaignExpense/campaign/{campaignId} endpoint"));
+        }
+
+        #endregion
+    }
+}

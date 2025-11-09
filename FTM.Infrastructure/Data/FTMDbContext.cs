@@ -1,7 +1,8 @@
-﻿using FTM.Domain.DTOs.Authen;
+using FTM.Domain.DTOs.Authen;
 using FTM.Domain.Entities.Applications;
 using FTM.Domain.Entities.Events;
 using FTM.Domain.Entities.FamilyTree;
+using FTM.Domain.Entities.Funds;
 using FTM.Domain.Entities.Identity;
 using FTM.Domain.Entities.Notifications;
 using FTM.Domain.Entities.Posts;
@@ -57,6 +58,15 @@ namespace FTM.Infrastructure.Data
         public virtual DbSet<FTFamilyEventMember> FTFamilyEventMembers { get; set; }
         public virtual DbSet<FTFamilyEventFT> FTFamilyEventFTs { get; set; }
 
+        // Fund Management
+        public virtual DbSet<FTFund> FTFunds { get; set; }
+        public virtual DbSet<FTFundDonation> FTFundDonations { get; set; }
+        public virtual DbSet<FTFundExpense> FTFundExpenses { get; set; }
+        public virtual DbSet<FTFundCampaign> FTFundCampaigns { get; set; }
+        public virtual DbSet<FTCampaignDonation> FTCampaignDonations { get; set; }
+        public virtual DbSet<FTCampaignExpense> FTCampaignExpenses { get; set; }
+        public virtual DbSet<FTPayOSTransaction> FTPayOSTransactions { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.ApplyConfiguration(new MEthicConfiguration());
@@ -80,6 +90,13 @@ namespace FTM.Infrastructure.Data
             builder.ApplyConfiguration(new FTFamilyEventConfiguration());
             builder.ApplyConfiguration(new FTFamilyEventMemberConfiguration());
             builder.ApplyConfiguration(new FTFamilyEventFTConfiguration());
+            builder.ApplyConfiguration(new FTFundConfiguration());
+            builder.ApplyConfiguration(new FTFundDonationConfiguration());
+            builder.ApplyConfiguration(new FTFundExpenseConfiguration());
+            builder.ApplyConfiguration(new FTFundCampaignConfiguration());
+            builder.ApplyConfiguration(new FTCampaignDonationConfiguration());
+            builder.ApplyConfiguration(new FTCampaignExpenseConfiguration());
+            builder.ApplyConfiguration(new FTPayOSTransactionConfiguration());
             base.OnModelCreating(builder);
         }
 
