@@ -70,7 +70,7 @@ namespace FTM.API.Controllers
         /// Get campaigns managed by specific user
         /// </summary>
         [HttpGet("manager/{managerId:guid}")]
-        [Authorize]
+      
         public async Task<IActionResult> GetCampaignsByManager(
             Guid managerId,
             [FromQuery] int page = 1,
@@ -182,7 +182,7 @@ namespace FTM.API.Controllers
         /// Update an existing campaign
         /// </summary>
         [HttpPut("{id:guid}")]
-        [Authorize]
+   
         public async Task<IActionResult> UpdateCampaign(Guid id, [FromBody] FTFundCampaign campaign)
         {
             try
@@ -199,22 +199,75 @@ namespace FTM.API.Controllers
 
         #endregion
 
-        #region Campaign Financial Summary
+        #region Campaign Statistics & Financial Info
 
         /// <summary>
-        /// Get financial summary for a campaign
+        /// Get campaign statistics (money raised, expenses, balance, progress)
         /// </summary>
-        [HttpGet("{campaignId:guid}/financial-summary")]
-        public async Task<IActionResult> GetCampaignFinancialSummary(Guid campaignId)
+        [HttpGet("{campaignId:guid}/statistics")]
+        public async Task<IActionResult> GetCampaignStatistics(Guid campaignId)
         {
             try
             {
-                var result = await _campaignService.GetCampaignFinancialSummaryAsync(campaignId);
-                return Ok(new ApiSuccess(result));
+                var campaign = await _campaignService.GetByIdAsync(campaignId);
+                if (campaign == null)
+                    return NotFound(new ApiError("Campaign not found"));
+
+                // Calculate statistics
+                var stats = new
+                {
+                    campaignId = campaign.Id,
+                    campaignName = campaign.CampaignName,
+                    fundGoal = campaign.FundGoal,
+                    currentBalance = campaign.CurrentBalance,
+                    raisedAmount = campaign.CurrentBalance, // Same as current balance
+                    progressPercentage = campaign.FundGoal > 0 ? (campaign.CurrentBalance / campaign.FundGoal * 100) : 0,
+                    status = campaign.Status.ToString(),
+                    startDate = campaign.StartDate,
+                    endDate = campaign.EndDate,
+                    daysRemaining = campaign.EndDate > DateTimeOffset.UtcNow 
+                        ? (campaign.EndDate - DateTimeOffset.UtcNow).Days 
+                        : 0,
+                    isActive = campaign.Status == CampaignStatus.Active,
+                    isCompleted = campaign.Status == CampaignStatus.Completed,
+                    bankInfo = new
+                    {
+                        bankAccountNumber = campaign.BankAccountNumber,
+                        bankName = campaign.BankName,
+                        bankCode = campaign.BankCode,
+                        accountHolderName = campaign.AccountHolderName
+                    }
+                };
+
+                return Ok(new ApiSuccess("Campaign statistics retrieved successfully", stats));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                _logger.LogError(ex, "Error getting campaign statistics for {CampaignId}", campaignId);
+                return BadRequest(new ApiError("Error retrieving campaign statistics", ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Get campaign financial summary (donations count, expenses count, total amounts)
+        /// </summary>
+        [HttpGet("{campaignId:guid}/financial-summary")]
+        public async Task<IActionResult> GetFinancialSummary(Guid campaignId)
+        {
+            try
+            {
+                var campaign = await _campaignService.GetByIdAsync(campaignId);
+                if (campaign == null)
+                    return NotFound(new ApiError("Campaign not found"));
+
+                var summary = await _campaignService.GetCampaignFinancialSummaryAsync(campaignId);
+                
+                return Ok(new ApiSuccess("Financial summary retrieved successfully", summary));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting financial summary for {CampaignId}", campaignId);
+                return BadRequest(new ApiError("Error retrieving financial summary", ex.Message));
             }
         }
 

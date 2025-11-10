@@ -4,6 +4,7 @@ using FTM.Infrastructure.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
 using FTM.API.Reponses;
 using FTM.Domain.Enums;
+using FTM.Application.IServices;
 
 namespace FTM.API.Controllers
 {
@@ -13,13 +14,16 @@ namespace FTM.API.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<FTFundExpenseController> _logger;
+        private readonly IBlobStorageService _blobStorageService;
 
         public FTFundExpenseController(
             IUnitOfWork unitOfWork,
-            ILogger<FTFundExpenseController> logger)
+            ILogger<FTFundExpenseController> logger,
+            IBlobStorageService blobStorageService)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _blobStorageService = blobStorageService;
         }
 
         /// <summary>
@@ -222,10 +226,11 @@ namespace FTM.API.Controllers
         }
 
         /// <summary>
-        /// Create a new expense request
+        /// Create a new expense request with receipt images
+        /// Member uploads receipts when creating expense
         /// </summary>
         [HttpPost]
-        public async Task<IActionResult> CreateExpense([FromBody] CreateExpenseRequest request)
+        public async Task<IActionResult> CreateExpense([FromForm] CreateExpenseRequest request)
         {
             try
             {
@@ -233,6 +238,18 @@ namespace FTM.API.Controllers
                 var fund = await _unitOfWork.Repository<FTFund>().GetByIdAsync(request.FundId);
                 if (fund == null)
                     return NotFound(new ApiError("Fund not found"));
+
+                // Upload receipt images to blob storage
+                var receiptUrls = new List<string>();
+                if (request.ReceiptImages != null && request.ReceiptImages.Any())
+                {
+                    foreach (var file in request.ReceiptImages)
+                    {
+                        var fileName = $"{Guid.NewGuid()}_{file.FileName}";
+                        var url = await _blobStorageService.UploadFileAsync(file, "fund-expense-receipts", fileName);
+                        receiptUrls.Add(url);
+                    }
+                }
 
                 // Create expense
                 var expense = new FTFundExpense
@@ -245,6 +262,7 @@ namespace FTM.API.Controllers
                     PlannedDate = request.PlannedDate ?? DateTimeOffset.UtcNow,
                     ExpenseEvent = request.ExpenseEvent,
                     Recipient = request.Recipient,
+                    ReceiptImages = receiptUrls.Any() ? string.Join(",", receiptUrls) : null,
                     Status = TransactionStatus.Pending,
                     CreatedOn = DateTimeOffset.UtcNow,
                     IsDeleted = false
@@ -253,7 +271,8 @@ namespace FTM.API.Controllers
                 await _unitOfWork.Repository<FTFundExpense>().AddAsync(expense);
                 await _unitOfWork.CompleteAsync();
 
-                _logger.LogInformation("Created expense request {ExpenseId} for fund {FundId}", expense.Id, request.FundId);
+                _logger.LogInformation("Created expense request {ExpenseId} for fund {FundId} with {Count} receipt images",
+                    expense.Id, request.FundId, receiptUrls.Count);
 
                 // Warn if expense would exceed current balance
                 string? warning = null;
@@ -264,19 +283,16 @@ namespace FTM.API.Controllers
                         expense.Id, expense.ExpenseAmount, fund.CurrentMoney);
                 }
 
-                var result = new
+                return Ok(new ApiSuccess("Expense request created with receipts, pending approval", new
                 {
-                    expense.Id,
-                    expense.ExpenseAmount,
-                    expense.ExpenseDescription,
-                    expense.PlannedDate,
-                    expense.ExpenseEvent,
-                    expense.Recipient,
+                    ExpenseId = expense.Id,
+                    Amount = expense.ExpenseAmount,
+                    Description = expense.ExpenseDescription,
                     Status = expense.Status.ToString(),
+                    ReceiptCount = receiptUrls.Count,
+                    ReceiptUrls = receiptUrls,
                     Warning = warning
-                };
-
-                return Ok(new ApiSuccess("Expense created successfully", result));
+                }));
             }
             catch (Exception ex)
             {
@@ -369,13 +385,18 @@ namespace FTM.API.Controllers
         }
 
         /// <summary>
-        /// Approve expense and deduct from fund balance
+        /// Approve expense with payment proof and deduct from fund balance
+        /// Manager must upload payment proof when approving
         /// </summary>
         [HttpPost("{id}/approve")]
-        public async Task<IActionResult> ApproveExpense(Guid id, [FromBody] ApproveExpenseRequest request)
+        public async Task<IActionResult> ApproveExpense(Guid id, [FromForm] ApproveExpenseRequest request)
         {
             try
             {
+                // Validate payment proof is provided
+                if (request.PaymentProofImage == null)
+                    return BadRequest(new ApiError("Payment proof image is required for approval"));
+
                 var expense = await _unitOfWork.Repository<FTFundExpense>().GetQuery()
                     .Where(e => e.Id == id && e.IsDeleted == false)
                     .Include(e => e.Fund)
@@ -396,11 +417,16 @@ namespace FTM.API.Controllers
                     return BadRequest(new ApiError($"Insufficient fund balance. Required: {expense.ExpenseAmount:N0} VND, Available: {expense.Fund.CurrentMoney:N0} VND"));
                 }
 
+                // Upload payment proof image to blob storage
+                var fileName = $"{Guid.NewGuid()}_{request.PaymentProofImage.FileName}";
+                var paymentProofUrl = await _blobStorageService.UploadFileAsync(request.PaymentProofImage, "fund-expense-payment-proofs", fileName);
+
                 // Approve expense
                 expense.Status = TransactionStatus.Approved;
                 expense.ApprovedBy = request.ApproverId;
                 expense.ApprovedOn = DateTimeOffset.UtcNow;
-                expense.ApprovalFeedback = request.Notes;
+                expense.ApprovalFeedback = $"{request.Notes}\nPayment Proof: {paymentProofUrl}";
+                expense.PaymentProofImage = paymentProofUrl;
 
                 // Deduct from fund balance (CRITICAL LOGIC)
                 expense.Fund.CurrentMoney -= expense.ExpenseAmount;
@@ -409,7 +435,7 @@ namespace FTM.API.Controllers
                 _unitOfWork.Repository<FTFund>().Update(expense.Fund);
                 await _unitOfWork.CompleteAsync();
 
-                _logger.LogInformation("Approved expense {ExpenseId}. Deducted {Amount} VND from fund {FundId}. New balance: {Balance} VND",
+                _logger.LogInformation("Approved expense {ExpenseId}. Deducted {Amount} VND from fund {FundId}. New balance: {Balance} VND. Payment proof uploaded.",
                     id, expense.ExpenseAmount, expense.Fund.Id, expense.Fund.CurrentMoney);
 
                 var result = new
@@ -419,10 +445,11 @@ namespace FTM.API.Controllers
                     expense.ApprovedBy,
                     expense.ApprovedOn,
                     DeductedAmount = expense.ExpenseAmount,
-                    NewFundBalance = expense.Fund.CurrentMoney
+                    NewFundBalance = expense.Fund.CurrentMoney,
+                    PaymentProofUrl = paymentProofUrl
                 };
 
-                return Ok(new ApiSuccess("Expense approved successfully", result));
+                return Ok(new ApiSuccess("Expense approved with payment proof", result));
             }
             catch (Exception ex)
             {
@@ -486,6 +513,7 @@ namespace FTM.API.Controllers
             public DateTimeOffset? PlannedDate { get; set; }
             public string? ExpenseEvent { get; set; }
             public string? Recipient { get; set; }
+            public List<IFormFile>? ReceiptImages { get; set; }
         }
 
         public class UpdateExpenseRequest
@@ -501,6 +529,7 @@ namespace FTM.API.Controllers
         {
             public Guid ApproverId { get; set; }
             public string? Notes { get; set; }
+            public IFormFile? PaymentProofImage { get; set; }
         }
 
         public class RejectExpenseRequest

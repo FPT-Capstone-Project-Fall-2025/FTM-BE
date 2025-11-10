@@ -76,6 +76,12 @@ namespace FTM.Domain.Entities.Funds
         /// </summary>
         public string? ConfirmationNotes { get; set; }
 
+        /// <summary>
+        /// Proof images (transfer receipt, cash photo, etc.) - comma-separated URLs
+        /// Required when confirming cash donations or for transfer proof
+        /// </summary>
+        public string? ProofImages { get; set; }
+
         // Navigation properties
         public virtual FTFund Fund { get; set; } = null!;
         public virtual FTMember? Member { get; set; }

@@ -148,6 +148,7 @@ namespace FTM.Domain.DTOs.Funds
         public DonationStatus Status { get; set; }
         public string PayOSOrderCode { get; set; }
         public string? TransactionId { get; set; }
+        public string? ProofImages { get; set; } // Proof of payment (transfer receipt, cash photo)
         public DateTime CreatedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
@@ -371,5 +372,132 @@ namespace FTM.Domain.DTOs.Funds
         public string Status { get; set; }
         public DateTime? TransactionDateTime { get; set; }
         public decimal Amount { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for confirming cash/bank transfer donation
+    /// Proof images should be uploaded via the upload-proof endpoint before confirmation
+    /// </summary>
+    public class ConfirmDonationDto
+    {
+        [Required]
+        public Guid DonationId { get; set; }
+
+        [Required]
+        public Guid ConfirmedBy { get; set; }
+
+        [StringLength(500)]
+        public string? Notes { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for creating donation (unified - supports Cash and BankTransfer)
+    /// </summary>
+    public class CampaignDonateRequest
+    {
+        public Guid? MemberId { get; set; }
+        
+        [Required]
+        [StringLength(200)]
+        public string DonorName { get; set; } = string.Empty;
+        
+        [Required]
+        [Range(1, double.MaxValue)]
+        public decimal Amount { get; set; }
+        
+        [Required]
+        public PaymentMethod PaymentMethod { get; set; }
+        
+        [StringLength(500)]
+        public string? PaymentNotes { get; set; }
+        
+        public bool? IsAnonymous { get; set; }
+        
+        /// <summary>
+        /// Comma-separated blob URLs of proof images (for Cash donations)
+        /// </summary>
+        [StringLength(2000)]
+        public string? ProofImages { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for online donations (bank transfer with QR code)
+    /// </summary>
+    public class CreateOnlineDonationDto
+    {
+        [Required]
+        public Guid CampaignId { get; set; }
+        
+        public Guid? MemberId { get; set; }
+        
+        [Required]
+        [StringLength(200)]
+        public string DonorName { get; set; } = string.Empty;
+        
+        [Required]
+        [Range(1, double.MaxValue)]
+        public decimal Amount { get; set; }
+        
+        [StringLength(500)]
+        public string? Message { get; set; }
+        
+        public bool IsAnonymous { get; set; }
+        
+        [Required]
+        [Url]
+        public string ReturnUrl { get; set; } = string.Empty;
+        
+        [Required]
+        [Url]
+        public string CancelUrl { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// DTO for cash donations (requires proof images)
+    /// </summary>
+    public class CreateCashDonationDto
+    {
+        [Required]
+        public Guid CampaignId { get; set; }
+        
+        public Guid? MemberId { get; set; }
+        
+        [Required]
+        [StringLength(200)]
+        public string DonorName { get; set; } = string.Empty;
+        
+        [Required]
+        [Range(1, double.MaxValue)]
+        public decimal Amount { get; set; }
+        
+        [StringLength(500)]
+        public string? Notes { get; set; }
+        
+        public bool IsAnonymous { get; set; }
+        
+        /// <summary>
+        /// Comma-separated blob URLs of proof images (cash photos, receipts)
+        /// </summary>
+        [StringLength(2000)]
+        public string? ProofImages { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for payment callback from payment gateway
+    /// </summary>
+    public class PaymentCallbackDto
+    {
+        [Required]
+        public string OrderCode { get; set; } = string.Empty;
+        
+        [Required]
+        public string Status { get; set; } = string.Empty;
+        
+        [Required]
+        public decimal Amount { get; set; }
+        
+        public string? TransactionId { get; set; }
+        
+        public DateTime? TransactionDateTime { get; set; }
     }
 }

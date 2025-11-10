@@ -15,10 +15,14 @@ namespace FTM.API.Controllers
     public class FTCampaignExpenseController : ControllerBase
     {
         private readonly IFTCampaignExpenseService _expenseService;
+        private readonly IBlobStorageService _blobStorageService;
 
-        public FTCampaignExpenseController(IFTCampaignExpenseService expenseService)
+        public FTCampaignExpenseController(
+            IFTCampaignExpenseService expenseService,
+            IBlobStorageService blobStorageService)
         {
             _expenseService = expenseService;
+            _blobStorageService = blobStorageService;
         }
 
         #region Query Operations
@@ -27,7 +31,7 @@ namespace FTM.API.Controllers
         /// Get expense by ID
         /// </summary>
         [HttpGet("{id:guid}")]
-        [Authorize]
+
         public async Task<IActionResult> GetExpenseById(Guid id)
         {
             try
@@ -48,7 +52,7 @@ namespace FTM.API.Controllers
         /// Get all expenses for a campaign (paginated, with optional status filter)
         /// </summary>
         [HttpGet("campaign/{campaignId:guid}")]
-        [Authorize]
+   
         public async Task<IActionResult> GetCampaignExpenses(
             Guid campaignId,
             [FromQuery] ApprovalStatus? status = null,
@@ -70,7 +74,7 @@ namespace FTM.API.Controllers
         /// Get pending expenses for campaigns managed by a user
         /// </summary>
         [HttpGet("pending/manager/{managerId:guid}")]
-        [Authorize]
+
         public async Task<IActionResult> GetPendingExpensesForManager(
             Guid managerId,
             [FromQuery] int page = 1,
@@ -91,7 +95,7 @@ namespace FTM.API.Controllers
         /// Get expense statistics for a campaign
         /// </summary>
         [HttpGet("campaign/{campaignId:guid}/statistics")]
-        [Authorize]
+
         public async Task<IActionResult> GetExpenseStatistics(Guid campaignId)
         {
             try
@@ -110,27 +114,48 @@ namespace FTM.API.Controllers
         #region CRUD Operations
 
         /// <summary>
-        /// Create new expense request
+        /// Create new expense request with receipt images
+        /// Member uploads receipt when creating expense
         /// </summary>
         [HttpPost]
-        [Authorize]
-        public async Task<IActionResult> CreateExpense([FromBody] CreateExpenseDto request)
+        public async Task<IActionResult> CreateExpense([FromForm] CreateExpenseDto request)
         {
             try
             {
+                // Upload receipt images to blob storage
+                var receiptUrls = new List<string>();
+                if (request.ReceiptImages != null && request.ReceiptImages.Any())
+                {
+                    foreach (var file in request.ReceiptImages)
+                    {
+                        var fileName = $"{Guid.NewGuid()}_{file.FileName}";
+                        var url = await _blobStorageService.UploadFileAsync(file, "campaign-expense-receipts", fileName);
+                        receiptUrls.Add(url);
+                    }
+                }
+
                 var expense = new FTCampaignExpense
                 {
                     CampaignId = request.CampaignId,
                     ExpenseAmount = request.Amount,
                     ExpenseDescription = request.Description,
                     Category = request.Category,
-                    ReceiptImages = request.ReceiptImages,
+                    ReceiptImages = receiptUrls.Any() ? string.Join(",", receiptUrls) : null,
                     AuthorizedBy = request.AuthorizedBy,
                     ApprovalStatus = ApprovalStatus.Pending
                 };
 
                 var result = await _expenseService.AddAsync(expense);
-                return Ok(new ApiSuccess("Expense request created, pending approval", result));
+                
+                return Ok(new ApiSuccess("Expense request created with receipts, pending approval", new
+                {
+                    ExpenseId = result.Id,
+                    Amount = result.ExpenseAmount,
+                    Description = result.ExpenseDescription,
+                    Status = result.ApprovalStatus.ToString(),
+                    ReceiptCount = receiptUrls.Count,
+                    ReceiptUrls = receiptUrls
+                }));
             }
             catch (Exception ex)
             {
@@ -142,7 +167,7 @@ namespace FTM.API.Controllers
         /// Update expense request (only for Pending expenses)
         /// </summary>
         [HttpPut("{id:guid}")]
-        [Authorize]
+
         public async Task<IActionResult> UpdateExpense(Guid id, [FromBody] UpdateExpenseDto request)
         {
             try
@@ -169,7 +194,7 @@ namespace FTM.API.Controllers
         /// Delete expense request (only for Pending expenses)
         /// </summary>
         [HttpDelete("{id:guid}")]
-        [Authorize]
+
         public async Task<IActionResult> DeleteExpense(Guid id)
         {
             try
@@ -188,16 +213,47 @@ namespace FTM.API.Controllers
         #region Approval Workflow
 
         /// <summary>
-        /// Approve expense request
+        /// Approve expense request with payment proof image
+        /// Manager uploads proof of payment transfer when approving
         /// </summary>
         [HttpPut("{id:guid}/approve")]
-        [Authorize]
-        public async Task<IActionResult> ApproveExpense(Guid id, [FromBody] ApproveExpenseDto request)
+        public async Task<IActionResult> ApproveExpense(Guid id, [FromForm] ApproveExpenseDto request)
         {
             try
             {
-                await _expenseService.ApproveExpenseAsync(id, request.ApproverId, request.ApprovalNotes);
-                return Ok(new ApiSuccess("Expense approved successfully"));
+                // Upload payment proof image
+                string? paymentProofUrl = null;
+                if (request.PaymentProofImage != null)
+                {
+                    var fileName = $"{Guid.NewGuid()}_{request.PaymentProofImage.FileName}";
+                    paymentProofUrl = await _blobStorageService.UploadFileAsync(
+                        request.PaymentProofImage, 
+                        "campaign-expense-payment-proofs", 
+                        fileName);
+                }
+
+                // Approve expense and attach payment proof
+                var expense = await _expenseService.GetByIdAsync(id);
+                if (expense == null)
+                    return NotFound(new ApiError("Expense not found"));
+
+                // Store payment proof URL in ApprovalNotes or create new field
+                var approvalNotes = request.ApprovalNotes ?? "";
+                if (!string.IsNullOrEmpty(paymentProofUrl))
+                {
+                    approvalNotes += $"\nPayment Proof: {paymentProofUrl}";
+                }
+
+                await _expenseService.ApproveExpenseAsync(id, request.ApproverId, approvalNotes);
+                
+                return Ok(new ApiSuccess("Expense approved successfully with payment proof", new
+                {
+                    ExpenseId = id,
+                    Status = "Approved",
+                    PaymentProofUrl = paymentProofUrl,
+                    ApprovedBy = request.ApproverId,
+                    ApprovalNotes = approvalNotes
+                }));
             }
             catch (Exception ex)
             {
@@ -209,7 +265,7 @@ namespace FTM.API.Controllers
         /// Reject expense request
         /// </summary>
         [HttpPut("{id:guid}/reject")]
-        [Authorize]
+
         public async Task<IActionResult> RejectExpense(Guid id, [FromBody] RejectExpenseDto request)
         {
             try
@@ -226,7 +282,7 @@ namespace FTM.API.Controllers
         #endregion
     }
 
-    #region DTOs (if not already defined)
+    #region DTOs
 
     public class CreateExpenseDto
     {
@@ -234,8 +290,12 @@ namespace FTM.API.Controllers
         public decimal Amount { get; set; }
         public string Description { get; set; } = string.Empty;
         public ExpenseCategory Category { get; set; }
-        public string? ReceiptImages { get; set; }
         public Guid AuthorizedBy { get; set; }
+        
+        /// <summary>
+        /// Receipt images uploaded by member when creating expense
+        /// </summary>
+        public List<IFormFile>? ReceiptImages { get; set; }
     }
 
     public class UpdateExpenseDto
@@ -250,6 +310,12 @@ namespace FTM.API.Controllers
     {
         public Guid ApproverId { get; set; }
         public string? ApprovalNotes { get; set; }
+        
+        /// <summary>
+        /// Payment proof image uploaded by manager when approving
+        /// Proves that money has been transferred to member
+        /// </summary>
+        public IFormFile? PaymentProofImage { get; set; }
     }
 
     public class RejectExpenseDto
