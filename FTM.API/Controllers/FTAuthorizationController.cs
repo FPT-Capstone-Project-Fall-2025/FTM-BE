@@ -2,6 +2,7 @@
 using FTM.API.Reponses;
 using FTM.Application.IServices;
 using FTM.Domain.DTOs.FamilyTree;
+using FTM.Domain.Enums;
 using FTM.Domain.Specification.FamilyTrees;
 using FTM.Domain.Specification.FTAuthorizations;
 using Microsoft.AspNetCore.Http;
@@ -20,6 +21,7 @@ namespace FTM.API.Controllers
         }
 
         [HttpPost]
+        [FTAuthorizeOwner]
         public async Task<IActionResult> Add([FromBody] UpsertFTAuthorizationRequest request)
         {
             if (!ModelState.IsValid)
@@ -33,6 +35,7 @@ namespace FTM.API.Controllers
         }
 
         [HttpPut]
+        [FTAuthorizeOwner]
         public async Task<IActionResult> Update([FromBody] UpsertFTAuthorizationRequest request)
         {
             if (!ModelState.IsValid)
@@ -47,6 +50,7 @@ namespace FTM.API.Controllers
 
 
         [HttpGet("list")]
+        [FTAuthorizeOwner]
         public async Task<IActionResult> ViewAuthorizationList([FromQuery] SearchWithPaginationRequest requestParams)
         {
             if (!ModelState.IsValid)

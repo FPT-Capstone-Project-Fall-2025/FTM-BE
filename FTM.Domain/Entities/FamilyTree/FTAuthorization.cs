@@ -16,3 +16,4 @@ namespace FTM.Domain.Entities.FamilyTree
         public virtual FTMember AuthorizedMember { get; set; }
     }
 }
+ 

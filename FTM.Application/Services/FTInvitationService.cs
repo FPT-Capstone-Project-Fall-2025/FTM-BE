@@ -61,7 +61,7 @@ namespace FTM.Application.Services
 
         public async Task AddAsync(FTInvitation invitation)
         {
-            await _fTInvitationRepository.AddAsync(invitation);       
+            await _fTInvitationRepository.AddAsync(invitation);
         }
 
         public async Task HandleRespondAsync(Guid invitationId, bool accepted)
@@ -108,6 +108,15 @@ namespace FTM.Application.Services
                         };
                         await _fTUserRepository.AddAsync(ftUser);
                     }
+                    else
+                    {
+                        var ftUser =  await _fTUserRepository.FindAsync(invitation.FTId, invitation.InvitedUserId);
+                        if(ftUser != null && ftUser.FTRole == FTMRole.FTGuest)
+                        {
+                            ftUser.FTRole = FTMRole.FTMember;
+                            _fTUserRepository.Update(ftUser);
+                        }
+                    }
                 }
                 else
                 {
@@ -141,8 +150,8 @@ namespace FTM.Application.Services
         {
             // Send By Email
                 string beURL = Environment.GetEnvironmentVariable("BE_URL");
-            string acceptUrl = $"{beURL}/api/invitation/respond?token={invitation.Token}&accepted=true";
-            string rejectUrl = $"{beURL}/api/invitation/respond?token={invitation.Token}&accepted=false";
+            string acceptUrl = $"{beURL}/api/invitation/respond?relatedId={invitation.Id}&accepted=true";
+            string rejectUrl = $"{beURL}/api/invitation/respond?relatedId={invitation.Id}&accepted=false";
 
             string body = $@"
             <div style='font-family: Arial; color:#333'>

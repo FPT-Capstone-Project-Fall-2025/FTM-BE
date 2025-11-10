@@ -66,5 +66,10 @@ namespace FTM.Infrastructure.Repositories.Implement
         {
             return await _context.FTMembers.AnyAsync(m => m.FTId == ftId && m.UserId == userId && m.IsDeleted == false);
         }
+
+        public async Task<bool> IsExisted(Guid ftId, Guid ftMemberId)
+        {
+            return await _context.FTMembers.AnyAsync(m => m.FTId == ftId && m.Id == ftMemberId && m.IsDeleted == false);
+        }
     }
 }

@@ -61,6 +61,7 @@ app.UseCors("AllowPorts");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseFTAuthorizationMiddleware();
 
 // Map Health Check endpoint
 app.MapHealthChecks("/health");
