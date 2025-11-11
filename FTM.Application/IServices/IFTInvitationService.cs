@@ -1,4 +1,5 @@
-﻿using FTM.Domain.Entities.FamilyTree;
+﻿using FTM.Domain.DTOs.FamilyTree;
+using FTM.Domain.Entities.FamilyTree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,5 +15,8 @@ namespace FTM.Application.IServices
         Task AddAsync(FTInvitation invitation);
 
         Task HandleRespondAsync(Guid invitationId, bool accepted);
+
+        Task InviteToGuestAsync(GuestInvitationDto request);
+        Task InviteToMemberAsync(MemberInvitationDto request);
     }
 }

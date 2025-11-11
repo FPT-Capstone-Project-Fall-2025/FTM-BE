@@ -1,8 +1,10 @@
 ﻿using FTM.API.Reponses;
 using FTM.Application.IServices;
+using FTM.Domain.DTOs.FamilyTree;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FTM.API.Controllers
 {
@@ -14,6 +16,20 @@ namespace FTM.API.Controllers
         public FTInvitationController(IFTInvitationService fTInvitationService)
         {
             _fTInvitationService = fTInvitationService;
+        }
+
+        [HttpPost("guest")]
+        public async Task<IActionResult> InviteToGuest(GuestInvitationDto request)
+        {
+            await _fTInvitationService.InviteToGuestAsync(request);
+            return Ok(new ApiSuccess("Gửi lời mời thành công"));
+        }
+
+        [HttpPost("member")]
+        public async Task<IActionResult> InviteToMember(MemberInvitationDto request)
+        {
+            await _fTInvitationService.InviteToMemberAsync(request);
+            return Ok(new ApiSuccess("Gửi lời mời thành công"));
         }
 
         [HttpGet("respond")]

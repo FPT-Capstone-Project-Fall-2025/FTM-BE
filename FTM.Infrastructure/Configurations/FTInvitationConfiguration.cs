@@ -19,6 +19,9 @@ namespace FTM.Infrastructure.Configurations
             builder.Property(e => e.InviterUserId)
                 .IsRequired();
 
+            builder.Property(e => e.FTMemberName)
+                .IsRequired(false);
+
             builder.Property(e => e.InvitedUserId)
                 .IsRequired();
 
@@ -45,6 +48,7 @@ namespace FTM.Infrastructure.Configurations
             builder.HasOne(e => e.FTMember)
                 .WithMany(m => m.FTInvitations)
                 .HasForeignKey(e => e.FTMemberId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

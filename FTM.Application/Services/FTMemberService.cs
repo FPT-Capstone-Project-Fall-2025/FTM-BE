@@ -145,7 +145,6 @@ namespace FTM.Application.Services
                                if (request.UserId != null && request.UserId != Guid.Empty)
                                {
                                    var invitedUser = await _userManager.FindByIdAsync(request.UserId.ToString());
-
                                    if (invitedUser == null)
                                        throw new ArgumentException("Người được mời không tồn tại trong hệ thống.");
 
@@ -612,6 +611,12 @@ namespace FTM.Application.Services
             if (_ftMember == null) throw new ArgumentException("Thành viên không tồn tại");
 
             return _mapper.Map<MemberRelationshipDto>(_ftMember);
+        }
+
+        public async Task<IReadOnlyList<FTMemberSimpleDto>> GetListOfMembersWithoutUser(Guid ftId)
+        {
+            var memberWithoutUserList = await _fTMemberRepository.GetMembersWithoutUserAsync(ftId);
+            return _mapper.Map<IReadOnlyList<FTMemberSimpleDto>>(memberWithoutUserList);
         }
     }
 }

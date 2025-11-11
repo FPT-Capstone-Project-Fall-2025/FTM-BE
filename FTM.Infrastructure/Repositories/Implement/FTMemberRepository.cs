@@ -62,7 +62,15 @@ namespace FTM.Infrastructure.Repositories.Implement
                 .ToListAsync();
         }
 
-        public async Task<bool> IsConnectedTo(Guid ftId, Guid userId)
+        public async Task<List<FTMember>> GetMembersWithoutUserAsync(Guid ftId)
+        {
+            return await _context.FTMembers.Include(m => m.FTMemberFiles)
+                                           .Where(m => m.FTId == ftId 
+                                                    && (m.UserId == null || m.UserId == Guid.Empty) 
+                                                    && m.IsDeleted == false).ToListAsync();
+        }
+
+        public async Task<bool> IsConnectedTo(Guid ftId, Guid userId)   
         {
             return await _context.FTMembers.AnyAsync(m => m.FTId == ftId && m.UserId == userId && m.IsDeleted == false);
         }
