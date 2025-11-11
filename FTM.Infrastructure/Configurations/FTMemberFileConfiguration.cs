@@ -19,6 +19,7 @@ namespace FTM.Infrastructure.Configurations
             builder.HasOne(f => f.FTMember)
                 .WithMany(m => m.FTMemberFiles)
                 .HasForeignKey(f => f.FTMemberId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

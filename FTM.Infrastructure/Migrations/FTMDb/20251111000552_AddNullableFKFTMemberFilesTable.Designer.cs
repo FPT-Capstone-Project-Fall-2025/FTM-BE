@@ -3,6 +3,7 @@ using System;
 using FTM.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FTM.Infrastructure.Migrations.FTMDb
 {
     [DbContext(typeof(FTMDbContext))]
-    partial class FTMDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251111000552_AddNullableFKFTMemberFilesTable")]
+    partial class AddNullableFKFTMemberFilesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -636,6 +639,7 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                         .HasColumnType("uuid");
 
                     b.Property<string>("FTMemberName")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("FTName")
@@ -1441,7 +1445,8 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "FTMember")
                         .WithMany("FTInvitations")
                         .HasForeignKey("FTMemberId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("FT");
 
@@ -1506,7 +1511,8 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "FTMember")
                         .WithMany("FTMemberFiles")
                         .HasForeignKey("FTMemberId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("FTMember");
                 });

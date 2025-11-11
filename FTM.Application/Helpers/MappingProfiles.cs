@@ -72,7 +72,15 @@ namespace FTM.Application.Helpers
             CreateMap<FamilyTree, FamilyTreeDataTableDto>()
                 .ForMember(dest => dest.MemberCount, opt => opt.MapFrom(src => src.FTMembers.Any(m => m.IsDeleted == false) ? src.FTMembers.Count(m => m.IsDeleted == false) : 0));
 
-            CreateMap<FTMember, FTMemberSimpleDto>();
+            CreateMap<FTMember, FTMemberSimpleDto>()
+                .AfterMap((src, desc) => {
+                    if (!src.FTMemberFiles.IsNullOrEmpty())
+                    {
+                        desc.FilePath = src.FTMemberFiles.First().FilePath;
+                    }
+                });
+    
+
             CreateMap<FTMemberFileRequest, FTMemberFile>().ReverseMap();
             CreateMap<MReligionDto, MReligion>().ReverseMap();
             CreateMap<MEthnicDto, MEthnic>().ReverseMap();

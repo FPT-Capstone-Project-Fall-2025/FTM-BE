@@ -9,6 +9,6 @@ namespace FTM.Infrastructure.Repositories.Interface
 {
     public interface IFTInvitationRepository : IGenericRepository<FTInvitation>
     {
-        Task<FTInvitation> GetInvitationAsync(string token);
+        Task<FTInvitation?> GetInvitationAsync(string token);
     }
 }

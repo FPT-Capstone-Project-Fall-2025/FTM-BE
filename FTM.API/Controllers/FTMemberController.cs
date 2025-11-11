@@ -55,6 +55,13 @@ namespace FTM.API.Controllers
                 requestParams.PageSize, totalItems, data)));
         }
 
+        [HttpGet("list-without-user")]
+        public async Task<IActionResult> GetListOfMembersWithoutUser(Guid ftId)
+        {
+            var data = await _fTMemberService.GetListOfMembersWithoutUser(ftId);
+            return Ok(new ApiSuccess("Lấy danh sách thành viên của gia phả thành công", data));
+        }
+
         [HttpGet("{ftid}/get-by-userid")]
         public async Task<IActionResult> GetDetailedMemberOfFamilyTreeByUserId([FromRoute] Guid ftid, [FromQuery] Guid userId)
         {
