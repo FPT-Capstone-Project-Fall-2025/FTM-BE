@@ -7,6 +7,7 @@ using FTM.Domain.Specification.FamilyTrees;
 using FTM.Domain.Specification.FTAuthorizations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FTM.API.Controllers
 {
@@ -21,7 +22,7 @@ namespace FTM.API.Controllers
         }
 
         [HttpPost]
-        [FTAuthorizeOwner]
+        //[FTAuthorizeOwner]
         public async Task<IActionResult> Add([FromBody] UpsertFTAuthorizationRequest request)
         {
             if (!ModelState.IsValid)
@@ -35,7 +36,7 @@ namespace FTM.API.Controllers
         }
 
         [HttpPut]
-        [FTAuthorizeOwner]
+        //[FTAuthorizeOwner]
         public async Task<IActionResult> Update([FromBody] UpsertFTAuthorizationRequest request)
         {
             if (!ModelState.IsValid)
@@ -50,7 +51,7 @@ namespace FTM.API.Controllers
 
 
         [HttpGet("list")]
-        [FTAuthorizeOwner]
+        //[FTAuthorizeOwner]
         public async Task<IActionResult> ViewAuthorizationList([FromQuery] SearchWithPaginationRequest requestParams)
         {
             if (!ModelState.IsValid)
@@ -67,9 +68,18 @@ namespace FTM.API.Controllers
                 Take = requestParams.PageSize
             };
 
-            var result = await _fTAuthorizationService.GetAuthorizationListViewAsync(specParams);
+            var data = await _fTAuthorizationService.GetAuthorizationListViewAsync(specParams);
+            var totalItems = await _fTAuthorizationService.CountAuthorizationListViewAsync(specParams);
 
-            return Ok(new ApiSuccess("Lấy danh sách quyền thành công", result));
+            IReadOnlyList<FTAuthorizationListViewDto> simpleData = new List<FTAuthorizationListViewDto> { data };
+
+            return Ok(new ApiSuccess(
+                "Lấy danh sách quyền của gia phả thành công",
+                new Pagination<FTAuthorizationListViewDto>(
+                    requestParams.PageIndex,
+                    requestParams.PageSize,
+                    totalItems,
+                    simpleData)));
         }
 
         private void ThrowModelErrors()

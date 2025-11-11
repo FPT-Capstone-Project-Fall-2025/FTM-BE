@@ -118,6 +118,13 @@ namespace FTM.Application.Services
             return result;
         }
 
+        public async Task<int> CountAuthorizationListViewAsync(FTAuthorizationSpecParams specParams)
+        {
+            var spec = new FTAuthorizationSpecificationForCount(specParams);
+            var authorList = await _fTAuthorizationRepository.ListAsync(spec);
+            return authorList.Count;
+        }
+
         public async Task<bool> HasPermissionAsync(Guid ftId, Guid userId, FeatureType feature, MethodType method)
         {
             return await _fTAuthorizationRepository.HasPermissionAsync(ftId, userId, feature, method);
@@ -238,5 +245,7 @@ namespace FTM.Application.Services
         {
             return await _fTUserRepository.IsGuestAsync(ftId, userId);
         }
+
+        
     }
 }
