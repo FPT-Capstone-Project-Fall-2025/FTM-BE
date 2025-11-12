@@ -12,9 +12,9 @@ namespace FTM.Domain.DTOs.FamilyTree
 
         public string FTName {  get; set; }
         
-        public Guid FTMemberId { get; set; }
+        public Guid? FTMemberId { get; set; }
         
-        public string FTMemberName {  get; set; }
+        public string? FTMemberName {  get; set; }
         
         public string Email { get; set; } = null!;
 

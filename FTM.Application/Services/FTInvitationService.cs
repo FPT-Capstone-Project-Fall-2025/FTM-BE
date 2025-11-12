@@ -8,6 +8,9 @@ using FTM.Domain.Entities.FamilyTree;
 using FTM.Domain.Entities.Identity;
 using FTM.Domain.Entities.Notifications;
 using FTM.Domain.Enums;
+using FTM.Domain.Specification.FTInvitations;
+using FTM.Domain.Specification.FTMembers;
+using FTM.Domain.Specification.FTUsers;
 using FTM.Infrastructure.Repositories.Implement;
 using FTM.Infrastructure.Repositories.Interface;
 using Humanizer;
@@ -239,6 +242,20 @@ namespace FTM.Application.Services
 
             await AddAsync(ftInvitation);
             await SendAsync(ftInvitation);
+        }
+
+        public async Task<IReadOnlyList<FTInvitationDto>> ListAsync(FTInvitationSpecParams specParams)
+        {
+            var spec = new FTInvitationSpecification(specParams);
+            var fTInvitations = await _fTInvitationRepository.ListAsync(spec);
+
+            return _mapper.Map<IReadOnlyList<FTInvitationDto>>(fTInvitations);
+        }
+
+        public async Task<int> CountListAsync(FTInvitationSpecParams specParams)
+        {
+            var spec = new FTInvitationForCountSpecification(specParams);
+            return await _fTInvitationRepository.CountAsync(spec);
         }
 
         public async Task SendAsync(FTInvitation invitation)

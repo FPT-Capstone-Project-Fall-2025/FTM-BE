@@ -93,6 +93,8 @@ namespace FTM.Application.Helpers
             CreateMap<FTAuthorization, FTAuthorizationDto>();
             CreateMap<FTInvitation, FTInvitationDto>();
             CreateMap<FTNotification, FTNotificationDto>();
+            CreateMap<FamilyTree, SimpleFamilyTreeDto>();
+            CreateMap<FTUser, FTUserDto>();
 
             CreateMap<UpdateFTMemberRequest, FTMember>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())

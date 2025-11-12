@@ -6,6 +6,7 @@ using FTM.Application.Services;
 using FTM.Domain.DTOs.FamilyTree;
 using FTM.Domain.Specification.FamilyTrees;
 using FTM.Domain.Specification.FTMembers;
+using FTM.Domain.Specification.FTUsers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -55,7 +56,26 @@ namespace FTM.API.Controllers
                 requestParams.PageSize, totalItems, data)));
         }
 
-        [HttpGet("list-without-user")]
+        [HttpGet("list-of-ftusers")]
+        public async Task<IActionResult> GetListOfFtUser([FromQuery] SearchWithPaginationRequest requestParams)
+        {
+            var specParams = new FTUserSpecParams()
+            {
+                Search = requestParams.Search ?? string.Empty,
+                PropertyFilters = requestParams.PropertyFilters ?? string.Empty,
+                OrderBy = requestParams.OrderBy ?? string.Empty,
+                Skip = ((requestParams.PageIndex) - 1) * (requestParams.PageSize),
+                Take = requestParams.PageSize
+            };
+
+            var data = await _fTMemberService.GetListOfFTUsers(specParams);
+            var totalItems = await _fTMemberService.CountFTUsers(specParams);
+
+            return Ok(new ApiSuccess("Lấy danh sách người dùng trong gia phả thành công", new Pagination<FTUserDto>(requestParams.PageIndex,
+                requestParams.PageSize, totalItems, data)));
+        }
+
+        [HttpGet("list-without-user")]  
         public async Task<IActionResult> GetListOfMembersWithoutUser(Guid ftId)
         {
             var data = await _fTMemberService.GetListOfMembersWithoutUser(ftId);
