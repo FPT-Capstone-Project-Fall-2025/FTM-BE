@@ -1,6 +1,10 @@
-﻿using FTM.API.Reponses;
+﻿using FTM.API.Helpers;
+using FTM.API.Reponses;
 using FTM.Application.IServices;
+using FTM.Application.Services;
 using FTM.Domain.DTOs.FamilyTree;
+using FTM.Domain.Specification.FTInvitations;
+using FTM.Domain.Specification.FTUsers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +20,25 @@ namespace FTM.API.Controllers
         public FTInvitationController(IFTInvitationService fTInvitationService)
         {
             _fTInvitationService = fTInvitationService;
+        }
+
+        [HttpGet("list")]
+        public async Task<IActionResult> InviteToMember([FromQuery] SearchWithPaginationRequest requestParams)
+        {
+            var specParams = new FTInvitationSpecParams()
+            {
+                Search = requestParams.Search ?? string.Empty,
+                PropertyFilters = requestParams.PropertyFilters ?? string.Empty,
+                OrderBy = requestParams.OrderBy ?? string.Empty,
+                Skip = ((requestParams.PageIndex) - 1) * (requestParams.PageSize),
+                Take = requestParams.PageSize
+            };
+
+            var data = await _fTInvitationService.ListAsync(specParams);
+            var totalItems = await _fTInvitationService.CountListAsync(specParams);
+
+            return Ok(new ApiSuccess("Lấy danh sách lời mời thành công", new Pagination<FTInvitationDto>(requestParams.PageIndex,
+                requestParams.PageSize, totalItems, data)));
         }
 
         [HttpPost("guest")]

@@ -10,6 +10,7 @@ using FTM.Domain.Models;
 using FTM.Domain.Specification;
 using FTM.Domain.Specification.FamilyTrees;
 using FTM.Domain.Specification.FTMembers;
+using FTM.Domain.Specification.FTUsers;
 using FTM.Infrastructure.Repositories.Implement;
 using FTM.Infrastructure.Repositories.Interface;
 using Microsoft.AspNetCore.Identity;
@@ -446,6 +447,13 @@ namespace FTM.Application.Services
 
             return _mapper.Map<IReadOnlyList<FTMemberSimpleDto>>(ftms);
         }
+        public async Task<IReadOnlyList<FTUserDto>> GetListOfFTUsers(FTUserSpecParams specParams)
+        {
+            var spec = new FTUserSpecification(specParams);
+            var ftUsers = await _fTUserRepository.ListAsync(spec);
+
+            return _mapper.Map<IReadOnlyList<FTUserDto>>(ftUsers);
+        }
 
         public async Task<int> CountMembers(FTMemberSpecParams specParams)
         {
@@ -617,6 +625,12 @@ namespace FTM.Application.Services
         {
             var memberWithoutUserList = await _fTMemberRepository.GetMembersWithoutUserAsync(ftId);
             return _mapper.Map<IReadOnlyList<FTMemberSimpleDto>>(memberWithoutUserList);
+        }
+
+        public async Task<int> CountFTUsers(FTUserSpecParams specParams)
+        {
+            var spec = new FTUserForCountSpecification(specParams);
+            return await _fTUserRepository.CountAsync(spec);
         }
     }
 }
