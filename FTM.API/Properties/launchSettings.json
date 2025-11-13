@@ -37,55 +37,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "API-local": {
-      "commandName": "Project",
-      //"dotnetRunMessages": "true",
-      "launchBrowser": true,
-      "launchUrl": "swagger",
-      "applicationUrl": "https://localhost:5001;http://localhost:5000",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "JWT_ISSUER": "http://localhost:3000/",
-        "JWT_AUDIENCE": "http://localhost:3000/",
-        "JWT_SIGNING_KEY": "familyTree123@gmail.comfamilyTree123@gmail.comfamilyTree123@gmail.com",
-        "JWT_EXPIRE_DAYS": "1",
-        "SMS_BASE_URL": "https://y35w41.api.infobip.com",
-        "SMS_API_KEY": "62d26f33fd024ad2c5bd80b57364f2c0-0b3365d8-6ccf-4eaa-9630-08d7b75b0c4e",
-        "SMS_PREFIX": "App",
-        "FE_URL": "https://localhost:5500",
-        "BE_URL": "https://localhost:5001",
-        "GMAIL_USERNAME": "tranphilongqv2015@gmail.com",
-        "GMAIL_PASSWORD": "epwewlrwisowsltp",
-        "GOOGLE_CLIENTID": "529464543864-hpkkhuu30kgjs4rnov33nrg3uo8ojgdf.apps.googleusercontent.com",
-        "GOOGLE_CLIENTSECRET": "",
-        "GOOGLE_CLIENTINFOURL": "https://www.googleapis.com/oauth2/v1/userinfo",
-        "BlobStorage": ""
-      },
-      "API-dev": {
-        "commandName": "Project",
-        //"dotnetRunMessages": "true",
-        "launchBrowser": true,
-        "launchUrl": "swagger",
-        "applicationUrl": "https://be.dev.familytree.io.vn;http://be.dev.familytree.io.vn",
-        "environmentVariables": {
-          "ASPNETCORE_ENVIRONMENT": "Development",
-          "JWT_ISSUER": "https://be.dev.familytree.io.vn",
-          "JWT_AUDIENCE": "https://be.dev.familytree.io.vn",
-          "JWT_SIGNING_KEY": "familyTree123@gmail.comfamilyTree123@gmail.comfamilyTree123@gmail.com",
-          "JWT_EXPIRE_DAYS": "1",
-          "SMS_BASE_URL": "https://y35w41.api.infobip.com",
-          "SMS_API_KEY": "62d26f33fd024ad2c5bd80b57364f2c0-0b3365d8-6ccf-4eaa-9630-08d7b75b0c4e",
-          "SMS_PREFIX": "App",
-          "FE_URL": "https://fe.dev.familytree.io.vn",
-          "BE_URL": "https://be.dev.familytree.io.vn",
-          "GMAIL_USERNAME": "tranphilongqv2015@gmail.com",
-          "GMAIL_PASSWORD": "epwewlrwisowsltp",
-          "GOOGLE_CLIENTID": "529464543864-hpkkhuu30kgjs4rnov33nrg3uo8ojgdf.apps.googleusercontent.com",
-          "GOOGLE_CLIENTSECRET": "",
-          "GOOGLE_CLIENTINFOURL": "https://www.googleapis.com/oauth2/v1/userinfo",
-          "BLOBSTORAGE": ""
-        }
-      }
+  
     }
   }
 }
