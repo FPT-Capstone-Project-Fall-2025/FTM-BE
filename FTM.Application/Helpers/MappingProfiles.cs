@@ -94,6 +94,7 @@ namespace FTM.Application.Helpers
             CreateMap<UpsertFTAuthorizationRequest, FTAuthorizationDto>();
             CreateMap<FTAuthorization, FTAuthorizationDto>();
             CreateMap<FTInvitation, FTInvitationDto>();
+            CreateMap<FTInvitation, SimpleFTInvitationDto>();
             CreateMap<FTNotification, FTNotificationDto>();
             CreateMap<FamilyTree, SimpleFamilyTreeDto>();
             CreateMap<FTUser, FTUserDto>();

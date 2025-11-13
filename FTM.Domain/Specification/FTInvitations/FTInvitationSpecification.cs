@@ -21,7 +21,7 @@ namespace FTM.Domain.Specification.FTInvitations
                            x.InvitedName.ToLower().Contains(specParams.Search.ToLower()) ||
                            (x.InviterName != null && x.InviterName.ToLower().Contains(specParams.Search.ToLower())) ||
                            (x.FTMemberName != null && x.FTMemberName.ToLower().Contains(specParams.Search.ToLower()))
-                     ) && x.IsDeleted == false)
+                     ))
         {
 
             ApplyPaging(specParams.Skip, specParams.Take);

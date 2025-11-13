@@ -17,7 +17,7 @@ namespace FTM.Application.IServices
         Task HandleRespondAsync(Guid invitationId, bool accepted);
         Task InviteToGuestAsync(GuestInvitationDto request);
         Task InviteToMemberAsync(MemberInvitationDto request);
-        Task<IReadOnlyList<FTInvitationDto>> ListAsync(FTInvitationSpecParams specParams);
+        Task<IReadOnlyList<SimpleFTInvitationDto>> ListAsync(FTInvitationSpecParams specParams);
         Task<int> CountListAsync(FTInvitationSpecParams specParams);
     }
 }

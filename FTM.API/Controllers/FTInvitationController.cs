@@ -23,7 +23,7 @@ namespace FTM.API.Controllers
         }
 
         [HttpGet("list")]
-        public async Task<IActionResult> InviteToMember([FromQuery] SearchWithPaginationRequest requestParams)
+        public async Task<IActionResult> GetList([FromQuery] SearchWithPaginationRequest requestParams)
         {
             var specParams = new FTInvitationSpecParams()
             {
@@ -37,7 +37,7 @@ namespace FTM.API.Controllers
             var data = await _fTInvitationService.ListAsync(specParams);
             var totalItems = await _fTInvitationService.CountListAsync(specParams);
 
-            return Ok(new ApiSuccess("Lấy danh sách lời mời thành công", new Pagination<FTInvitationDto>(requestParams.PageIndex,
+            return Ok(new ApiSuccess("Lấy danh sách lời mời thành công", new Pagination<SimpleFTInvitationDto>(requestParams.PageIndex,
                 requestParams.PageSize, totalItems, data)));
         }
 

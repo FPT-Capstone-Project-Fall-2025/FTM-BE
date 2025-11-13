@@ -244,12 +244,12 @@ namespace FTM.Application.Services
             await SendAsync(ftInvitation);
         }
 
-        public async Task<IReadOnlyList<FTInvitationDto>> ListAsync(FTInvitationSpecParams specParams)
+        public async Task<IReadOnlyList<SimpleFTInvitationDto>> ListAsync(FTInvitationSpecParams specParams)
         {
             var spec = new FTInvitationSpecification(specParams);
             var fTInvitations = await _fTInvitationRepository.ListAsync(spec);
 
-            return _mapper.Map<IReadOnlyList<FTInvitationDto>>(fTInvitations);
+            return _mapper.Map<IReadOnlyList<SimpleFTInvitationDto>>(fTInvitations);
         }
 
         public async Task<int> CountListAsync(FTInvitationSpecParams specParams)
