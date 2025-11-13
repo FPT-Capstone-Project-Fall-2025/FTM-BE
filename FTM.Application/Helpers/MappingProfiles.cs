@@ -188,6 +188,27 @@ namespace FTM.Application.Helpers
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedOn.DateTime))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.LastModifiedOn.DateTime));
 
+            // Campaign mappings
+            CreateMap<FTFundCampaign, FTCampaignResponseDto>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.CampaignName))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.CampaignDescription))
+                .ForMember(dest => dest.FamilyTreeId, opt => opt.MapFrom(src => src.FTId))
+                .ForMember(dest => dest.FamilyTreeName, opt => opt.MapFrom(src => src.FamilyTree != null ? src.FamilyTree.Name : null))
+                .ForMember(dest => dest.CampaignManagerId, opt => opt.MapFrom(src => src.CampaignManagerId))
+                .ForMember(dest => dest.CampaignManagerName, opt => opt.MapFrom(src => src.CampaignManager != null ? src.CampaignManager.Fullname : null))
+                .ForMember(dest => dest.TargetAmount, opt => opt.MapFrom(src => src.FundGoal))
+                .ForMember(dest => dest.CurrentAmount, opt => opt.MapFrom(src => src.CurrentBalance))
+                .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.StartDate.DateTime))
+                .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.EndDate.DateTime))
+                .ForMember(dest => dest.Purpose, opt => opt.MapFrom(src => src.Notes))
+                .ForMember(dest => dest.BeneficiaryInfo, opt => opt.MapFrom(src => src.AccountHolderName))
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => !src.IsDeleted))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedOn.DateTime))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.LastModifiedOn.DateTime))
+                .ForMember(dest => dest.TotalDonations, opt => opt.MapFrom(src => src.Donations != null ? src.Donations.Count : 0))
+                .ForMember(dest => dest.TotalDonors, opt => opt.MapFrom(src => src.Donations != null ? src.Donations.Select(d => d.FTMemberId).Distinct().Count() : 0));
+
         }
     }
 }
