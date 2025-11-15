@@ -26,7 +26,7 @@ namespace FTM.Domain.Specification.FTAuthorizations
             AddInclude(x => x.FamilyTree);
             AddInclude(x => x.AuthorizedMember);
 
-            ApplyPaging(specParams.Skip, specParams.Take);
+            //ApplyPaging(specParams.Skip, specParams.Take);
 
             if (!string.IsNullOrEmpty(specParams.OrderBy))
                 AddOrderBy(specParams.OrderBy);

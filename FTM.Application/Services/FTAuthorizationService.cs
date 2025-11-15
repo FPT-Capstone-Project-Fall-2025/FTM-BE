@@ -86,12 +86,14 @@ namespace FTM.Application.Services
         {
             var spec = new FTAuthorizationSpecification(specParams);
             var authorList = await _fTAuthorizationRepository.ListAsync(spec);
+           
             var result = authorList
                                 .GroupBy(a => a.FTId)
                                 .Select(ftGroup => new FTAuthorizationListViewDto
                                 {
                                     FTId = ftGroup.Key,
                                     Datalist = ftGroup
+                                        .OrderBy(a => a.AuthorizedMember.Fullname)
                                         .GroupBy(a => a.AuthorizedMember)
                                         .Select(memberGroup => new KeyValueModel
                                         {
@@ -111,6 +113,8 @@ namespace FTM.Application.Services
                                                 })
                                                 .ToList()
                                         })
+                                        .Skip(specParams.Skip)
+                                        .Take(specParams.Take)
                                         .ToList()
                                 })
                                 .FirstOrDefault();
@@ -120,9 +124,46 @@ namespace FTM.Application.Services
 
         public async Task<int> CountAuthorizationListViewAsync(FTAuthorizationSpecParams specParams)
         {
-            var spec = new FTAuthorizationSpecificationForCount(specParams);
+            //var spec = new FTAuthorizationSpecificationForCount(specParams);
+            //var authorList = await _fTAuthorizationRepository.ListAsync(spec);
+
+            var spec = new FTAuthorizationSpecification(specParams);
             var authorList = await _fTAuthorizationRepository.ListAsync(spec);
-            return authorList.Count;
+
+            var result = authorList
+                                .GroupBy(a => a.FTId)
+                                .Select(ftGroup => new FTAuthorizationListViewDto
+                                {
+                                    FTId = ftGroup.Key,
+                                    Datalist = ftGroup
+                                        .OrderBy(a => a.AuthorizedMember.Fullname)
+                                        .GroupBy(a => a.AuthorizedMember)
+                                        .Select(memberGroup => new KeyValueModel
+                                        {
+                                            Key = new
+                                            {
+                                                memberGroup.Key.Id,
+                                                memberGroup.Key.Fullname
+                                            },
+                                            Value = memberGroup
+                                                .GroupBy(a => a.FeatureCode)
+                                                .Select(featureGroup => new AuthorizationModel
+                                                {
+                                                    FeatureCode = featureGroup.Key,
+                                                    MethodsList = featureGroup
+                                                        .Select(x => x.MethodCode)
+                                                        .Distinct()
+                                                        .ToHashSet()
+                                                })
+                                                .ToList()
+                                        })
+                                        .Skip(specParams.Skip)
+                                        .Take(specParams.Take)
+                                        .ToList()
+                                })
+                                .FirstOrDefault();
+
+            return result.Datalist.Count;
         }
 
         public async Task<bool> HasPermissionAsync(Guid ftId, Guid userId, FeatureType feature, MethodType method)
@@ -200,24 +241,6 @@ namespace FTM.Application.Services
 
         public async Task<FTAuthorizationDto?> UpdateAsync(UpsertFTAuthorizationRequest request)
         {
-            if (request.AuthorizationList == null || request.AuthorizationList.Count == 0)
-                throw new ArgumentException("Quyền không hợp lệ");
-
-            if ((await _familyTreeRepository.GetByIdAsync(request.FTId)) is null)
-                throw new ArgumentException($"Không tồn tại gia phả với id {request.FTId}");
-
-            if (!await _fTMemberRepository.IsExisted(request.FTId, request.FTMemberId))
-                throw new ArgumentException($"Không tồn tại thành viên");
-
-            // Delete old Authorization List
-            var oldAuthorList = await _fTAuthorizationRepository.GetListAsync(request.FTId, request.FTMemberId);
-            
-            foreach( var oldAuthor in oldAuthorList)
-            {
-                _fTAuthorizationRepository.Delete(oldAuthor);
-            }
-            // End delete old Authorization List
-
             return await AddAsync(request);
         }
 
@@ -246,6 +269,17 @@ namespace FTM.Application.Services
             return await _fTUserRepository.IsGuestAsync(ftId, userId);
         }
 
-        
+        public async Task<FTAuthorizationDto> GetAuthorizationAsync(Guid ftId, Guid ftMemberId)
+        {
+            var ftAuthorizationDto = await _fTAuthorizationRepository.GetAuthorizationAsync(ftId, ftMemberId);
+
+            if(ftAuthorizationDto is null)
+            {
+                ftAuthorizationDto = new FTAuthorizationDto() { FTId = ftId, FTMemberId = ftMemberId };
+            }
+
+
+            return ftAuthorizationDto;
+        }
     }
 }

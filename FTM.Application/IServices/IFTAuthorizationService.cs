@@ -22,5 +22,6 @@ namespace FTM.Application.IServices
         Task<bool> IsGuestAsync(Guid ftId, Guid userId);
         Task SetMemberAuthorizationAsync(Guid ftId, Guid memberId);
         Task DeleteAuthorizationAsync(Guid ftId, Guid ftMemberId);
+        Task<FTAuthorizationDto> GetAuthorizationAsync(Guid ftId, Guid ftMemberId);
     }
 }

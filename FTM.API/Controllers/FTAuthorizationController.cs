@@ -2,6 +2,7 @@
 using FTM.API.Reponses;
 using FTM.Application.IServices;
 using FTM.Domain.DTOs.FamilyTree;
+using FTM.Domain.Entities.FamilyTree;
 using FTM.Domain.Enums;
 using FTM.Domain.Specification.FamilyTrees;
 using FTM.Domain.Specification.FTAuthorizations;
@@ -82,6 +83,34 @@ namespace FTM.API.Controllers
                     requestParams.PageSize,
                     totalItems,
                     simpleData)));
+        }
+
+        [HttpGet("{ftId}/member/{ftMemberId}/list")]
+        //[FTAuthorizeOwner]
+        public async Task<IActionResult> GetAuthorizationOfFtMember(Guid ftId, Guid ftMemberId)
+        {
+            if (!ModelState.IsValid)
+            {
+                ThrowModelErrors();
+            }
+
+            var ftMemberAuthorization = await _fTAuthorizationService.GetAuthorizationAsync(ftId, ftMemberId);
+
+            return Ok(new ApiSuccess("Lấy quyền thành công", ftMemberAuthorization));
+        }
+
+        [HttpDelete("{ftId}/member/{ftMemberId}")]
+        //[FTAuthorizeOwner]
+        public async Task<IActionResult> Delete(Guid ftId, Guid ftMemberId)
+        {
+            if (!ModelState.IsValid)
+            {
+                ThrowModelErrors();
+            }
+
+            await _fTAuthorizationService.DeleteAuthorizationAsync(ftId, ftMemberId);
+
+            return Ok(new ApiSuccess("Xóa quyền thành công"));
         }
 
         private void ThrowModelErrors()
