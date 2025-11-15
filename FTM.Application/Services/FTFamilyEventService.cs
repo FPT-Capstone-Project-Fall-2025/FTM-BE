@@ -67,11 +67,11 @@ namespace FTM.Application.Services
                 var memberId = await _eventRepository.GetMemberIdByUserIdAndFTIdAsync(currentUserId, request.FTId);
                 if (memberId.HasValue)
                 {
-                    var hasPermission = await _authorizationRepository.IsAuthorizationExisting(
-                        request.FTId, memberId.Value, FeatureType.EVENT, MethodType.ADD);
+                    //var hasPermission = await _authorizationRepository.IsAuthorizationExisting(
+                    //    request.FTId, memberId.Value, FeatureType.EVENT, MethodType.ADD);
                     
-                    if (!hasPermission && currentUserRole != "GPOwner")
-                        throw new Exception("User does not have permission to create events in this family tree");
+                    //if (!hasPermission && currentUserRole != "GPOwner")
+                    //    throw new Exception("User does not have permission to create events in this family tree");
                 }
             }
 
