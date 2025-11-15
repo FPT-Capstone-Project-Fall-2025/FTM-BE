@@ -117,7 +117,9 @@ namespace FTM.API.Controllers
                     FundName = d.Fund?.FundName,
                     FundId = d.FTFundId,
                     TreeId = d.Fund?.FTId,
-                    d.PayOSOrderCode
+                    d.PayOSOrderCode,
+                    d.ProofImages, // Payment proof images uploaded by donor
+                    d.Status
                 });
 
                 return Ok(new ApiSuccess("Pending donations retrieved successfully", donationDtos));
@@ -163,7 +165,8 @@ namespace FTM.API.Controllers
                     FundId = d.FTFundId,
                     TreeId = d.Fund?.FTId,
                     d.Status,
-                    d.PayOSOrderCode
+                    d.PayOSOrderCode,
+                    d.ProofImages // Payment proof images uploaded by donor
                 });
 
                 return Ok(new ApiSuccess("Your pending donations retrieved successfully", donationDtos));
@@ -209,7 +212,8 @@ namespace FTM.API.Controllers
                     donation.ConfirmationNotes,
                     FundName = donation.Fund?.FundName,
                     donation.PayOSOrderCode,
-                    donation.PaymentTransactionId
+                    donation.PaymentTransactionId,
+                    donation.ProofImages // Payment proof images
                 };
 
                 return Ok(new ApiSuccess("Donation details retrieved successfully", donationDto));
