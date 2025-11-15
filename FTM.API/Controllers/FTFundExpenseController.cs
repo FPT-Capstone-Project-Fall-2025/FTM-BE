@@ -121,6 +121,8 @@ namespace FTM.API.Controllers
                     e.PlannedDate,
                     e.ExpenseEvent,
                     e.Recipient,
+                    e.ReceiptImages, // Receipt/proof images uploaded with expense request
+                    e.Status, // Approval status (Pending/Approved/Rejected)
                     CreatedDate = e.CreatedOn,
                     FundName = e.Fund?.FundName,
                     FundId = e.FTFundId,
