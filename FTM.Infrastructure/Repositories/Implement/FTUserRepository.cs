@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -35,6 +36,21 @@ namespace FTM.Infrastructure.Repositories.Implement
         public async Task<FTUser?> FindAsync(Guid ftId, Guid userId)
         {
             return await _context.FTUsers.Where(u => u.FTId == ftId && u.UserId == userId && u.IsDeleted == false).FirstOrDefaultAsync();
+        }
+
+        public async Task<bool> BelongedToAsync(Guid ftId, Guid userId)
+        {
+            return await _context.FTUsers.AnyAsync(u => u.FTId == ftId && u.UserId == userId && u.IsDeleted == false);
+        }
+
+        public async Task<bool> IsOwnerAsync(Guid ftId, Guid userId)
+        {
+            return await _context.FTUsers.AnyAsync(u => u.FTId == ftId && u.UserId == userId && u.FTRole == FTMRole.FTOwner && u.IsDeleted == false);
+        }
+
+        public async Task<bool> IsGuestAsync(Guid ftId, Guid userId)
+        {
+            return await _context.FTUsers.AnyAsync(u => u.FTId == ftId && u.UserId == userId && u.FTRole == FTMRole.FTGuest && u.IsDeleted == false);
         }
     }
 }

@@ -113,6 +113,6 @@ namespace FTM.Domain.DTOs.FamilyTree
         public IFormFile? File { get; set; }
 
         [FromForm(Name = "isDivorced")]
-        public bool IsDivorced { get; set; }
+        public bool? IsDivorced { get; set; }
     }
 }

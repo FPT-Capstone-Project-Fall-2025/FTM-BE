@@ -38,7 +38,7 @@ namespace FTM.Application.Services
         private readonly IGenericRepository<FTRelationship> _fTRelationshipRepository;
         private readonly ICurrentUserResolver _currentUserResolver;
         private readonly IBlobStorageService _blobStorageService;
-        private readonly IFTInvitationService _invitationService;
+        private readonly IFTAuthorizationService _fTAuthorizationService;
         private readonly IFTMemberFileRepository _fTMemberFileRepository;
         private readonly IFTUserRepository _fTUserRepository;
         private readonly IUnitOfWork _unitOfWork;
@@ -53,7 +53,7 @@ namespace FTM.Application.Services
             IGenericRepository<FTRelationship> FTRelationshipRepository,
             ICurrentUserResolver CurrentUserResolver,
             IBlobStorageService blobStorageService,
-            IFTInvitationService invitationService,
+            IFTAuthorizationService fTAuthorizationService,
             IFTMemberFileRepository fTMemberFileRepository,
             IFTUserRepository fTUserRepository,
             IUnitOfWork unitOfWork,
@@ -66,6 +66,7 @@ namespace FTM.Application.Services
             _fTRelationshipRepository = FTRelationshipRepository;
             _currentUserResolver = CurrentUserResolver;
             _blobStorageService = blobStorageService;
+            _fTAuthorizationService = fTAuthorizationService;
             _fTMemberFileRepository = fTMemberFileRepository;
             _fTUserRepository = fTUserRepository;
             _unitOfWork = unitOfWork;
@@ -176,6 +177,22 @@ namespace FTM.Application.Services
                                    await _fTInvitationService.SendAsync(ftInvitation);
                                }
                                //----------------End Handle Invitation---------------------
+
+                               //----------------Handle Authorization---------------------
+                               if (request.UserId != null)
+                               {
+                                   var isOwner = await _fTAuthorizationService.IsOwnerAsync(request.FTId.Value, request.UserId.Value);
+                                   if (!isOwner)
+                                   {
+                                       await _fTAuthorizationService.SetMemberAuthorizationAsync(request.FTId.Value, ftMember.Id);
+                                   }
+                               }
+                               else
+                               {
+                                   await _fTAuthorizationService.SetMemberAuthorizationAsync(request.FTId.Value, ftMember.Id);
+
+                               }
+                               //----------------End Handle Authorization---------------------
 
                                await _unitOfWork.CompleteAsync();
                                newFMember = await _fTMemberRepository.GetDetaildedById(ftMember.Id);
@@ -602,10 +619,12 @@ namespace FTM.Application.Services
                 if (connectedUser != null)
                 {
                     var ftUser = await _fTUserRepository.FindAsync(member.FTId, member.UserId.Value);
-                    if (ftUser != null)
+                    if (ftUser != null && ftUser.FTRole == FTMRole.FTMember)
                     {
                         ftUser.FTRole = FTMRole.FTGuest;
+                        await _fTAuthorizationService.DeleteAuthorizationAsync(member.FTId, member.Id);
                     }
+                    member.UserId = Guid.Empty;
                 }
             }
 
