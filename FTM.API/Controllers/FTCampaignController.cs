@@ -182,18 +182,65 @@ namespace FTM.API.Controllers
         /// Update an existing campaign
         /// </summary>
         [HttpPut("{id:guid}")]
-   
-        public async Task<IActionResult> UpdateCampaign(Guid id, [FromBody] FTFundCampaign campaign)
+        public async Task<IActionResult> UpdateCampaign(Guid id, [FromBody] UpdateCampaignRequest request)
         {
             try
             {
-                campaign.Id = id;
-                var result = await _campaignService.UpdateAsync(campaign);
+                // Get the campaign entity
+                var campaignEntity = await _campaignService.GetByIdAsync(id);
+                if (campaignEntity == null)
+                {
+                    return NotFound(new ApiError("Campaign not found"));
+                }
+
+                // Update only provided fields
+                if (!string.IsNullOrEmpty(request.CampaignName))
+                    campaignEntity.CampaignName = request.CampaignName;
+
+                if (!string.IsNullOrEmpty(request.CampaignDescription))
+                    campaignEntity.CampaignDescription = request.CampaignDescription;
+
+                if (request.CampaignManagerId.HasValue)
+                    campaignEntity.CampaignManagerId = request.CampaignManagerId.Value;
+
+                if (request.StartDate.HasValue)
+                    campaignEntity.StartDate = request.StartDate.Value;
+
+                if (request.EndDate.HasValue)
+                    campaignEntity.EndDate = request.EndDate.Value;
+
+                if (request.FundGoal.HasValue)
+                    campaignEntity.FundGoal = request.FundGoal.Value;
+
+                if (request.Status.HasValue)
+                    campaignEntity.Status = request.Status.Value;
+
+                // Update bank account info
+                if (request.BankAccountNumber != null)
+                    campaignEntity.BankAccountNumber = request.BankAccountNumber;
+
+                if (request.BankCode != null)
+                    campaignEntity.BankCode = request.BankCode;
+
+                if (request.BankName != null)
+                    campaignEntity.BankName = request.BankName;
+
+                if (request.AccountHolderName != null)
+                    campaignEntity.AccountHolderName = request.AccountHolderName;
+
+                if (request.Notes != null)
+                    campaignEntity.Notes = request.Notes;
+
+                var result = await _campaignService.UpdateAsync(campaignEntity);
+                
+                _logger.LogInformation("Updated campaign {CampaignId}", id);
+                
                 return Ok(new ApiSuccess("Campaign updated successfully", result));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                _logger.LogError(ex, "Error updating campaign {CampaignId}", id);
+                return BadRequest(new ApiError("Error updating campaign", ex.Message));
             }
         }
 

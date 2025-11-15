@@ -95,6 +95,59 @@ namespace FTM.API.Controllers
         }
 
         /// <summary>
+        /// Update fund information
+        /// </summary>
+        [HttpPut("{fundId}")]
+        public async Task<IActionResult> UpdateFund(Guid fundId, [FromBody] UpdateFundRequest request)
+        {
+            try
+            {
+                var fund = await _unitOfWork.Repository<FTFund>().GetQuery()
+                    .FirstOrDefaultAsync(f => f.Id == fundId && f.IsDeleted == false);
+
+                if (fund == null)
+                {
+                    return NotFound(new ApiError("Fund not found"));
+                }
+
+                // Update only provided fields
+                if (!string.IsNullOrEmpty(request.FundName))
+                    fund.FundName = request.FundName;
+
+                if (request.Description != null)
+                    fund.FundNote = request.Description;
+
+                // Update bank account info
+                if (request.BankAccountNumber != null)
+                    fund.BankAccountNumber = request.BankAccountNumber;
+
+                if (request.BankCode != null)
+                    fund.BankCode = request.BankCode;
+
+                if (request.BankName != null)
+                    fund.BankName = request.BankName;
+
+                if (request.AccountHolderName != null)
+                    fund.AccountHolderName = request.AccountHolderName;
+
+                if (request.FundManagers != null)
+                    fund.FundManagers = request.FundManagers;
+
+                _unitOfWork.Repository<FTFund>().Update(fund);
+                await _unitOfWork.CompleteAsync();
+
+                _logger.LogInformation("Updated fund {FundId}", fundId);
+
+                return Ok(new ApiSuccess("Fund updated successfully", new { FundId = fund.Id }));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating fund {FundId}", fundId);
+                return StatusCode(500, new ApiError("Error updating fund", ex.Message));
+            }
+        }
+
+        /// <summary>
         /// Make a donation to fund
         /// </summary>
         [HttpPost("{fundId}/donate")]
@@ -201,6 +254,21 @@ namespace FTM.API.Controllers
         public string? BankCode { get; set; }
         public string? BankName { get; set; }
         public string? AccountHolderName { get; set; }
+    }
+
+    public class UpdateFundRequest
+    {
+        public string? FundName { get; set; }
+        public string? Description { get; set; }
+        
+        // Bank account information for receiving donations
+        public string? BankAccountNumber { get; set; }
+        public string? BankCode { get; set; }
+        public string? BankName { get; set; }
+        public string? AccountHolderName { get; set; }
+        
+        // Fund managers list (JSON array of member IDs)
+        public string? FundManagers { get; set; }
     }
 
     public class DonateRequest
