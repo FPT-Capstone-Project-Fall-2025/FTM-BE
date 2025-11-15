@@ -23,18 +23,26 @@ namespace FTM.Domain.DTOs.Funds
         public string? AccountHolderName { get; set; }
     }
 
+    /// <summary>
+    /// DTO for updating campaign information
+    /// All fields are optional - only provided fields will be updated
+    /// </summary>
     public class UpdateCampaignRequest
     {
         public string? CampaignName { get; set; }
         public string? CampaignDescription { get; set; }
-        public string? OrganizerName { get; set; }
-        public string? OrganizerContact { get; set; }
         public Guid? CampaignManagerId { get; set; }
         public DateTimeOffset? StartDate { get; set; }
         public DateTimeOffset? EndDate { get; set; }
         public decimal? FundGoal { get; set; }
-        public string? MediaAttachments { get; set; }
         public CampaignStatus? Status { get; set; }
+        
+        // Bank account information (optional update)
+        public string? BankAccountNumber { get; set; }
+        public string? BankName { get; set; }
+        public string? BankCode { get; set; }
+        public string? AccountHolderName { get; set; }
+        public string? Notes { get; set; }
     }
 
     public class CampaignResponseDto
