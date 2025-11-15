@@ -30,7 +30,7 @@ namespace FTM.API.Helpers
             // Add your custom header (example name)
             operation.Parameters.Add(new OpenApiParameter
             {
-                Name = "X-FTId",
+                Name = "X-Ftid",
                 In = ParameterLocation.Header,
                 Description = "Required for FTAuthorization",
                 Required = true

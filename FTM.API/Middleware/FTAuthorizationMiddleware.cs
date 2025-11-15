@@ -37,9 +37,9 @@ namespace FTM.API.Middleware
             }
 
             // Get FamilyTree Id from Header
-            if (!Guid.TryParse(context.Request.Headers["X-FTId"], out var ftId))
+            if (!Guid.TryParse(context.Request.Headers["X-Ftid"], out var ftId))
             {
-                await WriteError(context, HttpStatusCode.BadRequest, "Thiếu hoặc sai X-FTId header");
+                await WriteError(context, HttpStatusCode.BadRequest, "Thiếu hoặc sai X-Ftid header");
                 return;
             }
 
