@@ -45,7 +45,14 @@ namespace FTM.API.Controllers
                     Description = f.FundNote,
                     f.CurrentMoney,
                     DonationCount = f.Donations?.Count ?? 0,
-                    ExpenseCount = f.Expenses?.Count ?? 0
+                    ExpenseCount = f.Expenses?.Count ?? 0,
+                    BankInfo = new
+                    {
+                        f.BankAccountNumber,
+                        f.BankName,
+                        f.BankCode,
+                        f.AccountHolderName
+                    }
                 });
 
                 return Ok(new ApiSuccess("Funds retrieved successfully", fundDtos));
