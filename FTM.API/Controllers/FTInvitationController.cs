@@ -15,7 +15,7 @@ namespace FTM.API.Controllers
 {
     [Route("api/invitation")]
     [ApiController]
-    [Authorize(Roles = "User")]
+    //[Authorize(Roles = "User")]
     public class FTInvitationController : ControllerBase
     {
         private IFTInvitationService _fTInvitationService;

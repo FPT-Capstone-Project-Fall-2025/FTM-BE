@@ -14,7 +14,7 @@ namespace FTM.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "User")]
+    //[Authorize(Roles = "User")]
     public class FamilyTreeController : ControllerBase
     {
         private readonly IFamilyTreeService _familyTreeService;
