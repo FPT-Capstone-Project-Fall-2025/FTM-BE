@@ -410,6 +410,16 @@ namespace FTM.Infrastructure.Repositories
             return await Context.FTMembers.AnyAsync(m => m.UserId == userId && m.FTId == ftId && m.IsDeleted == false);
         }
 
+        public async Task<Guid?> GetMemberIdByUserIdAndFTIdAsync(Guid userId, Guid ftId)
+        {
+            var member = await Context.FTMembers
+                .Where(m => m.UserId == userId && m.FTId == ftId && m.IsDeleted == false)
+                .Select(m => m.Id)
+                .FirstOrDefaultAsync();
+            
+            return member == Guid.Empty ? null : member;
+        }
+
         public async Task<int> SaveChangesAsync()
         {
             return await Context.SaveChangesAsync();

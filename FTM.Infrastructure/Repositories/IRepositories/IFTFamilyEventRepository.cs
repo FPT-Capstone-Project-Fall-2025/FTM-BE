@@ -33,6 +33,7 @@ namespace FTM.Infrastructure.Repositories.IRepositories
         Task<bool> MemberExistsAsync(Guid memberId);
         Task<bool> MemberBelongsToFTAsync(Guid memberId, Guid ftId);
         Task<bool> UserIsMemberOfFTAsync(Guid userId, Guid ftId);
+        Task<Guid?> GetMemberIdByUserIdAndFTIdAsync(Guid userId, Guid ftId);
         Task<int> SaveChangesAsync();
         Task<IEnumerable<FTFamilyEvent>> GetRecurringEventInstancesAsync(Guid originalEventId);
     }

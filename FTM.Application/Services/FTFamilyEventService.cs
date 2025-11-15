@@ -46,14 +46,6 @@ namespace FTM.Application.Services
             return _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
         }
 
-        private Guid GetUserMemberIdAsync(Guid userId, Guid ftId)
-        {
-            // This is a simplified implementation - in real scenario you'd need to get this from repository
-            // For now, we'll assume the user has a member record
-            // TODO: Implement proper member lookup
-            return Guid.NewGuid(); // Placeholder - need proper implementation
-        }
-
         public async Task<FTFamilyEventDto> CreateEventAsync(CreateFTFamilyEventRequest request)
         {
             var currentUserId = GetCurrentUserId();
@@ -69,12 +61,18 @@ namespace FTM.Application.Services
             if (!userIsMember && currentUserRole != "GPOwner")
                 throw new Exception("User is not a member of this family tree");
 
+            // Check permission to create events
             if (userIsMember)
             {
-                var hasPermission = await _authorizationRepository.IsAuthorizationExisting(
-                    request.FTId, GetUserMemberIdAsync(currentUserId, request.FTId), FeatureType.EVENT, MethodType.ADD);
-                if (!hasPermission && currentUserRole != "GPOwner")
-                    throw new Exception("User does not have permission to create events in this family tree");
+                var memberId = await _eventRepository.GetMemberIdByUserIdAndFTIdAsync(currentUserId, request.FTId);
+                if (memberId.HasValue)
+                {
+                    var hasPermission = await _authorizationRepository.IsAuthorizationExisting(
+                        request.FTId, memberId.Value, FeatureType.EVENT, MethodType.ADD);
+                    
+                    if (!hasPermission && currentUserRole != "GPOwner")
+                        throw new Exception("User does not have permission to create events in this family tree");
+                }
             }
 
             // Validate RecurrenceType
@@ -313,12 +311,18 @@ namespace FTM.Application.Services
             if (!userIsMember && currentUserRole != "GPOwner")
                 throw new Exception("User is not a member of this family tree");
 
+            // Check permission to update events
             if (userIsMember)
             {
-                var hasPermission = await _authorizationRepository.IsAuthorizationExisting(
-                    eventEntity.FTId, GetUserMemberIdAsync(currentUserId, eventEntity.FTId), FeatureType.EVENT, MethodType.UPDATE);
-                if (!hasPermission && currentUserRole != "GPOwner")
-                    throw new Exception("User does not have permission to update events in this family tree");
+                var memberId = await _eventRepository.GetMemberIdByUserIdAndFTIdAsync(currentUserId, eventEntity.FTId);
+                if (memberId.HasValue)
+                {
+                    var hasPermission = await _authorizationRepository.IsAuthorizationExisting(
+                        eventEntity.FTId, memberId.Value, FeatureType.EVENT, MethodType.UPDATE);
+                    
+                    if (!hasPermission && currentUserRole != "GPOwner")
+                        throw new Exception("User does not have permission to update events in this family tree");
+                }
             }
 
             // Validate RecurrenceType if provided
