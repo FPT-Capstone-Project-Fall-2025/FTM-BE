@@ -5,6 +5,7 @@ using FTM.Domain.DTOs.FamilyTree;
 using FTM.Domain.Enums;
 using FTM.Domain.Specification.FamilyTrees;
 using FTM.Domain.Specification.FTAuthorizations;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -13,6 +14,7 @@ namespace FTM.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "User")]
     public class FTAuthorizationController : ControllerBase
     {
         private IFTAuthorizationService _fTAuthorizationService;

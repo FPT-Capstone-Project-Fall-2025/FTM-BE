@@ -5,6 +5,7 @@ using FTM.Application.Services;
 using FTM.Domain.DTOs.FamilyTree;
 using FTM.Domain.Specification.FTInvitations;
 using FTM.Domain.Specification.FTUsers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +15,7 @@ namespace FTM.API.Controllers
 {
     [Route("api/invitation")]
     [ApiController]
+    [Authorize(Roles = "User")]
     public class FTInvitationController : ControllerBase
     {
         private IFTInvitationService _fTInvitationService;
@@ -56,6 +58,7 @@ namespace FTM.API.Controllers
         }
 
         [HttpGet("respond")]
+        [AllowAnonymous]
         public async Task<IActionResult> RespondInvitation([FromQuery(Name = "relatedId")] Guid invitationId, [FromQuery] bool accepted)
         {
             await _fTInvitationService.HandleRespondAsync(invitationId, accepted);
@@ -71,6 +74,5 @@ namespace FTM.API.Controllers
 
             return Content(html, "text/html; charset=utf-8");
         }
-
     }
 }
