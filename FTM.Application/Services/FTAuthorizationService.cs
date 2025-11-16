@@ -99,7 +99,8 @@ namespace FTM.Application.Services
                                         {
                                             Key = new {
                                                 memberGroup.Key.Id,
-                                                memberGroup.Key.Fullname
+                                                memberGroup.Key.Fullname,
+                                                Avatar = memberGroup.Key.FTMemberFiles.FirstOrDefault()?.FilePath
                                             }, 
                                             Value = memberGroup
                                                 .GroupBy(a => a.FeatureCode)
@@ -129,6 +130,7 @@ namespace FTM.Application.Services
 
             var spec = new FTAuthorizationSpecification(specParams);
             var authorList = await _fTAuthorizationRepository.ListAsync(spec);
+
 
             var result = authorList
                                 .GroupBy(a => a.FTId)
@@ -162,6 +164,8 @@ namespace FTM.Application.Services
                                         .ToList()
                                 })
                                 .FirstOrDefault();
+
+            if (result == null) return 0;
 
             return result.Datalist.Count;
         }
