@@ -141,7 +141,7 @@ namespace FTM.Infrastructure.Repositories
         public async Task<IEnumerable<FTFundCampaign>> GetActiveCampaignsAsync(Guid? fundId = null)
         {
             var query = Context.FTFundCampaigns
-                .Where(c => c.Status == CampaignStatus.Active && c.IsDeleted == false);
+                .Where(c => c.IsDeleted == false);
 
             if (fundId.HasValue)
             {
