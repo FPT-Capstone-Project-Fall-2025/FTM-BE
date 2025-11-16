@@ -241,6 +241,7 @@ namespace FTM.Application.Services
 
         public async Task<FTAuthorizationDto?> UpdateAsync(UpsertFTAuthorizationRequest request)
         {
+            await DeleteAuthorizationAsync(request.FTId, request.FTMemberId);
             return await AddAsync(request);
         }
 
