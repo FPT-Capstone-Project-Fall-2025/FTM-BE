@@ -574,6 +574,65 @@ namespace FTM.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Reject a donation (for manager to reject pending donations with invalid proof or other reasons)
+        /// </summary>
+        [HttpPost("{donationId:guid}/reject")]
+        public async Task<IActionResult> RejectDonation(Guid donationId, [FromBody] RejectCampaignDonationRequest request)
+        {
+            try
+            {
+                if (donationId != request.DonationId)
+                    return BadRequest(new ApiError("Donation ID mismatch"));
+
+                // Get donation
+                var donation = await _donationService.GetByIdAsync(donationId);
+                if (donation == null)
+                    return NotFound(new ApiError("Donation not found"));
+
+                // Validate current status
+                if (donation.Status != DonationStatus.Pending)
+                    return BadRequest(new ApiError("Can only reject pending donations"));
+
+                // Update donation status to Rejected
+                donation.Status = DonationStatus.Rejected;
+                donation.ConfirmedBy = request.RejectedBy;
+                donation.ConfirmedOn = DateTimeOffset.UtcNow;
+                donation.ConfirmationNotes = request.Reason;
+
+                // Save changes
+                var updatedDonation = await _donationService.UpdateAsync(donation);
+
+                return Ok(new ApiSuccess("Donation rejected successfully", new
+                {
+                    DonationId = updatedDonation.Id,
+                    Status = updatedDonation.Status.ToString(),
+                    RejectedBy = updatedDonation.ConfirmedBy,
+                    RejectedOn = updatedDonation.ConfirmedOn,
+                    Reason = updatedDonation.ConfirmationNotes,
+                    Amount = updatedDonation.DonationAmount
+                }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError("Error rejecting donation", ex.Message));
+            }
+        }
+
         #endregion
     }
+
+    #region DTOs
+
+    /// <summary>
+    /// Request DTO for rejecting a campaign donation
+    /// </summary>
+    public class RejectCampaignDonationRequest
+    {
+        public Guid DonationId { get; set; }
+        public Guid? RejectedBy { get; set; } // Made nullable to handle string input
+        public string Reason { get; set; } = string.Empty;
+    }
+
+    #endregion
 }
