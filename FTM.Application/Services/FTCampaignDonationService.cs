@@ -43,13 +43,10 @@ namespace FTM.Application.Services
 
         public async Task<FTCampaignDonation> AddAsync(FTCampaignDonation donation)
         {
-            // Validate campaign exists and is active
+            // Validate campaign exists
             var campaign = await _campaignService.GetByIdAsync(donation.CampaignId);
             if (campaign == null)
                 throw new InvalidOperationException("Campaign not found");
-            
-            if (campaign.Status != CampaignStatus.Active)
-                throw new InvalidOperationException("Campaign is not active");
 
             donation.Id = Guid.NewGuid();
             donation.Status = DonationStatus.Pending;
