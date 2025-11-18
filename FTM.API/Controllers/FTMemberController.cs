@@ -15,7 +15,7 @@ namespace FTM.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize(Roles = "User")]
+    [Authorize]
     public class FTMemberController : ControllerBase
     {
         private readonly IFTMemberService _fTMemberService;
