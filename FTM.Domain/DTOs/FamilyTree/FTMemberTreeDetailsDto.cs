@@ -22,5 +22,19 @@ namespace FTM.Domain.DTOs.FamilyTree
         public List<KeyValueModel> Children { get; set; }
         public bool IsCurrentMember { get; set; }
         public bool IsPartner { get; set; }
+        public string? Address { get; set; }
+        public string? Email { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? Content { get; set; }
+        public Guid? EthnicId { get; set; }
+        public Guid? ReligionId { get; set; }
+        public Guid? WardId { get; set; }
+        public Guid? ProvinceId { get; set; }
+        public string? StoryDescription { get; set; }
+        public bool? IsDeath { get; set; }
+        public DateTime? DeathDate { get; set; }
+        public string? BurialAddress { get; set; }
+        public Guid? BurialWardId { get; set; }
+        public Guid? BurialProvinceId { get; set; }
     }
 }
