@@ -256,12 +256,20 @@ namespace FTM.Application.Services
 
         private async Task AddPartnerMember(FTMember? rootOld, FTMember ftMember, UpsertFTMemberRequest request)
         {
+            // Root Member
             var firstPartner = await _fTRelationshipRepository.GetQuery()
                                         .Include(x => x.ToFTMember)
                                         .FirstOrDefaultAsync(x => x.FromFTMemberId == request.RootId
                                                             && x.CategoryCode == FTRelationshipCategory.PARTNER);
+            // Partner Member
+            var partnerOfFromFTMember = await _fTRelationshipRepository.GetQuery()
+                                        .Include(x => x.FromFTMember)
+                                        .FirstOrDefaultAsync(x => x.ToFTMemberId == request.RootId
+                                                            && x.CategoryCode == FTRelationshipCategory.PARTNER);
 
-            if (firstPartner != null && !firstPartner.ToFTMember.IsDivorced) throw new ArgumentException("Mỗi người chồng chỉ được có một người vợ.");
+            if(partnerOfFromFTMember != null && !partnerOfFromFTMember.FromFTMember.IsDivorced) throw new ArgumentException("Quan hệ hôn nhân một vợ một chồng.");
+
+            if (firstPartner != null && !firstPartner.ToFTMember.IsDivorced) throw new ArgumentException("Quan hệ hôn nhân một vợ một chồng.");
 
             if (firstPartner != null && firstPartner.ToFTMember.StatusCode == FTMemberStatus.UNDEFINED)
             {

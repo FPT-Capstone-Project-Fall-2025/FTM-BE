@@ -21,11 +21,11 @@ namespace FTM.Domain.Specification.FamilyTrees
                            x.Name.ToLower().Contains(specParams.Search.ToLower()) ||
                            (x.Description != null && x.Description.ToLower().Contains(specParams.Search.ToLower())) ||
                            (x.Owner != null && x.Owner.ToLower().Contains(specParams.Search.ToLower()))
-                     ) && ((x.OwnerId == userId) || (x.FTMembers.Any(m => m.UserId == userId)))
+                     ) && (x.FTUsers.Any(y => y.UserId == userId))
                        && x.IsDeleted == false)
         {
             AddInclude(x => x.FTMembers);
-            ApplyPaging(specParams.Skip, specParams.Take);
+           // ApplyPaging(specParams.Skip, specParams.Take);
 
             if (!string.IsNullOrEmpty(specParams.OrderBy))
                 AddOrderBy(specParams.OrderBy);
