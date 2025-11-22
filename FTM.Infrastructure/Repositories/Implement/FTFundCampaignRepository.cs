@@ -16,6 +16,26 @@ namespace FTM.Infrastructure.Repositories
         {
         }
 
+        public new async Task<FTFundCampaign?> GetByIdAsync(Guid id)
+        {
+            var campaign = await Context.FTFundCampaigns
+                .Include(c => c.FamilyTree)
+                .Include(c => c.CampaignManager)
+                .Include(c => c.Donations)
+                    .ThenInclude(d => d.Member)
+                .Include(c => c.Expenses)
+                .FirstOrDefaultAsync(c => c.Id == id && c.IsDeleted != true);
+
+            if (campaign != null)
+            {
+                // Filter out deleted items in memory
+                campaign.Donations = campaign.Donations?.Where(d => d.IsDeleted != true).ToList() ?? new List<FTCampaignDonation>();
+                campaign.Expenses = campaign.Expenses?.Where(e => e.IsDeleted != true).ToList() ?? new List<FTCampaignExpense>();
+            }
+
+            return campaign;
+        }
+
         public async Task<IEnumerable<FTFundCampaign>> GetByFundIdAsync(Guid fundId, int skip = 0, int take = 20)
         {
             return await Context.FTFundCampaigns

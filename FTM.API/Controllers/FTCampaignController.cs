@@ -38,7 +38,79 @@ namespace FTM.API.Controllers
                 if (campaign == null)
                     return NotFound(new ApiError("Campaign not found"));
 
-                return Ok(new ApiSuccess(campaign));
+                // Create response with only necessary data to avoid deep nesting
+                var response = new
+                {
+                    campaign.Id,
+                    campaign.FTId,
+                    campaign.CampaignName,
+                    campaign.CampaignDescription,
+                    campaign.CampaignManagerId,
+                    CampaignManagerName = campaign.CampaignManager?.Fullname,
+                    campaign.StartDate,
+                    campaign.EndDate,
+                    campaign.FundGoal,
+                    campaign.CurrentBalance,
+                    campaign.Status,
+                    campaign.IsPublic,
+                    campaign.ImageUrl,
+                    campaign.Notes,
+                    campaign.BankAccountNumber,
+                    campaign.BankName,
+                    campaign.BankCode,
+                    campaign.AccountHolderName,
+                    FamilyTreeName = campaign.FamilyTree?.Name,
+                    Donations = campaign.Donations?.Select(d => new
+                    {
+                        d.Id,
+                        d.CampaignId,
+                        d.FTMemberId,
+                        MemberName = d.Member?.Fullname,
+                        d.DonorName,
+                        d.DonationAmount,
+                        d.PaymentMethod,
+                        d.DonorNotes,
+                        d.PaymentTransactionId,
+                        d.PayOSOrderCode,
+                        d.Status,
+                        d.ConfirmedBy,
+                        d.ConfirmedOn,
+                        d.ConfirmationNotes,
+                        d.ProofImages,
+                        d.IsAnonymous,
+                        d.CreatedOn,
+                        d.CreatedBy
+                    }).ToList(),
+                    Expenses = campaign.Expenses?.Select(e => new
+                    {
+                        e.Id,
+                        e.CampaignId,
+                        e.AuthorizedBy,
+                        e.ExpenseTitle,
+                        e.ExpenseDescription,
+                        e.ExpenseAmount,
+                        e.ExpenseDate,
+                        e.Category,
+                        e.Recipient,
+                        e.PaymentMethod,
+                        e.ReceiptImages,
+                        e.Notes,
+                        e.ApprovalStatus,
+                        e.ApprovedBy,
+                        e.ApprovedOn,
+                        e.ApprovalNotes,
+                        e.CreatedOn,
+                        e.CreatedBy
+                    }).ToList(),
+                    campaign.CreatedOn,
+                    campaign.CreatedBy,
+                    campaign.LastModifiedOn,
+                    campaign.LastModifiedBy,
+                    campaign.IsDeleted,
+                    campaign.CreatedByUserId
+                };
+
+                return Ok(new ApiSuccess(response));
             }
             catch (Exception ex)
             {
