@@ -383,6 +383,7 @@ namespace FTM.Application.Services
             {
                 var partnerToUpdate = await _fTMemberRepository.GetByIdAsync(parent.FromFTMemberPartnerId.Value);
                 //request.Id = partnerToUpdate.Id;
+                ftMember.Id = partnerToUpdate.Id;
                 partnerToUpdate = _mapper.Map(request, partnerToUpdate);
                 partnerToUpdate.StatusCode = 0;
 

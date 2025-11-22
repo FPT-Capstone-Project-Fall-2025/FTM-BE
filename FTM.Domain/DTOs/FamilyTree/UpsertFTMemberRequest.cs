@@ -27,7 +27,7 @@ namespace FTM.Domain.DTOs.FamilyTree
         [FromForm(Name = "birthday")]
         public DateTime? Birthday { get; set; }
 
-        [Required]
+        //[Required]
         [FromForm(Name = "isDeath")]
         public bool? IsDeath { get; set; }
 
