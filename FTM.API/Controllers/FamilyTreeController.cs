@@ -2,6 +2,7 @@ using FTM.API.Helpers;
 using FTM.API.Reponses;
 using FTM.Application.IServices;
 using FTM.Domain.DTOs.FamilyTree;
+using FTM.Domain.Enums;
 using FTM.Domain.Specification.FamilyTrees;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -71,6 +72,7 @@ namespace FTM.API.Controllers
         /// <param name="id">ID gia phả</param>
         /// <returns>Chi tiết gia phả</returns>
         [HttpGet("{id}")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> GetById(Guid id)
         {
             try
@@ -96,6 +98,7 @@ namespace FTM.API.Controllers
         /// <returns>Chi tiết gia phả sau khi cập nhật</returns>
         [HttpPut("{id}")]
         [Consumes("multipart/form-data")]
+        [FTAuthorizeOwner]
         public async Task<IActionResult> Edit(Guid id, [FromForm] UpsertFamilyTreeRequest request)
         {
             try
@@ -136,6 +139,7 @@ namespace FTM.API.Controllers
         /// <param name="id">ID gia phả</param>
         /// <returns>Kết quả xóa</returns>
         [HttpDelete("{id}")]
+        [FTAuthorizeOwner]
         public async Task<IActionResult> Delete(Guid id)
         {
             try
