@@ -88,7 +88,7 @@ namespace FTM.Application.Services
             }
 
             var executionStrategy = _unitOfWork.CreateExecutionStrategy();
-            var ftMember = _mapper.Map<FTMember>(request);
+            var ftMember = _mapper.Map<FTMember>(request);  
             ftMember.FTRole = FTMRole.FTMember;
 
             await executionStrategy.ExecuteAsync(
@@ -275,6 +275,7 @@ namespace FTM.Application.Services
             {
                 var partnerToUpdate = await _fTMemberRepository.GetByIdAsync(firstPartner.ToFTMemberId);
                 //request.Id = partnerToUpdate.Id;
+                ftMember.Id = partnerToUpdate.Id;   
                 partnerToUpdate = _mapper.Map(request, partnerToUpdate);
                 partnerToUpdate.StatusCode = 0;
 
