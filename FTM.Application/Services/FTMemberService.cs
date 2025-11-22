@@ -269,7 +269,7 @@ namespace FTM.Application.Services
 
             if(partnerOfFromFTMember != null && !partnerOfFromFTMember.FromFTMember.IsDivorced) throw new ArgumentException("Quan hệ hôn nhân một vợ một chồng.");
 
-            if (firstPartner != null && !firstPartner.ToFTMember.IsDivorced) throw new ArgumentException("Quan hệ hôn nhân một vợ một chồng.");
+            if (firstPartner != null && !firstPartner.ToFTMember.IsDivorced && firstPartner.ToFTMember.StatusCode != FTMemberStatus.UNDEFINED) throw new ArgumentException("Quan hệ hôn nhân một vợ một chồng.");
 
             if (firstPartner != null && firstPartner.ToFTMember.StatusCode == FTMemberStatus.UNDEFINED)
             {
