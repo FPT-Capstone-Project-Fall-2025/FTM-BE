@@ -16,13 +16,16 @@ namespace FTM.API.Controllers
     {
         private readonly IFTCampaignExpenseService _expenseService;
         private readonly IBlobStorageService _blobStorageService;
+        private readonly IFTCampaignService _campaignService;
 
         public FTCampaignExpenseController(
             IFTCampaignExpenseService expenseService,
-            IBlobStorageService blobStorageService)
+            IBlobStorageService blobStorageService,
+            IFTCampaignService campaignService)
         {
             _expenseService = expenseService;
             _blobStorageService = blobStorageService;
+            _campaignService = campaignService;
         }
 
         #region Query Operations
@@ -214,6 +217,7 @@ namespace FTM.API.Controllers
 
         /// <summary>
         /// Approve expense request with payment proof image
+        /// Only CampaignManager can approve expenses
         /// Manager uploads proof of payment transfer when approving
         /// </summary>
         [HttpPut("{id:guid}/approve")]
@@ -221,6 +225,20 @@ namespace FTM.API.Controllers
         {
             try
             {
+                // Get expense first to check authorization
+                var expense = await _expenseService.GetByIdAsync(id);
+                if (expense == null)
+                    return NotFound(new ApiError("Expense not found"));
+
+                // Get campaign to check manager authorization
+                var campaign = await _campaignService.GetByIdAsync(expense.CampaignId);
+                if (campaign == null)
+                    return NotFound(new ApiError("Campaign not found"));
+
+                // Authorization: Only CampaignManager can approve
+                if (campaign.CampaignManagerId != request.ApproverId)
+                    return StatusCode(403, new ApiError("Only the Campaign Manager can approve expenses. You are not authorized to perform this action."));
+
                 // Upload payment proof image
                 string? paymentProofUrl = null;
                 if (request.PaymentProofImage != null)
@@ -231,11 +249,6 @@ namespace FTM.API.Controllers
                         "campaign-expense-payment-proofs", 
                         fileName);
                 }
-
-                // Approve expense and attach payment proof
-                var expense = await _expenseService.GetByIdAsync(id);
-                if (expense == null)
-                    return NotFound(new ApiError("Expense not found"));
 
                 // Store payment proof URL in ApprovalNotes or create new field
                 var approvalNotes = request.ApprovalNotes ?? "";
@@ -263,6 +276,7 @@ namespace FTM.API.Controllers
 
         /// <summary>
         /// Reject expense request
+        /// Only CampaignManager can reject expenses
         /// </summary>
         [HttpPut("{id:guid}/reject")]
 
@@ -270,6 +284,20 @@ namespace FTM.API.Controllers
         {
             try
             {
+                // Get expense first to check authorization
+                var expense = await _expenseService.GetByIdAsync(id);
+                if (expense == null)
+                    return NotFound(new ApiError("Expense not found"));
+
+                // Get campaign to check manager authorization
+                var campaign = await _campaignService.GetByIdAsync(expense.CampaignId);
+                if (campaign == null)
+                    return NotFound(new ApiError("Campaign not found"));
+
+                // Authorization: Only CampaignManager can reject
+                if (campaign.CampaignManagerId != request.ApproverId)
+                    return StatusCode(403, new ApiError("Only the Campaign Manager can reject expenses. You are not authorized to perform this action."));
+
                 await _expenseService.RejectExpenseAsync(id, request.ApproverId, request.RejectionReason);
                 return Ok(new ApiSuccess("Expense rejected"));
             }
