@@ -104,6 +104,7 @@ namespace FTM.API.Extensions
             // serrvices.AddScoped<IFTFundService, FTFundService>(); // TODO: Fix property mapping issues
 
             // Campaign Management
+            serrvices.AddScoped<IFTFundCampaignRepository, FTFundCampaignRepository>();
             serrvices.AddScoped<IFTCampaignService, FTCampaignService>();
             serrvices.AddScoped<IFTCampaignDonationService, FTCampaignDonationService>();
             serrvices.AddScoped<IFTCampaignExpenseService, FTCampaignExpenseService>();
