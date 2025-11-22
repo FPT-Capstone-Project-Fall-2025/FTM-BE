@@ -514,6 +514,7 @@ namespace FTM.API.Controllers
 
         /// <summary>
         /// Confirm cash/bank transfer donation (proof images should be uploaded via upload-proof endpoint first)
+        /// Only CampaignManager can confirm donations
         /// </summary>
         [HttpPost("{donationId:guid}/confirm")]
 
@@ -528,6 +529,15 @@ namespace FTM.API.Controllers
                 var donation = await _donationService.GetByIdAsync(donationId);
                 if (donation == null)
                     return NotFound(new ApiError("Donation not found"));
+
+                // Get campaign to check manager authorization
+                var campaign = await _donationService.GetCampaignForDonationAsync(donation.CampaignId);
+                if (campaign == null)
+                    return NotFound(new ApiError("Campaign not found"));
+
+                // Authorization: Only CampaignManager can confirm
+                if (campaign.CampaignManagerId != request.ConfirmedBy)
+                    return StatusCode(403, new ApiError("Only the Campaign Manager can confirm donations. You are not authorized to perform this action."));
 
                 // Validate current status
                 if (donation.Status == DonationStatus.Completed)
@@ -549,8 +559,7 @@ namespace FTM.API.Controllers
                 // Save changes
                 var updatedDonation = await _donationService.UpdateAsync(donation);
 
-                // Update campaign balance
-                var campaign = await _donationService.GetCampaignForDonationAsync(donation.CampaignId);
+                // Update campaign balance (already have campaign object from authorization check)
                 if (campaign != null)
                 {
                     campaign.CurrentBalance += donation.DonationAmount;
@@ -576,6 +585,7 @@ namespace FTM.API.Controllers
 
         /// <summary>
         /// Reject a donation (for manager to reject pending donations with invalid proof or other reasons)
+        /// Only CampaignManager can reject donations
         /// </summary>
         [HttpPost("{donationId:guid}/reject")]
         public async Task<IActionResult> RejectDonation(Guid donationId, [FromBody] RejectCampaignDonationRequest request)
@@ -589,6 +599,15 @@ namespace FTM.API.Controllers
                 var donation = await _donationService.GetByIdAsync(donationId);
                 if (donation == null)
                     return NotFound(new ApiError("Donation not found"));
+
+                // Get campaign to check manager authorization
+                var campaignForReject = await _donationService.GetCampaignForDonationAsync(donation.CampaignId);
+                if (campaignForReject == null)
+                    return NotFound(new ApiError("Campaign not found"));
+
+                // Authorization: Only CampaignManager can reject
+                if (campaignForReject.CampaignManagerId != request.RejectedBy)
+                    return StatusCode(403, new ApiError("Only the Campaign Manager can reject donations. You are not authorized to perform this action."));
 
                 // Validate current status
                 if (donation.Status != DonationStatus.Pending)
