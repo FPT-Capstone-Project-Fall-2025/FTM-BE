@@ -1,3 +1,4 @@
+using FTM.API.Helpers;
 using FTM.API.Reponses;
 using FTM.Application.IServices;
 using FTM.Domain.DTOs.Funds;
@@ -38,6 +39,7 @@ namespace FTM.API.Controllers
         /// Get donation by ID
         /// </summary>
         [HttpGet("{id:guid}")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> GetDonationById(Guid id)
         {
             try
@@ -58,6 +60,7 @@ namespace FTM.API.Controllers
         /// Get all donations for a campaign (paginated)
         /// </summary>
         [HttpGet("campaign/{campaignId:guid}")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> GetCampaignDonations(
             Guid campaignId,
             [FromQuery] int page = 1,
@@ -78,7 +81,7 @@ namespace FTM.API.Controllers
         /// Get user's donation history (paginated)
         /// </summary>
         [HttpGet("user/{userId:guid}")]
-     
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> GetUserDonations(
             Guid userId,
             [FromQuery] int page = 1,
@@ -100,7 +103,7 @@ namespace FTM.API.Controllers
         /// Used by FE to show user their own pending donations that need proof images
         /// </summary>
         [HttpGet("my-pending")]
- 
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> GetMyPendingDonations([FromQuery] Guid? userId = null)
         {
             try
@@ -121,6 +124,7 @@ namespace FTM.API.Controllers
         /// Get top donors for a campaign
         /// </summary>
         [HttpGet("campaign/{campaignId:guid}/top-donors")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> GetTopDonors(
             Guid campaignId,
             [FromQuery] int limit = 10)
@@ -140,6 +144,7 @@ namespace FTM.API.Controllers
         /// Get donation statistics for a campaign
         /// </summary>
         [HttpGet("campaign/{campaignId:guid}/statistics")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> GetDonationStatistics(Guid campaignId)
         {
             try
@@ -157,6 +162,7 @@ namespace FTM.API.Controllers
         /// Get pending donations for a specific campaign (waiting for manager confirmation)
         /// </summary>
         [HttpGet("campaign/{campaignId:guid}/pending")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> GetPendingDonationsByCampaign(Guid campaignId)
         {
             try
@@ -175,6 +181,7 @@ namespace FTM.API.Controllers
         /// Optional: filter by familyTreeId
         /// </summary>
         [HttpGet("pending")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> GetAllPendingDonations([FromQuery] Guid? familyTreeId = null)
         {
             try
@@ -198,6 +205,7 @@ namespace FTM.API.Controllers
         /// For BankTransfer: generates VietQR code
         /// </summary>
         [HttpPost("campaign/{campaignId:guid}/donate")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> DonateToCampaign(Guid campaignId, [FromBody] CampaignDonateRequest request)
         {
             try
@@ -274,6 +282,8 @@ namespace FTM.API.Controllers
         /// Create online donation (returns QR code for bank transfer)
         /// </summary>
         [HttpPost("online")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+
         public async Task<IActionResult> CreateOnlineDonation([FromBody] CreateOnlineDonationDto request)
         {
             try
@@ -335,7 +345,7 @@ namespace FTM.API.Controllers
         /// Create cash donation (requires manual confirmation)
         /// </summary>
         [HttpPost("cash")]
- 
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> CreateCashDonation([FromBody] CreateCashDonationDto request)
         {
             try
@@ -444,6 +454,8 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpPost("{donationId:guid}/upload-proof")]
         [Consumes("multipart/form-data")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+
         public async Task<IActionResult> UploadProofImages(Guid donationId, [FromForm] List<IFormFile> images)
         {
             try
@@ -517,7 +529,7 @@ namespace FTM.API.Controllers
         /// Only CampaignManager can confirm donations
         /// </summary>
         [HttpPost("{donationId:guid}/confirm")]
-
+        [FTAuthorize(MethodType.UPDATE, FeatureType.MEMBER)]
         public async Task<IActionResult> ConfirmDonation(Guid donationId, [FromBody] ConfirmDonationDto request)
         {
             try
@@ -588,6 +600,7 @@ namespace FTM.API.Controllers
         /// Only CampaignManager can reject donations
         /// </summary>
         [HttpPost("{donationId:guid}/reject")]
+        [FTAuthorize(MethodType.UPDATE, FeatureType.MEMBER)]
         public async Task<IActionResult> RejectDonation(Guid donationId, [FromBody] RejectCampaignDonationRequest request)
         {
             try

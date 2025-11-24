@@ -1,10 +1,11 @@
-using Microsoft.AspNetCore.Mvc;
-using FTM.Domain.Entities.Funds;
-using FTM.Infrastructure.Repositories.Interface;
-using Microsoft.EntityFrameworkCore;
+using FTM.API.Helpers;
 using FTM.API.Reponses;
+using FTM.Domain.Entities.Funds;
 using FTM.Domain.Enums;
+using FTM.Infrastructure.Repositories.Interface;
 using FTM.Infrastructure.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FTM.API.Controllers
 {
@@ -30,6 +31,7 @@ namespace FTM.API.Controllers
         /// Get all funds for a family tree
         /// </summary>
         [HttpGet("tree/{treeId}")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> GetFundsByTreeId(Guid treeId)
         {
             try
@@ -68,6 +70,7 @@ namespace FTM.API.Controllers
         /// Create a new fund
         /// </summary>
         [HttpPost]
+        [FTAuthorize(MethodType.ADD, FeatureType.MEMBER)]
         public async Task<IActionResult> CreateFund([FromBody] CreateFundRequest request)
         {
             try
@@ -105,6 +108,7 @@ namespace FTM.API.Controllers
         /// Update fund information
         /// </summary>
         [HttpPut("{fundId}")]
+        [FTAuthorize(MethodType.UPDATE, FeatureType.MEMBER)]
         public async Task<IActionResult> UpdateFund(Guid fundId, [FromBody] UpdateFundRequest request)
         {
             try
@@ -158,6 +162,7 @@ namespace FTM.API.Controllers
         /// Make a donation to fund
         /// </summary>
         [HttpPost("{fundId}/donate")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> DonateTo(Guid fundId, [FromBody] DonateRequest request)
         {
             try
