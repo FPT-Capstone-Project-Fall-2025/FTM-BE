@@ -1,3 +1,4 @@
+using FTM.API.Helpers;
 using FTM.API.Reponses;
 using FTM.Application.IServices;
 using FTM.Domain.DTOs.Funds;
@@ -31,7 +32,7 @@ namespace FTM.API.Controllers
         /// Get expense by ID
         /// </summary>
         [HttpGet("{id:guid}")]
-
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> GetExpenseById(Guid id)
         {
             try
@@ -52,7 +53,8 @@ namespace FTM.API.Controllers
         /// Get all expenses for a campaign (paginated, with optional status filter)
         /// </summary>
         [HttpGet("campaign/{campaignId:guid}")]
-   
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+
         public async Task<IActionResult> GetCampaignExpenses(
             Guid campaignId,
             [FromQuery] ApprovalStatus? status = null,
@@ -74,6 +76,7 @@ namespace FTM.API.Controllers
         /// Get pending expenses for campaigns managed by a user
         /// </summary>
         [HttpGet("pending/manager/{managerId:guid}")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
 
         public async Task<IActionResult> GetPendingExpensesForManager(
             Guid managerId,
@@ -95,6 +98,7 @@ namespace FTM.API.Controllers
         /// Get expense statistics for a campaign
         /// </summary>
         [HttpGet("campaign/{campaignId:guid}/statistics")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
 
         public async Task<IActionResult> GetExpenseStatistics(Guid campaignId)
         {
@@ -118,6 +122,7 @@ namespace FTM.API.Controllers
         /// Member uploads receipt when creating expense
         /// </summary>
         [HttpPost]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> CreateExpense([FromForm] CreateExpenseDto request)
         {
             try
@@ -167,7 +172,7 @@ namespace FTM.API.Controllers
         /// Update expense request (only for Pending expenses)
         /// </summary>
         [HttpPut("{id:guid}")]
-
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> UpdateExpense(Guid id, [FromBody] UpdateExpenseDto request)
         {
             try
@@ -194,6 +199,7 @@ namespace FTM.API.Controllers
         /// Delete expense request (only for Pending expenses)
         /// </summary>
         [HttpDelete("{id:guid}")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
 
         public async Task<IActionResult> DeleteExpense(Guid id)
         {
@@ -217,6 +223,8 @@ namespace FTM.API.Controllers
         /// Manager uploads proof of payment transfer when approving
         /// </summary>
         [HttpPut("{id:guid}/approve")]
+        [FTAuthorize(MethodType.UPDATE, FeatureType.MEMBER)]
+
         public async Task<IActionResult> ApproveExpense(Guid id, [FromForm] ApproveExpenseDto request)
         {
             try
@@ -265,6 +273,7 @@ namespace FTM.API.Controllers
         /// Reject expense request
         /// </summary>
         [HttpPut("{id:guid}/reject")]
+        [FTAuthorize(MethodType.UPDATE, FeatureType.MEMBER)]
 
         public async Task<IActionResult> RejectExpense(Guid id, [FromBody] RejectExpenseDto request)
         {
