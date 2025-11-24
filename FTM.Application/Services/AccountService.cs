@@ -728,5 +728,10 @@ namespace FTM.Application.Services
                 //Roles = roles,
             };
         }
+
+        public bool IsTokenExpired(string token)
+        {
+            return _tokenProvider.IsTokenExpired(token);
+        }
     }
 }

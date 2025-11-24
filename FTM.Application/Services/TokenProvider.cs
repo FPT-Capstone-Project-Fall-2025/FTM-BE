@@ -94,5 +94,15 @@ namespace FTM.Application.Services
 
             return principal;
         }
+
+        public bool IsTokenExpired(string token)
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwt = handler.ReadJwtToken(token);
+
+            var exp = jwt.ValidTo;
+
+            return exp < DateTime.UtcNow;
+        }
     }
 }
