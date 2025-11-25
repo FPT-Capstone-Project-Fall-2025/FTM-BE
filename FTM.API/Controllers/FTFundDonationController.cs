@@ -33,7 +33,7 @@ namespace FTM.API.Controllers
         /// Get all donations for a fund
         /// </summary>
         [HttpGet("fund/{fundId}")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> GetDonationsByFund(Guid fundId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
             try
@@ -89,7 +89,7 @@ namespace FTM.API.Controllers
         /// Get pending donations for confirmation
         /// </summary>
         [HttpGet("pending")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> GetPendingDonations([FromQuery] Guid? treeId = null)
         {
             try
@@ -139,7 +139,7 @@ namespace FTM.API.Controllers
         /// Used by FE to show user their own pending donations that need proof images
         /// </summary>
         [HttpGet("my-pending")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> GetMyPendingDonations([FromQuery] Guid? userId = null)
         {
             try
@@ -185,7 +185,7 @@ namespace FTM.API.Controllers
         /// Get donation by ID
         /// </summary>
         [HttpGet("{id}")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> GetDonationById(Guid id)
         {
             try
@@ -233,7 +233,7 @@ namespace FTM.API.Controllers
         /// Confirm a donation (for cash payments or manual confirmation)
         /// </summary>
         [HttpPost("{id}/confirm")]
-        [FTAuthorize(MethodType.UPDATE, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
         public async Task<IActionResult> ConfirmDonation(Guid id, [FromBody] ConfirmDonationRequest request)
         {
             try
@@ -284,7 +284,7 @@ namespace FTM.API.Controllers
         /// Reject a donation
         /// </summary>
         [HttpPost("{id}/reject")]
-        [FTAuthorize(MethodType.UPDATE, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
         public async Task<IActionResult> RejectDonation(Guid id, [FromBody] RejectDonationRequest request)
         {
             try
@@ -327,7 +327,7 @@ namespace FTM.API.Controllers
         /// Get donation statistics for a fund
         /// </summary>
         [HttpGet("fund/{fundId}/stats")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> GetDonationStats(Guid fundId)
         {
             try
@@ -379,7 +379,7 @@ namespace FTM.API.Controllers
         /// Update donation details (before confirmation)
         /// </summary>
         [HttpPut("{id}")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> UpdateDonation(Guid id, [FromBody] UpdateDonationRequest request)
         {
             try
@@ -420,7 +420,7 @@ namespace FTM.API.Controllers
         /// Delete donation (soft delete, only for pending donations)
         /// </summary>
         [HttpDelete("{id}")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> DeleteDonation(Guid id)
         {
             try
@@ -461,7 +461,7 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpPost("{donationId:guid}/upload-proof")]
         [Consumes("multipart/form-data")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> UploadProofImages(Guid donationId, [FromForm] List<IFormFile> images)
         {
             try
@@ -541,7 +541,7 @@ namespace FTM.API.Controllers
         /// Confirm fund donation (proof images should be uploaded via upload-proof endpoint first)
         /// </summary>
         [HttpPost("{donationId:guid}/confirm")]
-        [FTAuthorize(MethodType.UPDATE, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
         public async Task<IActionResult> ConfirmFundDonation(Guid donationId, [FromBody] ConfirmFundDonationDto request)
         {
             try
