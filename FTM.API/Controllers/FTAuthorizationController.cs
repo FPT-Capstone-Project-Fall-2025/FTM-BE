@@ -25,7 +25,7 @@ namespace FTM.API.Controllers
         }
 
         [HttpPost]
-        //[FTAuthorizeOwner]
+        [FTAuthorizeOwner]
         public async Task<IActionResult> Add([FromBody] UpsertFTAuthorizationRequest request)
         {
             if (!ModelState.IsValid)
@@ -39,7 +39,7 @@ namespace FTM.API.Controllers
         }
 
         [HttpPut]
-        //[FTAuthorizeOwner]
+        [FTAuthorizeOwner]
         public async Task<IActionResult> Update([FromBody] UpsertFTAuthorizationRequest request)
         {
             if (!ModelState.IsValid)
@@ -54,7 +54,7 @@ namespace FTM.API.Controllers
 
 
         [HttpGet("list")]
-        //[FTAuthorizeOwner]
+        [FTAuthorizeOwner]
         public async Task<IActionResult> ViewAuthorizationList([FromQuery] SearchWithPaginationRequest requestParams)
         {
             if (!ModelState.IsValid)
@@ -85,8 +85,41 @@ namespace FTM.API.Controllers
                     simpleData)));
         }
 
-        [HttpGet("{ftId}/member/{ftMemberId}/list")]
+        [HttpGet("list-with-owner")]
         //[FTAuthorizeOwner]
+        public async Task<IActionResult> ViewAuthorization([FromQuery] SearchWithPaginationRequest requestParams)
+        {
+            if (!ModelState.IsValid)
+            {
+                ThrowModelErrors();
+            }
+
+            var specParams = new FTAuthorizationSpecParams()
+            {
+                Search = requestParams.Search ?? string.Empty,
+                PropertyFilters = requestParams.PropertyFilters ?? string.Empty,
+                OrderBy = requestParams.OrderBy ?? string.Empty,
+                Skip = ((requestParams.PageIndex) - 1) * (requestParams.PageSize),
+                Take = requestParams.PageSize
+            };
+
+            var data = await _fTAuthorizationService.GetAuthorizationListAsync(specParams);
+
+            IReadOnlyList<FTAuthorizationListViewDto> simpleData = new List<FTAuthorizationListViewDto> { data };
+
+            return Ok(new ApiSuccess(
+                "Lấy danh sách quyền của gia phả thành công",
+                new Pagination<FTAuthorizationListViewDto>(
+                    requestParams.PageIndex,
+                    requestParams.PageSize,
+                    1,
+                    simpleData)));
+        }
+
+
+
+        [HttpGet("{ftId}/member/{ftMemberId}/list")]
+        [FTAuthorizeOwner]
         public async Task<IActionResult> GetAuthorizationOfFtMember(Guid ftId, Guid ftMemberId)
         {
             if (!ModelState.IsValid)
@@ -100,7 +133,7 @@ namespace FTM.API.Controllers
         }
 
         [HttpDelete("{ftId}/member/{ftMemberId}")]
-        //[FTAuthorizeOwner]
+        [FTAuthorizeOwner]
         public async Task<IActionResult> Delete(Guid ftId, Guid ftMemberId)
         {
             if (!ModelState.IsValid)
