@@ -29,7 +29,7 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpPost]
         //[Authorize]
-        [FTAuthorize(MethodType.ADD, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.ADD, FeatureType.EVENT)]
         public async Task<IActionResult> CreateEvent([FromForm] CreateFTFamilyEventRequest request)
         {
             try
@@ -48,7 +48,7 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpPut("{id}")]
         //[Authorize]
-        [FTAuthorize(MethodType.UPDATE, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.UPDATE, FeatureType.EVENT)]
         public async Task<IActionResult> UpdateEvent(Guid id, [FromForm] UpdateFTFamilyEventRequest request)
         {
             try
@@ -66,7 +66,7 @@ namespace FTM.API.Controllers
         /// Delete an event
         /// </summary>
         [HttpDelete("{id}")]
-        [FTAuthorize(MethodType.DELETE, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.DELETE, FeatureType.EVENT)]
         public async Task<IActionResult> DeleteEvent(Guid id)
         {
             try
@@ -87,7 +87,7 @@ namespace FTM.API.Controllers
         /// Get event by ID
         /// </summary>
         [HttpGet("event/{id:guid}")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.EVENT)]
         public async Task<IActionResult> GetEventById(Guid id)
         {
             try
@@ -112,7 +112,7 @@ namespace FTM.API.Controllers
         /// Get events by family tree ID with pagination
         /// </summary>
         [HttpGet("by-gp/{FTId}")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.EVENT)]
         public async Task<IActionResult> GetEventsByGP(Guid FTId, [FromQuery] SearchWithPaginationRequest requestParams)
         {
             try
@@ -134,7 +134,7 @@ namespace FTM.API.Controllers
         /// Get upcoming events for a family tree
         /// </summary>
         [HttpGet("upcoming")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.EVENT)]
         public async Task<IActionResult> GetUpcomingEvents([FromQuery] Guid FTId, [FromQuery] int days = 30)
         {
             try
@@ -152,7 +152,7 @@ namespace FTM.API.Controllers
         /// Get events by date range
         /// </summary>
         [HttpGet("by-date")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.EVENT)]
         public async Task<IActionResult> GetEventsByDateRange(
             [FromQuery] Guid FTId, 
             [FromQuery] DateTimeOffset startDate, 
@@ -173,7 +173,7 @@ namespace FTM.API.Controllers
         /// Get events by member ID
         /// </summary>
         [HttpGet("by-member/{memberId}")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.EVENT)]
         public async Task<IActionResult> GetEventsByMember(Guid memberId, [FromQuery] SearchWithPaginationRequest requestParams)
         {
             try
@@ -193,7 +193,7 @@ namespace FTM.API.Controllers
         /// Filter events with multiple criteria
         /// </summary>
         [HttpPost("filter")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.EVENT)]
         public async Task<IActionResult> FilterEvents([FromBody] EventFilterRequest request)
         {
             try
@@ -211,7 +211,7 @@ namespace FTM.API.Controllers
         /// Get events in a specific year
         /// </summary>
         [HttpGet("{year:int}")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.EVENT)]
         public async Task<IActionResult> GetEventsGroupedByYear(int year, [FromQuery] Guid ftId)
         {
             try
@@ -229,7 +229,7 @@ namespace FTM.API.Controllers
         /// Get events in a specific month
         /// </summary>
         [HttpGet("{year:int}/{month:int}")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.EVENT)]
         public async Task<IActionResult> GetEventsGroupedByMonth(int year, int month, [FromQuery] Guid ftId)
         {
             try
@@ -247,7 +247,7 @@ namespace FTM.API.Controllers
         /// Get events in a specific week
         /// </summary>
         [HttpGet("{year:int}/{month:int}/{week:int}")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.EVENT)]
         public async Task<IActionResult> GetEventsGroupedByWeek(int year, int month, int week, [FromQuery] Guid ftId)
         {
             try
@@ -265,7 +265,7 @@ namespace FTM.API.Controllers
         /// Get events of current user (authenticated)
         /// </summary>
         [HttpGet("my-events")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.EVENT)]
         public async Task<IActionResult> GetMyEvents([FromQuery] Guid ftId, [FromQuery] SearchWithPaginationRequest requestParams)
         {
             try
@@ -286,7 +286,7 @@ namespace FTM.API.Controllers
         /// Get upcoming events of current user (authenticated)
         /// </summary>
         [HttpGet("my-upcoming-events")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.EVENT)]
         public async Task<IActionResult> GetMyUpcomingEvents([FromQuery] Guid ftId, [FromQuery] int days = 30)
         {
             try
@@ -310,7 +310,7 @@ namespace FTM.API.Controllers
         /// Add a member to an event
         /// </summary>
         [HttpPost("{eventId}/add-member/{memberId}")]
-        [FTAuthorize(MethodType.ADD, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.ADD, FeatureType.EVENT)]
         public async Task<IActionResult> AddMemberToEvent(Guid eventId, Guid memberId)
         {
             try
@@ -331,7 +331,7 @@ namespace FTM.API.Controllers
         /// Remove a member from an event
         /// </summary>
         [HttpDelete("{eventId}/remove-member/{memberId}")]
-        [FTAuthorize(MethodType.DELETE, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.DELETE, FeatureType.EVENT)]
         public async Task<IActionResult> RemoveMemberFromEvent(Guid eventId, Guid memberId)
         {
             try
@@ -352,7 +352,7 @@ namespace FTM.API.Controllers
         /// Get all members in an event
         /// </summary>
         [HttpGet("{eventId}/members")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.EVENT)]
         public async Task<IActionResult> GetEventMembers(Guid eventId)
         {
             try

@@ -32,7 +32,7 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpGet("{id:guid}")]
 
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> GetCampaignById(Guid id)
         {
             try
@@ -125,7 +125,7 @@ namespace FTM.API.Controllers
         /// Get campaigns by family tree with pagination
         /// </summary>
         [HttpGet("family-tree/{familyTreeId:guid}")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> GetCampaignsByFamilyTree(
             Guid familyTreeId,
             [FromQuery] int page = 1,
@@ -146,7 +146,7 @@ namespace FTM.API.Controllers
         /// Get campaigns managed by specific user
         /// </summary>
         [HttpGet("manager/{managerId:guid}")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> GetCampaignsByManager(
             Guid managerId,
             [FromQuery] int page = 1,
@@ -167,7 +167,7 @@ namespace FTM.API.Controllers
         /// Get all active campaigns
         /// </summary>
         [HttpGet("active")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> GetActiveCampaigns(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10)
@@ -188,7 +188,7 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpPost]
         // [Authorize] // TODO: Uncomment for production
-        [FTAuthorize(MethodType.ADD, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.ADD, FeatureType.FUND)]
         public async Task<IActionResult> CreateCampaign([FromBody] CreateCampaignRequest? request)
         {
             try
@@ -260,7 +260,7 @@ namespace FTM.API.Controllers
         /// Update an existing campaign
         /// </summary>
         [HttpPut("{id:guid}")]
-        [FTAuthorize(MethodType.UPDATE, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
         public async Task<IActionResult> UpdateCampaign(Guid id, [FromBody] UpdateCampaignRequest request)
         {
             try
@@ -331,7 +331,7 @@ namespace FTM.API.Controllers
         /// Get campaign statistics (money raised, expenses, balance, progress)
         /// </summary>
         [HttpGet("{campaignId:guid}/statistics")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> GetCampaignStatistics(Guid campaignId)
         {
             try
@@ -379,7 +379,7 @@ namespace FTM.API.Controllers
         /// Get campaign financial summary (donations count, expenses count, total amounts)
         /// </summary>
         [HttpGet("{campaignId:guid}/financial-summary")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> GetFinancialSummary(Guid campaignId)
         {
             try
@@ -408,7 +408,7 @@ namespace FTM.API.Controllers
         /// Use /api/FTCampaignDonation/campaign/{campaignId} instead
         /// </summary>
         [HttpGet("{campaignId:guid}/donations")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public IActionResult GetCampaignDonations(Guid campaignId)
         {
             return Ok(new ApiSuccess("Use /api/FTCampaignDonation/campaign/{campaignId} endpoint"));
@@ -419,7 +419,7 @@ namespace FTM.API.Controllers
         /// Use /api/FTCampaignExpense/campaign/{campaignId} instead
         /// </summary>
         [HttpGet("{campaignId:guid}/expenses")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public IActionResult GetCampaignExpenses(Guid campaignId)
         {
             return Ok(new ApiSuccess("Use /api/FTCampaignExpense/campaign/{campaignId} endpoint"));
