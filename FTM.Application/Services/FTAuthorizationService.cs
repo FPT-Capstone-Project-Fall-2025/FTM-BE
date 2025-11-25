@@ -4,12 +4,14 @@ using FTM.Application.IServices;
 using FTM.Domain.DTOs.FamilyTree;
 using FTM.Domain.Entities.FamilyTree;
 using FTM.Domain.Enums;
+using FTM.Domain.Helpers;
 using FTM.Domain.Models;
 using FTM.Domain.Specification;
 using FTM.Domain.Specification.FTAuthorizations;
 using FTM.Domain.Specification.FTMembers;
 using FTM.Infrastructure.Repositories.Interface;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -69,7 +71,7 @@ namespace FTM.Application.Services
                             FeatureCode = authorization.FeatureCode,
                             MethodCode = method
                         };
-                        
+
                         await _fTAuthorizationRepository.AddAsync(newAuthorization);
                         await _unitOfWork.CompleteAsync();
                     }
@@ -95,10 +97,11 @@ namespace FTM.Application.Services
                                         .GroupBy(a => a.AuthorizedMember)
                                         .Select(memberGroup => new KeyValueModel
                                         {
-                                            Key = new {
+                                            Key = new
+                                            {
                                                 memberGroup.Key.Id,
                                                 memberGroup.Key.Fullname
-                                            }, 
+                                            },
                                             Value = memberGroup
                                                 .GroupBy(a => a.FeatureCode)
                                                 .Select(featureGroup => new AuthorizationModel
@@ -116,6 +119,48 @@ namespace FTM.Application.Services
                                 .FirstOrDefault();
 
             return result;
+        }
+
+        public async Task<FTAuthorizationListViewDto?> GetAuthorizationListAsync(FTAuthorizationSpecParams specParams)
+        {
+
+            try
+            {
+                PropertyFilter[] propertyFilters = JsonConvert.DeserializeObject<PropertyFilter[]>(specParams.PropertyFilters);
+                //var ftId = propertyFilters.Find(a => a.F)
+                //if (propertyFilters.Find)
+                var ftIdString = propertyFilters.FirstOrDefault(f => f.Name.IsEqualOrdinalIgnoreCase("FtId")).Value.ToString();
+                var userIdString = propertyFilters.FirstOrDefault(f => f.Name.IsEqualOrdinalIgnoreCase("AuthorizedMember.UserId") && f.Operation.IsEqualOrdinalIgnoreCase("EQUAL")).Value.ToString();
+                Guid ftIdGuid = Guid.Parse(ftIdString);
+                Guid userIdGuid = Guid.Parse(userIdString);
+
+                if (await IsOwnerAsync(ftIdGuid, userIdGuid))
+                {
+                    FTAuthorizationListViewDto result = new FTAuthorizationListViewDto()
+                    {
+                        FTId = ftIdGuid,
+                        Datalist = new List<KeyValueModel>(){
+                            new KeyValueModel
+                            {
+                                Key = new {
+                                    Id = new Guid(),
+                                    Fullname = "Owner"
+                                },
+                                Value = GetOwnerAuthorization()
+                            }
+                        }
+                    };
+                    return result;
+                }
+                else
+                {
+                    return await GetAuthorizationListViewAsync(specParams);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException("Invalid params");
+            }
         }
 
         public async Task<int> CountAuthorizationListViewAsync(FTAuthorizationSpecParams specParams)
@@ -137,7 +182,7 @@ namespace FTM.Application.Services
 
         public async Task<bool> IsOwnerAsync(Guid ftId, Guid userId)
         {
-            return await _fTUserRepository.IsOwnerAsync(ftId, userId);  
+            return await _fTUserRepository.IsOwnerAsync(ftId, userId);
         }
 
         public async Task SetMemberAuthorizationAsync(Guid ftId, Guid memberId)
@@ -198,6 +243,40 @@ namespace FTM.Application.Services
             }
         }
 
+        private HashSet<AuthorizationModel> GetOwnerAuthorization()
+        {
+
+            HashSet<AuthorizationModel> authorizationModels = new HashSet<AuthorizationModel>();
+            authorizationModels.Add(new AuthorizationModel
+            {
+                FeatureCode = FeatureType.MEMBER,
+                MethodsList = new HashSet<MethodType>
+                                   {
+                                        MethodType.VIEW, MethodType.ADD, MethodType.UPDATE, MethodType.DELETE
+                                   }
+            });
+
+            authorizationModels.Add(new AuthorizationModel
+            {
+                FeatureCode = FeatureType.FUND,
+                MethodsList = new HashSet<MethodType>
+                                   {
+                                        MethodType.VIEW, MethodType.ADD, MethodType.UPDATE, MethodType.DELETE
+                                   }
+            });
+
+            authorizationModels.Add(new AuthorizationModel
+            {
+                FeatureCode = FeatureType.EVENT,
+                MethodsList = new HashSet<MethodType>
+                                   {
+                                        MethodType.VIEW, MethodType.ADD, MethodType.UPDATE, MethodType.DELETE
+                                   }
+            });
+
+            return authorizationModels;
+        }
+
         public async Task<FTAuthorizationDto?> UpdateAsync(UpsertFTAuthorizationRequest request)
         {
             if (request.AuthorizationList == null || request.AuthorizationList.Count == 0)
@@ -211,8 +290,8 @@ namespace FTM.Application.Services
 
             // Delete old Authorization List
             var oldAuthorList = await _fTAuthorizationRepository.GetListAsync(request.FTId, request.FTMemberId);
-            
-            foreach( var oldAuthor in oldAuthorList)
+
+            foreach (var oldAuthor in oldAuthorList)
             {
                 _fTAuthorizationRepository.Delete(oldAuthor);
             }
@@ -246,6 +325,6 @@ namespace FTM.Application.Services
             return await _fTUserRepository.IsGuestAsync(ftId, userId);
         }
 
-        
+
     }
 }

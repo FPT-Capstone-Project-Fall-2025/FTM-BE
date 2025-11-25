@@ -82,6 +82,39 @@ namespace FTM.API.Controllers
                     simpleData)));
         }
 
+        [HttpGet("list-with-owner")]
+        //[FTAuthorizeOwner]
+        public async Task<IActionResult> ViewAuthorization([FromQuery] SearchWithPaginationRequest requestParams)
+        {
+            if (!ModelState.IsValid)
+            {
+                ThrowModelErrors();
+            }
+
+            var specParams = new FTAuthorizationSpecParams()
+            {
+                Search = requestParams.Search ?? string.Empty,
+                PropertyFilters = requestParams.PropertyFilters ?? string.Empty,
+                OrderBy = requestParams.OrderBy ?? string.Empty,
+                Skip = ((requestParams.PageIndex) - 1) * (requestParams.PageSize),
+                Take = requestParams.PageSize
+            };
+
+            var data = await _fTAuthorizationService.GetAuthorizationListAsync(specParams);
+
+            IReadOnlyList<FTAuthorizationListViewDto> simpleData = new List<FTAuthorizationListViewDto> { data };
+
+            return Ok(new ApiSuccess(
+                "Lấy danh sách quyền của gia phả thành công",
+                new Pagination<FTAuthorizationListViewDto>(
+                    requestParams.PageIndex,
+                    requestParams.PageSize,
+                    1,
+                    simpleData)));
+        }
+
+
+
         private void ThrowModelErrors()
         {
             var message = string.Join(" | ", ModelState.Values
