@@ -88,7 +88,7 @@ namespace FTM.Application.Services
             }
 
             var executionStrategy = _unitOfWork.CreateExecutionStrategy();
-            var ftMember = _mapper.Map<FTMember>(request);  
+            var ftMember = _mapper.Map<FTMember>(request);
             ftMember.FTRole = FTMRole.FTMember;
 
             await executionStrategy.ExecuteAsync(
@@ -267,7 +267,7 @@ namespace FTM.Application.Services
                                         .FirstOrDefaultAsync(x => x.ToFTMemberId == request.RootId
                                                             && x.CategoryCode == FTRelationshipCategory.PARTNER);
 
-            if(partnerOfFromFTMember != null && !partnerOfFromFTMember.FromFTMember.IsDivorced) throw new ArgumentException("Quan hệ hôn nhân một vợ một chồng.");
+            if (partnerOfFromFTMember != null && !partnerOfFromFTMember.FromFTMember.IsDivorced) throw new ArgumentException("Quan hệ hôn nhân một vợ một chồng.");
 
             if (firstPartner != null && !firstPartner.ToFTMember.IsDivorced && firstPartner.ToFTMember.StatusCode != FTMemberStatus.UNDEFINED) throw new ArgumentException("Quan hệ hôn nhân một vợ một chồng.");
 
@@ -275,7 +275,7 @@ namespace FTM.Application.Services
             {
                 var partnerToUpdate = await _fTMemberRepository.GetByIdAsync(firstPartner.ToFTMemberId);
                 //request.Id = partnerToUpdate.Id;
-                ftMember.Id = partnerToUpdate.Id;   
+                ftMember.Id = partnerToUpdate.Id;
                 partnerToUpdate = _mapper.Map(request, partnerToUpdate);
                 partnerToUpdate.StatusCode = 0;
 
@@ -660,6 +660,21 @@ namespace FTM.Application.Services
         {
             var spec = new FTUserForCountSpecification(specParams);
             return await _fTUserRepository.CountAsync(spec);
+        }
+
+        public async Task DeleteGuest(Guid ftId, Guid ftUserId)
+        {
+            var guest = await _fTUserRepository.FindAsync(ftId, ftUserId);
+
+            if (guest != null && guest.FTRole == FTMRole.FTGuest)
+            {
+                _fTUserRepository.Delete(guest);
+                await _unitOfWork.CompleteAsync();
+            }
+            else
+            {
+                throw new ArgumentException("Thành viên không phải là khách trong gia tộc này hoặc gia tộc không tồn tại");
+            }
         }
     }
 }

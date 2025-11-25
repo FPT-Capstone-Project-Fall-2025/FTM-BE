@@ -134,6 +134,14 @@ namespace FTM.API.Controllers
             return Ok(new ApiSuccess("Xoá thành viên của gia phả thành công"));
         }
 
+        [HttpDelete("{ftId}/guest/{ftUserId}")]
+        [FTAuthorize(MethodType.DELETE, FeatureType.MEMBER)]
+        public async Task<IActionResult> DeleteGuest([FromRoute] Guid ftId, [FromRoute] Guid ftUserId)
+        {
+            await _fTMemberService.DeleteGuest(ftId, ftUserId);
+            return Ok(new ApiSuccess("Xoá thành viên khách của gia phả thành công"));
+        }
+
         [HttpGet("{ftMemberId}/relationship")]
         public async Task<IActionResult> GetRelationship([FromRoute] Guid ftMemberId)
         {

@@ -24,5 +24,6 @@ namespace FTM.Application.IServices
         Task<IReadOnlyList<FTMemberSimpleDto>> GetListOfMembersWithoutUser(Guid ftId);
         Task<int> CountMembers(FTMemberSpecParams specParams);
         Task<int> CountFTUsers(FTUserSpecParams specParams);
+        Task DeleteGuest(Guid ftId, Guid ftUserId);
     }
 }
