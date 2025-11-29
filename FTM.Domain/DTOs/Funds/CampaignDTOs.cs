@@ -145,7 +145,7 @@ namespace FTM.Domain.DTOs.Funds
         public decimal Amount { get; set; }
         public string? Message { get; set; }
         public bool IsAnonymous { get; set; }
-        public DonationStatus Status { get; set; }
+        public string StatusName { get; set; } = string.Empty;
         public string PayOSOrderCode { get; set; }
         public string? TransactionId { get; set; }
         public string? ProofImages { get; set; } // Proof of payment (transfer receipt, cash photo)
@@ -264,16 +264,11 @@ namespace FTM.Domain.DTOs.Funds
         public Guid Id { get; set; }
         public Guid CampaignId { get; set; }
         public string? CampaignName { get; set; }
-        public string Title { get; set; }
         public string? Description { get; set; }
         public decimal Amount { get; set; }
-        public ExpenseCategory Category { get; set; }
-        public string CategoryName => Category.ToString();
         public DateTime? ExpenseDate { get; set; }
         public string? ReceiptUrl { get; set; }
-        public string? Notes { get; set; }
-        public ApprovalStatus Status { get; set; }
-        public string StatusName => Status.ToString();
+        public string StatusName { get; set; } = string.Empty;
         public Guid RequestedById { get; set; }
         public string? RequestedByName { get; set; }
         public Guid? ApprovedById { get; set; }

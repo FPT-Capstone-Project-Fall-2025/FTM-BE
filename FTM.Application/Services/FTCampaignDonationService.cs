@@ -281,6 +281,48 @@ namespace FTM.Application.Services
             return donations.Select(MapToDonationDto).ToList();
         }
 
+        public async Task<PaginatedResponse<FTCampaignDonationResponseDto>> GetPendingDonationsForManagerAsync(
+            Guid managerId, int page, int pageSize)
+        {
+            // First, get campaigns managed by this user
+            var campaignQuery = _unitOfWork.Repository<FTFundCampaign>().GetQuery();
+            var campaignIds = await campaignQuery
+                .Where(c => c.CampaignManagerId == managerId && c.IsDeleted != true)
+                .Select(c => c.Id)
+                .ToListAsync();
+
+            // Then get pending donations for those campaigns
+            var donationQuery = _unitOfWork.Repository<FTCampaignDonation>().GetQuery();
+            
+            var totalCount = await donationQuery
+                .Where(d => campaignIds.Contains(d.CampaignId) && 
+                           d.Status == DonationStatus.Pending && 
+                           d.IsDeleted != true)
+                .CountAsync();
+
+            var donations = await donationQuery
+                .Where(d => campaignIds.Contains(d.CampaignId) && 
+                           d.Status == DonationStatus.Pending && 
+                           d.IsDeleted != true)
+                .Include(d => d.Campaign)       // Load campaign for CampaignName
+                .Include(d => d.Member)         // Load donor for DonorName
+                .Include(d => d.Confirmer)      // Load confirmer (if exists)
+                .OrderByDescending(d => d.CreatedOn)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var donationDtos = donations.Select(d => MapToDonationDto(d)).ToList();
+
+            return new PaginatedResponse<FTCampaignDonationResponseDto>
+            {
+                Items = donationDtos,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
+        }
+
         private FTCampaignDonationResponseDto MapToDonationDto(FTCampaignDonation donation)
         {
             var dto = _mapper.Map<FTCampaignDonationResponseDto>(donation);
