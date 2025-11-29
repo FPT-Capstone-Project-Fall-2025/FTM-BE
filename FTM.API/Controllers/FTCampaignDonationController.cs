@@ -99,6 +99,27 @@ namespace FTM.API.Controllers
         }
 
         /// <summary>
+        /// Get pending donations for campaigns managed by the specified manager
+        /// </summary>
+        [HttpGet("pending/manager/{managerId:guid}")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
+        public async Task<IActionResult> GetPendingDonationsForManager(
+            Guid managerId,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                var result = await _donationService.GetPendingDonationsForManagerAsync(managerId, page, pageSize);
+                return Ok(new ApiSuccess("Pending donations retrieved successfully", result));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
+            }
+        }
+
+        /// <summary>
         /// Get my pending donations (donations waiting for proof upload or confirmation)
         /// Used by FE to show user their own pending donations that need proof images
         /// </summary>

@@ -182,6 +182,16 @@ namespace FTM.Application.IServices
         /// <param name="userId">User ID</param>
         /// <returns>List of user's pending donations</returns>
         Task<List<FTCampaignDonationResponseDto>> GetUserPendingDonationsAsync(Guid userId);
+
+        /// <summary>
+        /// Get pending donations for campaigns managed by a user
+        /// </summary>
+        /// <param name="managerId">Manager user ID</param>
+        /// <param name="page">Page number</param>
+        /// <param name="pageSize">Page size</param>
+        /// <returns>Paginated pending donations</returns>
+        Task<PaginatedResponse<FTCampaignDonationResponseDto>> GetPendingDonationsForManagerAsync(
+            Guid managerId, int page, int pageSize);
     }
 
     public interface IFTCampaignExpenseService

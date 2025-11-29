@@ -174,6 +174,9 @@ namespace FTM.Application.Services
                 .Where(e => campaignIds.Contains(e.CampaignId) && 
                            e.ApprovalStatus == ApprovalStatus.Pending && 
                            e.IsDeleted != true)
+                .Include(e => e.Campaign)       // Load campaign for CampaignName
+                .Include(e => e.Authorizer)     // Load requester for RequestedByName
+                .Include(e => e.Approver)       // Load approver for ApprovedByName (if exists)
                 .OrderByDescending(e => e.CreatedOn)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
