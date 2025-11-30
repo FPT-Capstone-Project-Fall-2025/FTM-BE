@@ -1,0 +1,777 @@
+{
+  "info": {
+    "name": "Fund Management API - Refactored",
+    "description": "Complete API collection for testing refactored Fund, Donation, and Expense controllers. Remember to set X-Ftid header!",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://localhost:7777/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_JWT_TOKEN_HERE",
+      "type": "string"
+    },
+    {
+      "key": "treeId",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "fundId",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "donationId",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "expenseId",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Fund CRUD",
+      "item": [
+        {
+          "name": "Get Funds by Tree",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/funds/tree/{{treeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "funds",
+                "tree",
+                "{{treeId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Fund",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"familyTreeId\": \"{{treeId}}\",\n  \"fundName\": \"Quỹ Tết Nguyên Đán 2025\",\n  \"description\": \"Quỹ tổ chức Tết cho gia đình\",\n  \"bankAccountNumber\": \"1234567890\",\n  \"bankCode\": \"970436\",\n  \"bankName\": \"Vietcombank\",\n  \"accountHolderName\": \"NGUYEN VAN A\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/funds",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "funds"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Fund",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fundName\": \"Quỹ Tết Nguyên Đán 2025 (Updated)\",\n  \"description\": \"Quỹ tổ chức Tết - Cập nhật\",\n  \"bankAccountNumber\": \"9876543210\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/funds/{{fundId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "funds",
+                "{{fundId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Donate - Cash",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberId\": \"{{userId}}\",\n  \"donorName\": \"Nguyễn Văn A\",\n  \"amount\": 500000,\n  \"paymentMethod\": 0,\n  \"paymentNotes\": \"Ủng hộ quỹ Tết\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/funds/{{fundId}}/donate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "funds",
+                "{{fundId}}",
+                "donate"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Donate - Bank Transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberId\": \"{{userId}}\",\n  \"donorName\": \"Trần Thị B\",\n  \"amount\": 1000000,\n  \"paymentMethod\": 1,\n  \"paymentNotes\": \"Chuyển khoản ủng hộ\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/funds/{{fundId}}/donate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "funds",
+                "{{fundId}}",
+                "donate"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Donation Management",
+      "item": [
+        {
+          "name": "Get Donations by Fund",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/donations/fund/{{fundId}}?page=1&pageSize=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "FTFundDonation",
+                "fund",
+                "{{fundId}}"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Pending Donations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/donations/pending?page=1&pageSize=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "FTFundDonation",
+                "pending"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                },
+                {
+                  "key": "fundId",
+                  "value": "{{fundId}}",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Pending Donations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/donations/my-pending",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "FTFundDonation",
+                "my-pending"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Donation by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/donations/{{donationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "FTFundDonation",
+                "{{donationId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Confirm Donation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Đã xác nhận tiền mặt\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/donations/{{donationId}}/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "FTFundDonation",
+                "{{donationId}}",
+                "confirm"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject Donation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Hình ảnh chứng minh không rõ ràng\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/donations/{{donationId}}/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "FTFundDonation",
+                "{{donationId}}",
+                "reject"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Donation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 600000,\n  \"donorName\": \"Nguyễn Văn A (Updated)\",\n  \"paymentNotes\": \"Cập nhật số tiền\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/donations/{{donationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "FTFundDonation",
+                "{{donationId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Donation",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/donations/{{donationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "FTFundDonation",
+                "{{donationId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Donation Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/donations/fund/{{fundId}}/statistics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "FTFundDonation",
+                "fund",
+                "{{fundId}}",
+                "statistics"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Expense Management",
+      "item": [
+        {
+          "name": "Get Expenses by Fund",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/fund-expenses/fund/{{fundId}}?page=1&pageSize=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "FTFundExpense",
+                "fund",
+                "{{fundId}}"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Pending Expenses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/fund-expenses/pending?page=1&pageSize=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "FTFundExpense",
+                "pending"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Expense by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/fund-expenses/{{expenseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "FTFundExpense",
+                "{{expenseId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve Expense",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "notes",
+                  "value": "Đã duyệt và thanh toán",
+                  "type": "text"
+                },
+                {
+                  "key": "paymentProof",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fund-expenses/{{expenseId}}/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "FTFundExpense",
+                "{{expenseId}}",
+                "approve"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject Expense",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Hóa đơn không hợp lệ\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fund-expenses/{{expenseId}}/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "FTFundExpense",
+                "{{expenseId}}",
+                "reject"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Expense",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 2500000,\n  \"description\": \"Mua đồ trang trí Tết (Updated)\",\n  \"event\": \"Tết Nguyên Đán 2025\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fund-expenses/{{expenseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "FTFundExpense",
+                "{{expenseId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Expense",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/fund-expenses/{{expenseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "FTFundExpense",
+                "{{expenseId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Expense Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Ftid",
+                "value": "{{treeId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/fund-expenses/fund/{{fundId}}/statistics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "FTFundExpense",
+                "fund",
+                "{{fundId}}",
+                "statistics"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -101,7 +101,9 @@ namespace FTM.API.Extensions
             serrvices.AddScoped<IFTAuthorizationRepository, FTAuthorizationRepository>();
 
             // Fund Management
-            // serrvices.AddScoped<IFTFundService, FTFundService>(); // TODO: Fix property mapping issues
+            serrvices.AddScoped<IFTFundService, FTFundService>();
+            serrvices.AddScoped<IFTFundDonationService, FTFundDonationService>();
+            serrvices.AddScoped<IFTFundExpenseService, FTFundExpenseService>();
 
             // Campaign Management
             serrvices.AddScoped<IFTFundCampaignRepository, FTFundCampaignRepository>();

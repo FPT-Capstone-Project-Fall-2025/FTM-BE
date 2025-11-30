@@ -1,0 +1,292 @@
+### ===========================================
+### FUND MANAGEMENT API TESTS
+### Base URL: https://localhost:7777/api
+### ===========================================
+
+@baseUrl = https://localhost:7777/api
+@token = YOUR_JWT_TOKEN_HERE
+@treeId = YOUR_FAMILY_TREE_ID
+@fundId = YOUR_FUND_ID
+@donationId = YOUR_DONATION_ID
+@expenseId = YOUR_EXPENSE_ID
+@userId = YOUR_USER_ID
+
+### ===========================================
+### 1. FUND CRUD OPERATIONS
+### ===========================================
+
+### 1.1 Get all funds for a family tree
+GET {{baseUrl}}/funds/tree/{{treeId}}
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+X-Ftid: {{treeId}}
+
+### 1.2 Create a new fund
+POST {{baseUrl}}/funds
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+Content-Type: application/json
+
+{
+  "familyTreeId": "{{treeId}}",
+  "fundName": "Quỹ Tết Nguyên Đán 2025",
+  "description": "Quỹ tổ chức Tết cho gia đình",
+  "bankAccountNumber": "1234567890",
+  "bankCode": "970436",
+  "bankName": "Vietcombank",
+  "accountHolderName": "NGUYEN VAN A"
+}
+
+### 1.3 Update fund information
+PUT {{baseUrl}}/funds/{{fundId}}
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+Content-Type: application/json
+
+{
+  "fundName": "Quỹ Tết Nguyên Đán 2025 (Updated)",
+  "description": "Quỹ tổ chức Tết cho gia đình - Cập nhật",
+  "bankAccountNumber": "9876543210",
+  "bankCode": "970415",
+  "bankName": "VietinBank",
+  "accountHolderName": "TRAN THI B"
+}
+
+### 1.4 Donate to fund (Cash)
+POST {{baseUrl}}/funds/{{fundId}}/donate
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+Content-Type: application/json
+
+{
+  "memberId": "{{userId}}",
+  "donorName": "Nguyễn Văn A",
+  "amount": 500000,
+  "paymentMethod": 0,
+  "paymentNotes": "Ủng hộ quỹ Tết"
+}
+
+### 1.5 Donate to fund (Bank Transfer with QR)
+POST {{baseUrl}}/funds/{{fundId}}/donate
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+Content-Type: application/json
+
+{
+  "memberId": "{{userId}}",
+  "donorName": "Trần Thị B",
+  "amount": 1000000,
+  "paymentMethod": 1,
+  "paymentNotes": "Chuyển khoản ủng hộ quỹ",
+  "returnUrl": "https://yourapp.com/donation/success",
+  "cancelUrl": "https://yourapp.com/donation/cancel"
+}
+
+### ===========================================
+### 2. FUND DONATION MANAGEMENT
+### ===========================================
+
+### 2.1 Get all donations for a fund (paginated)
+GET {{baseUrl}}/donations/fund/{{fundId}}?page=1&pageSize=20
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+
+### 2.2 Get pending donations (all funds)
+GET {{baseUrl}}/donations/pending?page=1&pageSize=20
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+
+### 2.3 Get pending donations for specific fund
+GET {{baseUrl}}/donations/pending?fundId={{fundId}}&page=1&pageSize=20
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+
+### 2.4 Get my pending donations
+GET {{baseUrl}}/donations/my-pending
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+
+### 2.5 Get donation by ID
+GET {{baseUrl}}/donations/{{donationId}}
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+
+### 2.6 Upload proof images for donation
+POST {{baseUrl}}/donations/{{donationId}}/upload-proof
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="images"; filename="proof1.jpg"
+Content-Type: image/jpeg
+
+< ./path/to/proof1.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="images"; filename="proof2.jpg"
+Content-Type: image/jpeg
+
+< ./path/to/proof2.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### 2.7 Confirm donation (manual)
+POST {{baseUrl}}/donations/{{donationId}}/confirm
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+Content-Type: application/json
+
+{
+  "notes": "Đã xác nhận tiền mặt"
+}
+
+### 2.8 Confirm donation with proof
+POST {{baseUrl}}/donations/{{donationId}}/confirm-with-proof
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+
+### 2.9 Reject donation
+POST {{baseUrl}}/donations/{{donationId}}/reject
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+Content-Type: application/json
+
+{
+  "reason": "Hình ảnh chứng minh không rõ ràng"
+}
+
+### 2.10 Update donation (before confirmation)
+PUT {{baseUrl}}/donations/{{donationId}}
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+Content-Type: application/json
+
+{
+  "amount": 600000,
+  "donorName": "Nguyễn Văn A (Updated)",
+  "paymentNotes": "Cập nhật số tiền"
+}
+
+### 2.11 Delete donation (soft delete)
+DELETE {{baseUrl}}/donations/{{donationId}}
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+
+### 2.12 Get donation statistics
+GET {{baseUrl}}/donations/fund/{{fundId}}/statistics
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+
+### ===========================================
+### 3. FUND EXPENSE MANAGEMENT
+### ===========================================
+
+### 3.1 Get all expenses for a fund (paginated)
+GET {{baseUrl}}/fund-expenses/fund/{{fundId}}?page=1&pageSize=20
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+
+### 3.2 Get pending expenses (all funds)
+GET {{baseUrl}}/fund-expenses/pending?page=1&pageSize=20
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+
+### 3.3 Get pending expenses for specific fund
+GET {{baseUrl}}/fund-expenses/pending?fundId={{fundId}}&page=1&pageSize=20
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+
+### 3.4 Get expense by ID
+GET {{baseUrl}}/fund-expenses/{{expenseId}}
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+
+### 3.5 Create expense request (with receipt images)
+POST {{baseUrl}}/FTFundExpense
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="fundId"
+
+{{fundId}}
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="amount"
+
+2000000
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="description"
+
+Mua đồ trang trí Tết
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="event"
+
+Tết Nguyên Đán 2025
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="recipient"
+
+Cửa hàng ABC
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="receiptImages"; filename="receipt1.jpg"
+Content-Type: image/jpeg
+
+< ./path/to/receipt1.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### 3.6 Update expense (before approval)
+PUT {{baseUrl}}/fund-expenses/{{expenseId}}
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+Content-Type: application/json
+
+{
+  "amount": 2500000,
+  "description": "Mua đồ trang trí Tết (Updated)",
+  "event": "Tết Nguyên Đán 2025"
+}
+
+### 3.7 Approve expense (with payment proof)
+POST {{baseUrl}}/fund-expenses/{{expenseId}}/approve
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="notes"
+
+Đã duyệt và thanh toán
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="paymentProof"; filename="payment_proof.jpg"
+Content-Type: image/jpeg
+
+< ./path/to/payment_proof.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### 3.8 Reject expense
+POST {{baseUrl}}/fund-expenses/{{expenseId}}/reject
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+Content-Type: application/json
+
+{
+  "reason": "Hóa đơn không hợp lệ"
+}
+
+### 3.9 Delete expense (soft delete)
+DELETE {{baseUrl}}/fund-expenses/{{expenseId}}
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+
+### 3.10 Get expense statistics
+GET {{baseUrl}}/fund-expenses/fund/{{fundId}}/statistics
+Authorization: Bearer {{token}}
+X-Ftid: {{treeId}}
+
+### ===========================================
+### NOTES:
+### - Replace {{variables}} with actual values
+### - PaymentMethod: 0 = Cash, 1 = BankTransfer
+### - DonationStatus: 0 = Pending, 1 = Completed, 2 = Rejected
+### - TransactionStatus: 1 = Pending, 2 = Approved, 3 = Rejected
+### - For file uploads, use actual file paths
+### ===========================================

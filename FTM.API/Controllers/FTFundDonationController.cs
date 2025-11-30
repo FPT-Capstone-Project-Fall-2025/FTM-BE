@@ -4,10 +4,8 @@ using FTM.Application.IServices;
 using FTM.Domain.DTOs.Funds;
 using FTM.Domain.Entities.Funds;
 using FTM.Domain.Enums;
-using FTM.Infrastructure.Repositories.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace FTM.API.Controllers
 {
@@ -15,16 +13,16 @@ namespace FTM.API.Controllers
     [Route("api/donations")]
     public class FTFundDonationController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IFTFundDonationService _donationService;
         private readonly ILogger<FTFundDonationController> _logger;
         private readonly IBlobStorageService _blobStorageService;
 
         public FTFundDonationController(
-            IUnitOfWork unitOfWork,
+            IFTFundDonationService donationService,
             ILogger<FTFundDonationController> logger,
             IBlobStorageService blobStorageService)
         {
-            _unitOfWork = unitOfWork;
+            _donationService = donationService;
             _logger = logger;
             _blobStorageService = blobStorageService;
         }
@@ -38,20 +36,9 @@ namespace FTM.API.Controllers
         {
             try
             {
-                var donations = await _unitOfWork.Repository<FTFundDonation>().GetQuery()
-                    .Where(d => d.FTFundId == fundId && d.IsDeleted == false)
-                    .Include(d => d.Member)
-                    .Include(d => d.Fund)
-                    .Include(d => d.Confirmer)
-                    .OrderByDescending(d => d.CreatedOn)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync();
+                var result = await _donationService.GetDonationsByFundAsync(fundId, page, pageSize);
 
-                var totalCount = await _unitOfWork.Repository<FTFundDonation>().GetQuery()
-                    .CountAsync(d => d.FTFundId == fundId && d.IsDeleted == false);
-
-                var donationDtos = donations.Select(d => new
+                var donationDtos = result.Items.Select(d => new
                 {
                     d.Id,
                     d.DonationMoney,
@@ -67,16 +54,16 @@ namespace FTM.API.Controllers
                     d.PayOSOrderCode
                 });
 
-                var result = new
+                var response = new
                 {
                     Donations = donationDtos,
-                    TotalCount = totalCount,
-                    Page = page,
-                    PageSize = pageSize,
-                    TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+                    TotalCount = result.TotalCount,
+                    Page = result.Page,
+                    PageSize = result.PageSize,
+                    TotalPages = (int)Math.Ceiling((double)result.TotalCount / result.PageSize)
                 };
 
-                return Ok(new ApiSuccess("Donations retrieved successfully", result));
+                return Ok(new ApiSuccess("Donations retrieved successfully", response));
             }
             catch (Exception ex)
             {
@@ -90,42 +77,36 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpGet("pending")]
         [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
-        public async Task<IActionResult> GetPendingDonations([FromQuery] Guid? treeId = null)
+        public async Task<IActionResult> GetPendingDonations([FromQuery] Guid? fundId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
             try
             {
-                IQueryable<FTFundDonation> query = _unitOfWork.Repository<FTFundDonation>().GetQuery()
-                    .Where(d => d.Status == DonationStatus.Pending && d.IsDeleted == false)
-                    .Include(d => d.Member)
-                    .Include(d => d.Fund);
+                var result = await _donationService.GetPendingDonationsAsync(fundId, page, pageSize);
 
-                // Apply tree filter if provided
-                if (treeId.HasValue)
-                {
-                    query = query.Where(d => d.Fund.FTId == treeId.Value);
-                }
-
-                var donations = await query
-                    .OrderBy(d => d.CreatedOn)
-                    .ToListAsync();
-
-                var donationDtos = donations.Select(d => new
+                var donationDtos = result.Items.Select(d => new
                 {
                     d.Id,
                     d.DonationMoney,
                     DonorName = d.Member?.Fullname ?? d.DonorName ?? "Anonymous",
                     d.PaymentMethod,
                     d.PaymentNotes,
+                    d.Status,
                     CreatedDate = d.CreatedOn,
                     FundName = d.Fund?.FundName,
-                    FundId = d.FTFundId,
-                    TreeId = d.Fund?.FTId,
                     d.PayOSOrderCode,
-                    d.ProofImages, // Payment proof images uploaded by donor
-                    d.Status
+                    d.ProofImages
                 });
 
-                return Ok(new ApiSuccess("Pending donations retrieved successfully", donationDtos));
+                var response = new
+                {
+                    Donations = donationDtos,
+                    TotalCount = result.TotalCount,
+                    Page = result.Page,
+                    PageSize = result.PageSize,
+                    TotalPages = (int)Math.Ceiling((double)result.TotalCount / result.PageSize)
+                };
+
+                return Ok(new ApiSuccess("Pending donations retrieved successfully", response));
             }
             catch (Exception ex)
             {
@@ -147,55 +128,41 @@ namespace FTM.API.Controllers
                 if (!userId.HasValue)
                     return BadRequest(new ApiError("User ID is required"));
 
-                var donations = await _unitOfWork.Repository<FTFundDonation>().GetQuery()
-                    .Where(d => d.FTMemberId == userId.Value 
-                        && d.Status == DonationStatus.Pending 
-                        && d.IsDeleted == false)
-                    .Include(d => d.Member)
-                    .Include(d => d.Fund)
-                    .OrderByDescending(d => d.CreatedOn) // Newest first
-                    .ToListAsync();
+                var donations = await _donationService.GetUserPendingDonationsAsync(userId.Value);
 
                 var donationDtos = donations.Select(d => new
                 {
                     d.Id,
                     d.DonationMoney,
-                    DonorName = d.Member?.Fullname ?? d.DonorName ?? "Anonymous",
                     d.PaymentMethod,
                     d.PaymentNotes,
+                    d.Status,
                     CreatedDate = d.CreatedOn,
                     FundName = d.Fund?.FundName,
-                    FundId = d.FTFundId,
-                    TreeId = d.Fund?.FTId,
-                    d.Status,
                     d.PayOSOrderCode,
-                    d.ProofImages // Payment proof images uploaded by donor
+                    HasProofImages = !string.IsNullOrEmpty(d.ProofImages),
+                    ProofImageCount = string.IsNullOrEmpty(d.ProofImages) ? 0 : d.ProofImages.Split(',').Length
                 });
 
-                return Ok(new ApiSuccess("Your pending donations retrieved successfully", donationDtos));
+                return Ok(new ApiSuccess("My pending donations retrieved successfully", donationDtos));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting user pending donations");
-                return StatusCode(500, new ApiError("Error retrieving pending donations", ex.Message));
+                _logger.LogError(ex, "Error getting my pending donations");
+                return StatusCode(500, new ApiError("Error retrieving my pending donations", ex.Message));
             }
         }
 
         /// <summary>
         /// Get donation by ID
         /// </summary>
-        [HttpGet("{id}")]
+        [HttpGet("{donationId}")]
         [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
-        public async Task<IActionResult> GetDonationById(Guid id)
+        public async Task<IActionResult> GetDonationById(Guid donationId)
         {
             try
             {
-                var donation = await _unitOfWork.Repository<FTFundDonation>().GetQuery()
-                    .Where(d => d.Id == id && d.IsDeleted == false)
-                    .Include(d => d.Member)
-                    .Include(d => d.Fund)
-                    .Include(d => d.Confirmer)
-                    .FirstOrDefaultAsync();
+                var donation = await _donationService.GetByIdAsync(donationId);
 
                 if (donation == null)
                 {
@@ -216,66 +183,48 @@ namespace FTM.API.Controllers
                     donation.ConfirmationNotes,
                     FundName = donation.Fund?.FundName,
                     donation.PayOSOrderCode,
-                    donation.PaymentTransactionId,
-                    donation.ProofImages // Payment proof images
+                    donation.ProofImages
                 };
 
-                return Ok(new ApiSuccess("Donation details retrieved successfully", donationDto));
+                return Ok(new ApiSuccess("Donation retrieved successfully", donationDto));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting donation {DonationId}", id);
-                return StatusCode(500, new ApiError("Error retrieving donation details", ex.Message));
+                _logger.LogError(ex, "Error getting donation {DonationId}", donationId);
+                return StatusCode(500, new ApiError("Error retrieving donation", ex.Message));
             }
         }
 
         /// <summary>
         /// Confirm a donation (for cash payments or manual confirmation)
         /// </summary>
-        [HttpPost("{id}/confirm")]
+        [HttpPost("{donationId}/confirm")]
         [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
-        public async Task<IActionResult> ConfirmDonation(Guid id, [FromBody] ConfirmDonationRequest request)
+        public async Task<IActionResult> ConfirmDonation(Guid donationId, [FromBody] ConfirmDonationRequest request)
         {
             try
             {
-                var donation = await _unitOfWork.Repository<FTFundDonation>().GetQuery()
-                    .Include(d => d.Fund)
-                    .FirstOrDefaultAsync(d => d.Id == id && d.IsDeleted == false);
+                var confirmerId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 
-                if (donation == null)
+                var donation = await _donationService.ConfirmDonationAsync(donationId, confirmerId, request.Notes);
+
+                _logger.LogInformation("Confirmed donation {DonationId} by {ConfirmerId}", donationId, confirmerId);
+
+                return Ok(new ApiSuccess("Donation confirmed successfully", new
                 {
-                    return NotFound(new ApiError("Donation not found"));
-                }
-
-                if (donation.Status == DonationStatus.Confirmed)
-                {
-                    return BadRequest(new ApiError("Donation already confirmed"));
-                }
-
-                // Confirm the donation
-                donation.Status = DonationStatus.Confirmed;
-                donation.ConfirmedBy = request.ConfirmerId;
-                donation.ConfirmedOn = DateTimeOffset.UtcNow;
-                donation.ConfirmationNotes = request.Notes;
-                donation.LastModifiedOn = DateTimeOffset.UtcNow;
-
-                // Update fund balance
-                if (donation.Fund != null)
-                {
-                    donation.Fund.CurrentMoney += donation.DonationMoney;
-                    donation.Fund.LastModifiedOn = DateTimeOffset.UtcNow;
-                }
-
-                _unitOfWork.Repository<FTFundDonation>().Update(donation);
-                await _unitOfWork.CompleteAsync();
-
-                _logger.LogInformation("Confirmed donation {DonationId} by user {ConfirmerId}", id, request.ConfirmerId);
-
-                return Ok(new ApiSuccess("Donation confirmed successfully"));
+                    DonationId = donation.Id,
+                    donation.Status,
+                    Amount = donation.DonationMoney,
+                    ConfirmedAt = donation.ConfirmedOn
+                }));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error confirming donation {DonationId}", id);
+                _logger.LogError(ex, "Error confirming donation {DonationId}", donationId);
                 return StatusCode(500, new ApiError("Error confirming donation", ex.Message));
             }
         }
@@ -283,42 +232,30 @@ namespace FTM.API.Controllers
         /// <summary>
         /// Reject a donation
         /// </summary>
-        [HttpPost("{id}/reject")]
+        [HttpPost("{donationId}/reject")]
         [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
-        public async Task<IActionResult> RejectDonation(Guid id, [FromBody] RejectDonationRequest request)
+        public async Task<IActionResult> RejectDonation(Guid donationId, [FromBody] RejectDonationRequest request)
         {
             try
             {
-                var donation = await _unitOfWork.Repository<FTFundDonation>().GetQuery()
-                    .FirstOrDefaultAsync(d => d.Id == id && d.IsDeleted == false);
+                var donation = await _donationService.RejectDonationAsync(donationId, request.Reason);
 
-                if (donation == null)
+                _logger.LogInformation("Rejected donation {DonationId}", donationId);
+
+                return Ok(new ApiSuccess("Donation rejected successfully", new
                 {
-                    return NotFound(new ApiError("Donation not found"));
-                }
-
-                if (donation.Status != DonationStatus.Pending)
-                {
-                    return BadRequest(new ApiError("Can only reject pending donations"));
-                }
-
-                donation.Status = DonationStatus.Rejected;
-                donation.ConfirmedBy = request.RejectedBy;
-                donation.ConfirmedOn = DateTimeOffset.UtcNow;
-                donation.ConfirmationNotes = request.Reason;
-                donation.LastModifiedOn = DateTimeOffset.UtcNow;
-
-                _unitOfWork.Repository<FTFundDonation>().Update(donation);
-                await _unitOfWork.CompleteAsync();
-
-                _logger.LogInformation("Rejected donation {DonationId} by user {RejectedBy}: {Reason}", 
-                    id, request.RejectedBy, request.Reason);
-
-                return Ok(new ApiSuccess("Donation rejected successfully"));
+                    DonationId = donation.Id,
+                    donation.Status,
+                    Reason = donation.ConfirmationNotes
+                }));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error rejecting donation {DonationId}", id);
+                _logger.LogError(ex, "Error rejecting donation {DonationId}", donationId);
                 return StatusCode(500, new ApiError("Error rejecting donation", ex.Message));
             }
         }
@@ -326,92 +263,54 @@ namespace FTM.API.Controllers
         /// <summary>
         /// Get donation statistics for a fund
         /// </summary>
-        [HttpGet("fund/{fundId}/stats")]
+        [HttpGet("fund/{fundId}/statistics")]
         [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> GetDonationStats(Guid fundId)
         {
             try
             {
-                var fund = await _unitOfWork.Repository<FTFund>().GetQuery()
-                    .Where(f => f.Id == fundId && f.IsDeleted == false)
-                    .Include(f => f.Donations.Where(d => d.IsDeleted == false))
-                    .FirstOrDefaultAsync();
-
-                if (fund == null)
-                {
-                    return NotFound(new ApiError("Fund not found"));
-                }
-
-                var donations = fund.Donations ?? new List<FTFundDonation>();
-
-                var stats = new
-                {
-                    TotalDonations = donations.Count,
-                    TotalAmount = donations.Where(d => d.Status == DonationStatus.Confirmed).Sum(d => d.DonationMoney),
-                    PendingCount = donations.Count(d => d.Status == DonationStatus.Pending),
-                    PendingAmount = donations.Where(d => d.Status == DonationStatus.Pending).Sum(d => d.DonationMoney),
-                    ConfirmedCount = donations.Count(d => d.Status == DonationStatus.Confirmed),
-                    RejectedCount = donations.Count(d => d.Status == DonationStatus.Rejected),
-                    CashDonations = donations.Count(d => d.PaymentMethod == PaymentMethod.Cash),
-                    OnlineDonations = donations.Count(d => d.PaymentMethod == PaymentMethod.BankTransfer),
-                    AverageAmount = donations.Where(d => d.Status == DonationStatus.Confirmed && d.DonationMoney > 0)
-                        .DefaultIfEmpty()
-                        .Average(d => d?.DonationMoney ?? 0),
-                    Fund = new
-                    {
-                        fund.Id,
-                        fund.FundName,
-                        CurrentBalance = fund.CurrentMoney,
-                        fund.FundNote
-                    }
-                };
+                var stats = await _donationService.GetDonationStatisticsAsync(fundId);
 
                 return Ok(new ApiSuccess("Donation statistics retrieved successfully", stats));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting donation stats for fund {FundId}", fundId);
-                return StatusCode(500, new ApiError("Error retrieving donation statistics", ex.Message));
+                _logger.LogError(ex, "Error getting donation statistics for fund {FundId}", fundId);
+                return StatusCode(500, new ApiError("Error retrieving statistics", ex.Message));
             }
         }
 
         /// <summary>
         /// Update donation details (before confirmation)
         /// </summary>
-        [HttpPut("{id}")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
-        public async Task<IActionResult> UpdateDonation(Guid id, [FromBody] UpdateDonationRequest request)
+        [HttpPut("{donationId}")]
+        [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
+        public async Task<IActionResult> UpdateDonation(Guid donationId, [FromBody] UpdateDonationRequest request)
         {
             try
             {
-                var donation = await _unitOfWork.Repository<FTFundDonation>().GetQuery()
-                    .FirstOrDefaultAsync(d => d.Id == id && d.IsDeleted == false);
-
-                if (donation == null)
+                var donation = new FTFundDonation
                 {
-                    return NotFound(new ApiError("Donation not found"));
-                }
+                    Id = donationId,
+                    DonationMoney = request.Amount,
+                    DonorName = request.DonorName,
+                    PaymentNotes = request.PaymentNotes,
+                    ProofImages = request.ProofImages
+                };
 
-                if (donation.Status != DonationStatus.Pending)
-                {
-                    return BadRequest(new ApiError("Can only update pending donations"));
-                }
+                var updated = await _donationService.UpdateDonationAsync(donation);
 
-                donation.DonationMoney = request.Amount;
-                donation.DonorName = request.DonorName;
-                donation.PaymentNotes = request.PaymentNotes;
-                donation.LastModifiedOn = DateTimeOffset.UtcNow;
+                _logger.LogInformation("Updated donation {DonationId}", donationId);
 
-                _unitOfWork.Repository<FTFundDonation>().Update(donation);
-                await _unitOfWork.CompleteAsync();
-
-                _logger.LogInformation("Updated donation {DonationId}", id);
-
-                return Ok(new ApiSuccess("Donation updated successfully"));
+                return Ok(new ApiSuccess("Donation updated successfully", new { DonationId = updated.Id }));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating donation {DonationId}", id);
+                _logger.LogError(ex, "Error updating donation {DonationId}", donationId);
                 return StatusCode(500, new ApiError("Error updating donation", ex.Message));
             }
         }
@@ -419,38 +318,25 @@ namespace FTM.API.Controllers
         /// <summary>
         /// Delete donation (soft delete, only for pending donations)
         /// </summary>
-        [HttpDelete("{id}")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
-        public async Task<IActionResult> DeleteDonation(Guid id)
+        [HttpDelete("{donationId}")]
+        [FTAuthorize(MethodType.DELETE, FeatureType.FUND)]
+        public async Task<IActionResult> DeleteDonation(Guid donationId)
         {
             try
             {
-                var donation = await _unitOfWork.Repository<FTFundDonation>().GetQuery()
-                    .FirstOrDefaultAsync(d => d.Id == id && d.IsDeleted == false);
+                await _donationService.DeleteDonationAsync(donationId);
 
-                if (donation == null)
-                {
-                    return NotFound(new ApiError("Donation not found"));
-                }
-
-                if (donation.Status == DonationStatus.Confirmed)
-                {
-                    return BadRequest(new ApiError("Cannot delete confirmed donations"));
-                }
-
-                donation.IsDeleted = true;
-                donation.LastModifiedOn = DateTimeOffset.UtcNow;
-
-                _unitOfWork.Repository<FTFundDonation>().Update(donation);
-                await _unitOfWork.CompleteAsync();
-
-                _logger.LogInformation("Deleted donation {DonationId}", id);
+                _logger.LogInformation("Deleted donation {DonationId}", donationId);
 
                 return Ok(new ApiSuccess("Donation deleted successfully"));
             }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
+            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting donation {DonationId}", id);
+                _logger.LogError(ex, "Error deleting donation {DonationId}", donationId);
                 return StatusCode(500, new ApiError("Error deleting donation", ex.Message));
             }
         }
@@ -459,147 +345,102 @@ namespace FTM.API.Controllers
         /// Upload proof images to blob storage for a specific fund donation
         /// Images are automatically linked to the donation upon upload
         /// </summary>
-        [HttpPost("{donationId:guid}/upload-proof")]
-        [Consumes("multipart/form-data")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
+        [HttpPost("{donationId}/upload-proof")]
+        [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
         public async Task<IActionResult> UploadProofImages(Guid donationId, [FromForm] List<IFormFile> images)
         {
             try
             {
-                // Validate donation exists
-                var donation = await _unitOfWork.Repository<FTFundDonation>().GetQuery()
-                    .FirstOrDefaultAsync(d => d.Id == donationId && d.IsDeleted == false);
+                var donation = await _donationService.GetByIdAsync(donationId);
 
                 if (donation == null)
-                    return NotFound(new ApiError("Donation not found"));
-
-                // Validate donation status
-                if (donation.Status == DonationStatus.Completed)
-                    return BadRequest(new ApiError("Cannot upload proof for already confirmed donation"));
-
-                if (donation.Status == DonationStatus.Rejected)
-                    return BadRequest(new ApiError("Cannot upload proof for rejected donation"));
-
-                if (images == null || !images.Any())
-                    return BadRequest(new ApiError("No images provided"));
-
-                if (images.Count > 5)
-                    return BadRequest(new ApiError("Maximum 5 images allowed"));
-
-                var uploadedUrls = new List<string>();
-                foreach (var image in images)
                 {
-                    // Validate file type
-                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-                    var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
-
-                    if (!allowedExtensions.Contains(extension))
-                        return BadRequest(new ApiError($"Invalid file type: {extension}. Allowed: {string.Join(", ", allowedExtensions)}"));
-
-                    // Validate file size (max 5MB)
-                    if (image.Length > 5 * 1024 * 1024)
-                        return BadRequest(new ApiError($"File {image.FileName} exceeds 5MB limit"));
-
-                    // Upload to blob storage with donationId in filename
-                    var fileName = $"fund-donation-proof_{donationId}_{Guid.NewGuid()}{extension}";
-                    var blobUrl = await _blobStorageService.UploadFileAsync(image, "fund-donation-proofs", fileName);
-                    uploadedUrls.Add(blobUrl);
+                    return NotFound(new ApiError("Donation not found"));
                 }
 
-                // Automatically update donation with proof images
-                var existingProofs = string.IsNullOrWhiteSpace(donation.ProofImages)
-                    ? new List<string>()
-                    : donation.ProofImages.Split(',').ToList();
+                if (donation.Status != DonationStatus.Pending)
+                {
+                    return BadRequest(new ApiError("Can only upload proof for pending donations"));
+                }
 
-                existingProofs.AddRange(uploadedUrls);
-                donation.ProofImages = string.Join(",", existingProofs);
-                donation.LastModifiedOn = DateTimeOffset.UtcNow;
+                if (images == null || images.Count == 0)
+                {
+                    return BadRequest(new ApiError("No images provided"));
+                }
 
-                _unitOfWork.Repository<FTFundDonation>().Update(donation);
-                await _unitOfWork.CompleteAsync();
+                var uploadedUrls = new List<string>();
 
-                _logger.LogInformation("Uploaded {Count} proof images for donation {DonationId}", uploadedUrls.Count, donationId);
+                foreach (var image in images)
+                {
+                    var imageUrl = await _blobStorageService.UploadFileAsync(
+                        image,
+                        "donations",
+                        $"{donationId}/proof/{Guid.NewGuid()}{Path.GetExtension(image.FileName)}");
 
-                return Ok(new ApiSuccess("Images uploaded and linked to donation successfully", new
+                    uploadedUrls.Add(imageUrl);
+                }
+
+                // Update donation with proof images
+                donation.ProofImages = string.Join(",", uploadedUrls);
+                await _donationService.UpdateDonationAsync(donation);
+
+                _logger.LogInformation("Uploaded {Count} proof images for donation {DonationId}", images.Count, donationId);
+
+                return Ok(new ApiSuccess("Proof images uploaded successfully", new
                 {
                     DonationId = donationId,
                     ImageUrls = uploadedUrls,
-                    AllProofImages = existingProofs,
-                    CommaSeparated = donation.ProofImages,
-                    Count = uploadedUrls.Count,
-                    TotalProofs = existingProofs.Count
+                    TotalImages = uploadedUrls.Count
                 }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error uploading proof images for donation {DonationId}", donationId);
-                return BadRequest(new ApiError("Error uploading images", ex.Message));
+                return StatusCode(500, new ApiError("Error uploading proof images", ex.Message));
             }
         }
 
         /// <summary>
         /// Confirm fund donation (proof images should be uploaded via upload-proof endpoint first)
         /// </summary>
-        [HttpPost("{donationId:guid}/confirm")]
+        [HttpPost("{donationId}/confirm-with-proof")]
         [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
-        public async Task<IActionResult> ConfirmFundDonation(Guid donationId, [FromBody] ConfirmFundDonationDto request)
+        public async Task<IActionResult> ConfirmFundDonation(Guid donationId)
         {
             try
             {
-                if (donationId != request.DonationId)
-                    return BadRequest(new ApiError("Donation ID mismatch"));
+                var confirmerId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 
-                var donation = await _unitOfWork.Repository<FTFundDonation>().GetQuery()
-                    .Include(d => d.Fund)
-                    .FirstOrDefaultAsync(d => d.Id == donationId && d.IsDeleted == false);
+                var donation = await _donationService.GetByIdAsync(donationId);
 
                 if (donation == null)
-                    return NotFound(new ApiError("Donation not found"));
-
-                // Validate donation can be confirmed
-                if (donation.Status == DonationStatus.Completed)
-                    return BadRequest(new ApiError("Donation already confirmed"));
-
-                if (donation.Status == DonationStatus.Rejected)
-                    return BadRequest(new ApiError("Cannot confirm rejected donation"));
-
-                // Validate proof images are provided (should be uploaded via upload-proof endpoint)
-                if (string.IsNullOrWhiteSpace(donation.ProofImages))
-                    return BadRequest(new ApiError("Proof images are required. Please upload proof images first using the upload-proof endpoint."));
-
-                // Update donation status
-                donation.Status = DonationStatus.Completed;
-                donation.ConfirmedBy = request.ConfirmedBy;
-                donation.ConfirmedOn = DateTimeOffset.UtcNow;
-                donation.ConfirmationNotes = request.Notes;
-                // ProofImages already set via upload-proof endpoint
-                donation.LastModifiedOn = DateTimeOffset.UtcNow;
-
-                _unitOfWork.Repository<FTFundDonation>().Update(donation);
-
-                // Update fund balance
-                if (donation.Fund != null)
                 {
-                    donation.Fund.CurrentMoney += donation.DonationMoney;
-                    donation.Fund.LastModifiedOn = DateTimeOffset.UtcNow;
-                    _unitOfWork.Repository<FTFund>().Update(donation.Fund);
+                    return NotFound(new ApiError("Donation not found"));
                 }
 
-                await _unitOfWork.CompleteAsync();
+                if (string.IsNullOrEmpty(donation.ProofImages))
+                {
+                    return BadRequest(new ApiError("Please upload proof images first using the upload-proof endpoint"));
+                }
+
+                var confirmed = await _donationService.ConfirmDonationAsync(donationId, confirmerId, "Confirmed with proof images");
 
                 _logger.LogInformation("Confirmed donation {DonationId} with proof images", donationId);
 
                 return Ok(new ApiSuccess("Donation confirmed successfully", new
                 {
-                    DonationId = donation.Id,
-                    Status = donation.Status.ToString(), // Add ToString() for clarity
-                    StatusCode = (int)donation.Status, // Add numeric value
-                    Amount = donation.DonationMoney,
-                    ConfirmedAt = donation.ConfirmedOn,
-                    ProofImages = donation.ProofImages?.Split(','),
-                    ConfirmedBy = donation.ConfirmedBy,
-                    NewFundBalance = donation.Fund?.CurrentMoney
+                    DonationId = confirmed.Id,
+                    Status = confirmed.Status.ToString(),
+                    StatusCode = (int)confirmed.Status,
+                    Amount = confirmed.DonationMoney,
+                    ConfirmedAt = confirmed.ConfirmedOn,
+                    ProofImages = confirmed.ProofImages?.Split(','),
+                    ConfirmedBy = confirmed.ConfirmedBy
                 }));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
             }
             catch (Exception ex)
             {
@@ -613,13 +454,11 @@ namespace FTM.API.Controllers
 
     public class ConfirmDonationRequest
     {
-        public Guid ConfirmerId { get; set; }
         public string? Notes { get; set; }
     }
 
     public class RejectDonationRequest
     {
-        public Guid RejectedBy { get; set; }
         public string Reason { get; set; } = string.Empty;
     }
 
@@ -628,6 +467,7 @@ namespace FTM.API.Controllers
         public decimal Amount { get; set; }
         public string? DonorName { get; set; }
         public string? PaymentNotes { get; set; }
+        public string? ProofImages { get; set; }
     }
 
     #endregion

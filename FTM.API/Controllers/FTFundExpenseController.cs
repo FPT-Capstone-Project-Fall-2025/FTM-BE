@@ -3,9 +3,7 @@ using FTM.API.Reponses;
 using FTM.Application.IServices;
 using FTM.Domain.Entities.Funds;
 using FTM.Domain.Enums;
-using FTM.Infrastructure.Repositories.Interface;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace FTM.API.Controllers
 {
@@ -13,16 +11,16 @@ namespace FTM.API.Controllers
     [Route("api/fund-expenses")]
     public class FTFundExpenseController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IFTFundExpenseService _expenseService;
         private readonly ILogger<FTFundExpenseController> _logger;
         private readonly IBlobStorageService _blobStorageService;
 
         public FTFundExpenseController(
-            IUnitOfWork unitOfWork,
+            IFTFundExpenseService expenseService,
             ILogger<FTFundExpenseController> logger,
             IBlobStorageService blobStorageService)
         {
-            _unitOfWork = unitOfWork;
+            _expenseService = expenseService;
             _logger = logger;
             _blobStorageService = blobStorageService;
         }
@@ -32,58 +30,39 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpGet("fund/{fundId}")]
         [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
-        public async Task<IActionResult> GetExpensesByFund(Guid fundId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] TransactionStatus? status = null)
+        public async Task<IActionResult> GetExpensesByFund(Guid fundId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
             try
             {
-                IQueryable<FTFundExpense> query = _unitOfWork.Repository<FTFundExpense>().GetQuery()
-                    .Where(e => e.FTFundId == fundId && e.IsDeleted == false)
-                    .Include(e => e.Fund)
-                    .Include(e => e.Approver)
-                    .Include(e => e.Campaign);
+                var result = await _expenseService.GetExpensesByFundAsync(fundId, page, pageSize);
 
-                // Filter by status if provided
-                if (status.HasValue)
-                {
-                    query = query.Where(e => e.Status == status.Value);
-                }
-
-                var totalCount = await query.CountAsync();
-
-                var expenses = await query
-                    .OrderByDescending(e => e.CreatedOn)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync();
-
-                var expenseDtos = expenses.Select(e => new
+                var expenseDtos = result.Items.Select(e => new
                 {
                     e.Id,
                     e.ExpenseAmount,
                     e.ExpenseDescription,
-                    e.PlannedDate,
                     e.ExpenseEvent,
                     e.Recipient,
-                    Status = e.Status.ToString(),
+                    e.Status,
                     CreatedDate = e.CreatedOn,
-                    e.ApprovalFeedback,
-                    e.ApprovedBy,
                     e.ApprovedOn,
                     ApproverName = e.Approver?.Fullname,
+                    e.ApprovalFeedback,
                     FundName = e.Fund?.FundName,
-                    CampaignName = e.Campaign?.CampaignName
+                    e.ReceiptImages,
+                    e.PaymentProofImage
                 });
 
-                var result = new
+                var response = new
                 {
                     Expenses = expenseDtos,
-                    TotalCount = totalCount,
-                    Page = page,
-                    PageSize = pageSize,
-                    TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+                    TotalCount = result.TotalCount,
+                    Page = result.Page,
+                    PageSize = result.PageSize,
+                    TotalPages = (int)Math.Ceiling((double)result.TotalCount / result.PageSize)
                 };
 
-                return Ok(new ApiSuccess("Expenses retrieved successfully", result));
+                return Ok(new ApiSuccess("Expenses retrieved successfully", response));
             }
             catch (Exception ex)
             {
@@ -97,43 +76,35 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpGet("pending")]
         [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
-        public async Task<IActionResult> GetPendingExpenses([FromQuery] Guid? treeId = null)
+        public async Task<IActionResult> GetPendingExpenses([FromQuery] Guid? fundId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
             try
             {
-                IQueryable<FTFundExpense> query = _unitOfWork.Repository<FTFundExpense>().GetQuery()
-                    .Where(e => e.Status == TransactionStatus.Pending && e.IsDeleted == false)
-                    .Include(e => e.Fund)
-                    .Include(e => e.Campaign);
+                var result = await _expenseService.GetPendingExpensesAsync(fundId, page, pageSize);
 
-                // Apply tree filter if provided
-                if (treeId.HasValue)
-                {
-                    query = query.Where(e => e.Fund.FTId == treeId.Value);
-                }
-
-                var expenses = await query
-                    .OrderBy(e => e.CreatedOn)
-                    .ToListAsync();
-
-                var expenseDtos = expenses.Select(e => new
+                var expenseDtos = result.Items.Select(e => new
                 {
                     e.Id,
                     e.ExpenseAmount,
                     e.ExpenseDescription,
-                    e.PlannedDate,
                     e.ExpenseEvent,
                     e.Recipient,
-                    e.ReceiptImages, // Receipt/proof images uploaded with expense request
-                    e.Status, // Approval status (Pending/Approved/Rejected)
+                    e.Status,
                     CreatedDate = e.CreatedOn,
                     FundName = e.Fund?.FundName,
-                    FundId = e.FTFundId,
-                    CampaignName = e.Campaign?.CampaignName,
-                    CurrentFundBalance = e.Fund?.CurrentMoney
+                    e.ReceiptImages
                 });
 
-                return Ok(new ApiSuccess("Pending expenses retrieved successfully", expenseDtos));
+                var response = new
+                {
+                    Expenses = expenseDtos,
+                    TotalCount = result.TotalCount,
+                    Page = result.Page,
+                    PageSize = result.PageSize,
+                    TotalPages = (int)Math.Ceiling((double)result.TotalCount / result.PageSize)
+                };
+
+                return Ok(new ApiSuccess("Pending expenses retrieved successfully", response));
             }
             catch (Exception ex)
             {
@@ -145,47 +116,41 @@ namespace FTM.API.Controllers
         /// <summary>
         /// Get expense by ID
         /// </summary>
-        [HttpGet("{id}")]
+        [HttpGet("{expenseId}")]
         [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
-        public async Task<IActionResult> GetExpenseById(Guid id)
+        public async Task<IActionResult> GetExpenseById(Guid expenseId)
         {
             try
             {
-                var expense = await _unitOfWork.Repository<FTFundExpense>().GetQuery()
-                    .Where(e => e.Id == id && e.IsDeleted == false)
-                    .Include(e => e.Fund)
-                    .Include(e => e.Approver)
-                    .Include(e => e.Campaign)
-                    .FirstOrDefaultAsync();
+                var expense = await _expenseService.GetByIdAsync(expenseId);
 
                 if (expense == null)
+                {
                     return NotFound(new ApiError("Expense not found"));
+                }
 
                 var expenseDto = new
                 {
                     expense.Id,
                     expense.ExpenseAmount,
                     expense.ExpenseDescription,
-                    expense.PlannedDate,
                     expense.ExpenseEvent,
                     expense.Recipient,
-                    Status = expense.Status.ToString(),
+                    expense.Status,
                     CreatedDate = expense.CreatedOn,
-                    expense.ApprovalFeedback,
-                    expense.ApprovedBy,
                     expense.ApprovedOn,
                     ApproverName = expense.Approver?.Fullname,
+                    expense.ApprovalFeedback,
                     FundName = expense.Fund?.FundName,
-                    FundId = expense.FTFundId,
-                    CurrentFundBalance = expense.Fund?.CurrentMoney,
-                    CampaignName = expense.Campaign?.CampaignName
+                    expense.ReceiptImages,
+                    expense.PaymentProofImage
                 };
 
                 return Ok(new ApiSuccess("Expense retrieved successfully", expenseDto));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting expense {ExpenseId}", id);
+                _logger.LogError(ex, "Error getting expense {ExpenseId}", expenseId);
                 return StatusCode(500, new ApiError("Error retrieving expense", ex.Message));
             }
         }
@@ -199,31 +164,9 @@ namespace FTM.API.Controllers
         {
             try
             {
-                var expenses = await _unitOfWork.Repository<FTFundExpense>().GetQuery()
-                    .Where(e => e.FTFundId == fundId && e.IsDeleted == false)
-                    .ToListAsync();
+                var stats = await _expenseService.GetExpenseStatisticsAsync(fundId);
 
-                var stats = new
-                {
-                    TotalExpenses = expenses.Count,
-                    PendingCount = expenses.Count(e => e.Status == TransactionStatus.Pending),
-                    ApprovedCount = expenses.Count(e => e.Status == TransactionStatus.Approved),
-                    RejectedCount = expenses.Count(e => e.Status == TransactionStatus.Rejected),
-                    TotalApprovedAmount = expenses.Where(e => e.Status == TransactionStatus.Approved).Sum(e => e.ExpenseAmount),
-                    TotalPendingAmount = expenses.Where(e => e.Status == TransactionStatus.Pending).Sum(e => e.ExpenseAmount),
-                    EventBreakdown = expenses
-                        .Where(e => e.Status == TransactionStatus.Approved && !string.IsNullOrEmpty(e.ExpenseEvent))
-                        .GroupBy(e => e.ExpenseEvent!)
-                        .Select(g => new
-                        {
-                            Event = g.Key,
-                            Count = g.Count(),
-                            TotalAmount = g.Sum(e => e.ExpenseAmount)
-                        })
-                        .ToList()
-                };
-
-                return Ok(new ApiSuccess("Statistics retrieved successfully", stats));
+                return Ok(new ApiSuccess("Expense statistics retrieved successfully", stats));
             }
             catch (Exception ex)
             {
@@ -242,64 +185,41 @@ namespace FTM.API.Controllers
         {
             try
             {
-                // Validate fund exists
-                var fund = await _unitOfWork.Repository<FTFund>().GetByIdAsync(request.FundId);
-                if (fund == null)
-                    return NotFound(new ApiError("Fund not found"));
-
-                // Upload receipt images to blob storage
                 var receiptUrls = new List<string>();
-                if (request.ReceiptImages != null && request.ReceiptImages.Any())
+
+                if (request.ReceiptImages != null && request.ReceiptImages.Count > 0)
                 {
-                    foreach (var file in request.ReceiptImages)
+                    foreach (var image in request.ReceiptImages)
                     {
-                        var fileName = $"{Guid.NewGuid()}_{file.FileName}";
-                        var url = await _blobStorageService.UploadFileAsync(file, "fund-expense-receipts", fileName);
-                        receiptUrls.Add(url);
+                        var imageUrl = await _blobStorageService.UploadFileAsync(
+                            image,
+                            "expenses",
+                            $"{Guid.NewGuid()}/receipts/{Guid.NewGuid()}{Path.GetExtension(image.FileName)}");
+
+                        receiptUrls.Add(imageUrl);
                     }
                 }
 
-                // Create expense
                 var expense = new FTFundExpense
                 {
-                    Id = Guid.NewGuid(),
                     FTFundId = request.FundId,
                     CampaignId = request.CampaignId,
                     ExpenseAmount = request.Amount,
                     ExpenseDescription = request.Description,
-                    PlannedDate = request.PlannedDate ?? DateTimeOffset.UtcNow,
-                    ExpenseEvent = request.ExpenseEvent,
+                    ExpenseEvent = request.Event,
                     Recipient = request.Recipient,
-                    ReceiptImages = receiptUrls.Any() ? string.Join(",", receiptUrls) : null,
-                    Status = TransactionStatus.Pending,
-                    CreatedOn = DateTimeOffset.UtcNow,
-                    IsDeleted = false
+                    PlannedDate = request.PlannedDate,
+                    ReceiptImages = receiptUrls.Count > 0 ? string.Join(",", receiptUrls) : null
                 };
 
-                await _unitOfWork.Repository<FTFundExpense>().AddAsync(expense);
-                await _unitOfWork.CompleteAsync();
+                var created = await _expenseService.CreateExpenseAsync(expense);
 
-                _logger.LogInformation("Created expense request {ExpenseId} for fund {FundId} with {Count} receipt images",
-                    expense.Id, request.FundId, receiptUrls.Count);
+                _logger.LogInformation("Created expense {ExpenseId} for fund {FundId}", created.Id, request.FundId);
 
-                // Warn if expense would exceed current balance
-                string? warning = null;
-                if (fund.CurrentMoney < expense.ExpenseAmount)
+                return Ok(new ApiSuccess("Expense created successfully", new
                 {
-                    warning = "Expense exceeds current fund balance";
-                    _logger.LogWarning("Expense {ExpenseId} amount ({Amount}) exceeds fund balance ({Balance})",
-                        expense.Id, expense.ExpenseAmount, fund.CurrentMoney);
-                }
-
-                return Ok(new ApiSuccess("Expense request created with receipts, pending approval", new
-                {
-                    ExpenseId = expense.Id,
-                    Amount = expense.ExpenseAmount,
-                    Description = expense.ExpenseDescription,
-                    Status = expense.Status.ToString(),
-                    ReceiptCount = receiptUrls.Count,
-                    ReceiptUrls = receiptUrls,
-                    Warning = warning
+                    ExpenseId = created.Id,
+                    ReceiptCount = receiptUrls.Count
                 }));
             }
             catch (Exception ex)
@@ -312,53 +232,34 @@ namespace FTM.API.Controllers
         /// <summary>
         /// Update pending expense
         /// </summary>
-        [HttpPut("{id}")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
-        public async Task<IActionResult> UpdateExpense(Guid id, [FromBody] UpdateExpenseRequest request)
+        [HttpPut("{expenseId}")]
+        [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
+        public async Task<IActionResult> UpdateExpense(Guid expenseId, [FromBody] UpdateExpenseRequest request)
         {
             try
             {
-                var expense = await _unitOfWork.Repository<FTFundExpense>().GetByIdAsync(id);
-                if (expense == null || expense.IsDeleted == true)
-                    return NotFound(new ApiError("Expense not found"));
-
-                // Only allow updating pending expenses
-                if (expense.Status != TransactionStatus.Pending)
-                    return BadRequest(new ApiError("Cannot update non-pending expense"));
-
-                // Update fields
-                if (request.Amount.HasValue)
-                    expense.ExpenseAmount = request.Amount.Value;
-                if (request.Description != null)
-                    expense.ExpenseDescription = request.Description;
-                if (request.PlannedDate.HasValue)
-                    expense.PlannedDate = request.PlannedDate.Value;
-                if (request.ExpenseEvent != null)
-                    expense.ExpenseEvent = request.ExpenseEvent;
-                if (request.Recipient != null)
-                    expense.Recipient = request.Recipient;
-
-                _unitOfWork.Repository<FTFundExpense>().Update(expense);
-                await _unitOfWork.CompleteAsync();
-
-                _logger.LogInformation("Updated expense {ExpenseId}", id);
-
-                var result = new
+                var expense = new FTFundExpense
                 {
-                    expense.Id,
-                    expense.ExpenseAmount,
-                    expense.ExpenseDescription,
-                    expense.PlannedDate,
-                    expense.ExpenseEvent,
-                    expense.Recipient,
-                    Status = expense.Status.ToString()
+                    Id = expenseId,
+                    ExpenseAmount = request.Amount,
+                    ExpenseDescription = request.Description,
+                    ExpenseEvent = request.Event,
+                    ReceiptImages = request.ReceiptImages
                 };
 
-                return Ok(new ApiSuccess("Expense updated successfully", result));
+                var updated = await _expenseService.UpdateExpenseAsync(expense);
+
+                _logger.LogInformation("Updated expense {ExpenseId}", expenseId);
+
+                return Ok(new ApiSuccess("Expense updated successfully", new { ExpenseId = updated.Id }));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating expense {ExpenseId}", id);
+                _logger.LogError(ex, "Error updating expense {ExpenseId}", expenseId);
                 return StatusCode(500, new ApiError("Error updating expense", ex.Message));
             }
         }
@@ -366,30 +267,25 @@ namespace FTM.API.Controllers
         /// <summary>
         /// Delete pending expense (soft delete)
         /// </summary>
-        [HttpDelete("{id}")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
-        public async Task<IActionResult> DeleteExpense(Guid id)
+        [HttpDelete("{expenseId}")]
+        [FTAuthorize(MethodType.DELETE, FeatureType.FUND)]
+        public async Task<IActionResult> DeleteExpense(Guid expenseId)
         {
             try
             {
-                var expense = await _unitOfWork.Repository<FTFundExpense>().GetByIdAsync(id);
-                if (expense == null || expense.IsDeleted == true)
-                    return NotFound(new ApiError("Expense not found"));
+                await _expenseService.DeleteExpenseAsync(expenseId);
 
-                // Only allow deleting pending expenses
-                if (expense.Status != TransactionStatus.Pending)
-                    return BadRequest(new ApiError("Cannot delete non-pending expense"));
-
-                _unitOfWork.Repository<FTFundExpense>().Delete(expense);
-                await _unitOfWork.CompleteAsync();
-
-                _logger.LogInformation("Deleted expense {ExpenseId}", id);
+                _logger.LogInformation("Deleted expense {ExpenseId}", expenseId);
 
                 return Ok(new ApiSuccess("Expense deleted successfully"));
             }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
+            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting expense {ExpenseId}", id);
+                _logger.LogError(ex, "Error deleting expense {ExpenseId}", expenseId);
                 return StatusCode(500, new ApiError("Error deleting expense", ex.Message));
             }
         }
@@ -398,73 +294,44 @@ namespace FTM.API.Controllers
         /// Approve expense with payment proof and deduct from fund balance
         /// Manager must upload payment proof when approving
         /// </summary>
-        [HttpPost("{id}/approve")]
+        [HttpPost("{expenseId}/approve")]
         [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
-        public async Task<IActionResult> ApproveExpense(Guid id, [FromForm] ApproveExpenseRequest request)
+        public async Task<IActionResult> ApproveExpense(Guid expenseId, [FromForm] ApproveExpenseRequest request)
         {
             try
             {
-                // Validate payment proof is provided
-                if (request.PaymentProofImage == null)
-                    return BadRequest(new ApiError("Payment proof image is required for approval"));
+                var approverId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 
-                var expense = await _unitOfWork.Repository<FTFundExpense>().GetQuery()
-                    .Where(e => e.Id == id && e.IsDeleted == false)
-                    .Include(e => e.Fund)
-                    .FirstOrDefaultAsync();
+                string? paymentProofUrl = null;
 
-                if (expense == null)
-                    return NotFound(new ApiError("Expense not found"));
-
-                // Only approve pending expenses
-                if (expense.Status != TransactionStatus.Pending)
-                    return BadRequest(new ApiError("Expense is not pending approval"));
-
-                // Validate fund has sufficient balance
-                if (expense.Fund.CurrentMoney < expense.ExpenseAmount)
+                if (request.PaymentProof != null)
                 {
-                    _logger.LogWarning("Insufficient balance to approve expense {ExpenseId}. Required: {Required}, Available: {Available}",
-                        id, expense.ExpenseAmount, expense.Fund.CurrentMoney);
-                    return BadRequest(new ApiError($"Insufficient fund balance. Required: {expense.ExpenseAmount:N0} VND, Available: {expense.Fund.CurrentMoney:N0} VND"));
+                    paymentProofUrl = await _blobStorageService.UploadFileAsync(
+                        request.PaymentProof,
+                        "expenses",
+                        $"{expenseId}/payment-proof/{Guid.NewGuid()}{Path.GetExtension(request.PaymentProof.FileName)}");
                 }
 
-                // Upload payment proof image to blob storage
-                var fileName = $"{Guid.NewGuid()}_{request.PaymentProofImage.FileName}";
-                var paymentProofUrl = await _blobStorageService.UploadFileAsync(request.PaymentProofImage, "fund-expense-payment-proofs", fileName);
+                var expense = await _expenseService.ApproveExpenseAsync(expenseId, approverId, request.Notes, paymentProofUrl);
 
-                // Approve expense
-                expense.Status = TransactionStatus.Approved;
-                expense.ApprovedBy = request.ApproverId;
-                expense.ApprovedOn = DateTimeOffset.UtcNow;
-                expense.ApprovalFeedback = $"{request.Notes}\nPayment Proof: {paymentProofUrl}";
-                expense.PaymentProofImage = paymentProofUrl;
+                _logger.LogInformation("Approved expense {ExpenseId} by {ApproverId}", expenseId, approverId);
 
-                // Deduct from fund balance (CRITICAL LOGIC)
-                expense.Fund.CurrentMoney -= expense.ExpenseAmount;
-
-                _unitOfWork.Repository<FTFundExpense>().Update(expense);
-                _unitOfWork.Repository<FTFund>().Update(expense.Fund);
-                await _unitOfWork.CompleteAsync();
-
-                _logger.LogInformation("Approved expense {ExpenseId}. Deducted {Amount} VND from fund {FundId}. New balance: {Balance} VND. Payment proof uploaded.",
-                    id, expense.ExpenseAmount, expense.Fund.Id, expense.Fund.CurrentMoney);
-
-                var result = new
+                return Ok(new ApiSuccess("Expense approved successfully", new
                 {
-                    expense.Id,
-                    Status = expense.Status.ToString(),
-                    expense.ApprovedBy,
-                    expense.ApprovedOn,
-                    DeductedAmount = expense.ExpenseAmount,
-                    NewFundBalance = expense.Fund.CurrentMoney,
-                    PaymentProofUrl = paymentProofUrl
-                };
-
-                return Ok(new ApiSuccess("Expense approved with payment proof", result));
+                    ExpenseId = expense.Id,
+                    expense.Status,
+                    Amount = expense.ExpenseAmount,
+                    ApprovedAt = expense.ApprovedOn,
+                    PaymentProof = paymentProofUrl
+                }));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error approving expense {ExpenseId}", id);
+                _logger.LogError(ex, "Error approving expense {ExpenseId}", expenseId);
                 return StatusCode(500, new ApiError("Error approving expense", ex.Message));
             }
         }
@@ -472,84 +339,67 @@ namespace FTM.API.Controllers
         /// <summary>
         /// Reject expense with reason
         /// </summary>
-        [HttpPost("{id}/reject")]
+        [HttpPost("{expenseId}/reject")]
         [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
-        public async Task<IActionResult> RejectExpense(Guid id, [FromBody] RejectExpenseRequest request)
+        public async Task<IActionResult> RejectExpense(Guid expenseId, [FromBody] RejectExpenseRequest request)
         {
             try
             {
-                var expense = await _unitOfWork.Repository<FTFundExpense>().GetByIdAsync(id);
-                if (expense == null || expense.IsDeleted == true)
-                    return NotFound(new ApiError("Expense not found"));
+                var expense = await _expenseService.RejectExpenseAsync(expenseId, request.Reason);
 
-                // Only reject pending expenses
-                if (expense.Status != TransactionStatus.Pending)
-                    return BadRequest(new ApiError("Expense is not pending approval"));
+                _logger.LogInformation("Rejected expense {ExpenseId}", expenseId);
 
-                expense.Status = TransactionStatus.Rejected;
-                expense.ApprovedBy = request.RejectedBy;
-                expense.ApprovedOn = DateTimeOffset.UtcNow;
-                expense.ApprovalFeedback = request.Reason;
-
-                _unitOfWork.Repository<FTFundExpense>().Update(expense);
-                await _unitOfWork.CompleteAsync();
-
-                _logger.LogInformation("Rejected expense {ExpenseId}. Reason: {Reason}", id, request.Reason);
-
-                var result = new
+                return Ok(new ApiSuccess("Expense rejected successfully", new
                 {
-                    expense.Id,
-                    Status = expense.Status.ToString(),
-                    expense.ApprovedBy,
-                    expense.ApprovedOn,
-                    expense.ApprovalFeedback
-                };
-
-                return Ok(new ApiSuccess("Expense rejected successfully", result));
+                    ExpenseId = expense.Id,
+                    expense.Status,
+                    Reason = expense.ApprovalFeedback
+                }));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error rejecting expense {ExpenseId}", id);
+                _logger.LogError(ex, "Error rejecting expense {ExpenseId}", expenseId);
                 return StatusCode(500, new ApiError("Error rejecting expense", ex.Message));
             }
         }
-
-        #region DTOs
-
-        public class CreateExpenseRequest
-        {
-            public Guid FundId { get; set; }
-            public Guid? CampaignId { get; set; }
-            public decimal Amount { get; set; }
-            public string Description { get; set; } = string.Empty;
-            public DateTimeOffset? PlannedDate { get; set; }
-            public string? ExpenseEvent { get; set; }
-            public string? Recipient { get; set; }
-            public List<IFormFile>? ReceiptImages { get; set; }
-        }
-
-        public class UpdateExpenseRequest
-        {
-            public decimal? Amount { get; set; }
-            public string? Description { get; set; }
-            public DateTimeOffset? PlannedDate { get; set; }
-            public string? ExpenseEvent { get; set; }
-            public string? Recipient { get; set; }
-        }
-
-        public class ApproveExpenseRequest
-        {
-            public Guid ApproverId { get; set; }
-            public string? Notes { get; set; }
-            public IFormFile? PaymentProofImage { get; set; }
-        }
-
-        public class RejectExpenseRequest
-        {
-            public Guid RejectedBy { get; set; }
-            public string Reason { get; set; } = string.Empty;
-        }
-
-        #endregion
     }
+
+    #region DTOs
+
+    public class CreateExpenseRequest
+    {
+        public Guid FundId { get; set; }
+        public Guid? CampaignId { get; set; }
+        public decimal Amount { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public string? Event { get; set; }
+        public string? Recipient { get; set; }
+        public DateTimeOffset? PlannedDate { get; set; }
+        public List<IFormFile>? ReceiptImages { get; set; }
+    }
+
+    public class UpdateExpenseRequest
+    {
+        public decimal Amount { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public string? Event { get; set; }
+        public string? ReceiptImages { get; set; }
+    }
+
+    public class ApproveExpenseRequest
+    {
+        public string? Notes { get; set; }
+        public IFormFile? PaymentProof { get; set; }
+    }
+
+    public class RejectExpenseRequest
+    {
+        public string Reason { get; set; } = string.Empty;
+    }
+
+    #endregion
 }
