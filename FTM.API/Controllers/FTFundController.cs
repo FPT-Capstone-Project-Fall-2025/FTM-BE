@@ -1,11 +1,10 @@
 using FTM.API.Helpers;
 using FTM.API.Reponses;
+using FTM.Application.IServices;
 using FTM.Domain.Entities.Funds;
 using FTM.Domain.Enums;
-using FTM.Infrastructure.Repositories.Interface;
 using FTM.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace FTM.API.Controllers
 {
@@ -13,16 +12,19 @@ namespace FTM.API.Controllers
     [Route("api/funds")]
     public class FTFundController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IFTFundService _fundService;
+        private readonly IFTFundDonationService _donationService;
         private readonly IPayOSPaymentService _paymentService;
         private readonly ILogger<FTFundController> _logger;
 
         public FTFundController(
-            IUnitOfWork unitOfWork,
+            IFTFundService fundService,
+            IFTFundDonationService donationService,
             IPayOSPaymentService paymentService,
             ILogger<FTFundController> logger)
         {
-            _unitOfWork = unitOfWork;
+            _fundService = fundService;
+            _donationService = donationService;
             _paymentService = paymentService;
             _logger = logger;
         }
@@ -36,9 +38,7 @@ namespace FTM.API.Controllers
         {
             try
             {
-                var funds = await _unitOfWork.Repository<FTFund>().GetQuery()
-                    .Where(f => f.FTId == treeId && f.IsDeleted == false)
-                    .ToListAsync();
+                var funds = await _fundService.GetFundsByTreeAsync(treeId);
 
                 var fundDtos = funds.Select(f => new
                 {
@@ -77,25 +77,20 @@ namespace FTM.API.Controllers
             {
                 var fund = new FTFund
                 {
-                    Id = Guid.NewGuid(),
                     FTId = request.FamilyTreeId,
                     FundName = request.FundName,
                     FundNote = request.Description,
-                    CurrentMoney = 0,
-                    IsDeleted = false,
-                    // Bank account info
                     BankAccountNumber = request.BankAccountNumber,
                     BankCode = request.BankCode,
                     BankName = request.BankName,
                     AccountHolderName = request.AccountHolderName
                 };
 
-                await _unitOfWork.Repository<FTFund>().AddAsync(fund);
-                await _unitOfWork.CompleteAsync();
+                var created = await _fundService.CreateFundAsync(fund);
 
-                _logger.LogInformation("Created new fund {FundId} for tree {TreeId}", fund.Id, request.FamilyTreeId);
+                _logger.LogInformation("Created new fund {FundId} for tree {TreeId}", created.Id, request.FamilyTreeId);
 
-                return Ok(new ApiSuccess("Fund created successfully", new { FundId = fund.Id }));
+                return Ok(new ApiSuccess("Fund created successfully", new { FundId = created.Id }));
             }
             catch (Exception ex)
             {
@@ -113,43 +108,26 @@ namespace FTM.API.Controllers
         {
             try
             {
-                var fund = await _unitOfWork.Repository<FTFund>().GetQuery()
-                    .FirstOrDefaultAsync(f => f.Id == fundId && f.IsDeleted == false);
-
-                if (fund == null)
+                var fund = new FTFund
                 {
-                    return NotFound(new ApiError("Fund not found"));
-                }
+                    FundName = request.FundName,
+                    FundNote = request.Description,
+                    BankAccountNumber = request.BankAccountNumber,
+                    BankCode = request.BankCode,
+                    BankName = request.BankName,
+                    AccountHolderName = request.AccountHolderName,
+                    FundManagers = request.FundManagers
+                };
 
-                // Update only provided fields
-                if (!string.IsNullOrEmpty(request.FundName))
-                    fund.FundName = request.FundName;
-
-                if (request.Description != null)
-                    fund.FundNote = request.Description;
-
-                // Update bank account info
-                if (request.BankAccountNumber != null)
-                    fund.BankAccountNumber = request.BankAccountNumber;
-
-                if (request.BankCode != null)
-                    fund.BankCode = request.BankCode;
-
-                if (request.BankName != null)
-                    fund.BankName = request.BankName;
-
-                if (request.AccountHolderName != null)
-                    fund.AccountHolderName = request.AccountHolderName;
-
-                if (request.FundManagers != null)
-                    fund.FundManagers = request.FundManagers;
-
-                _unitOfWork.Repository<FTFund>().Update(fund);
-                await _unitOfWork.CompleteAsync();
+                var updated = await _fundService.UpdateFundAsync(fundId, fund);
 
                 _logger.LogInformation("Updated fund {FundId}", fundId);
 
-                return Ok(new ApiSuccess("Fund updated successfully", new { FundId = fund.Id }));
+                return Ok(new ApiSuccess("Fund updated successfully", new { FundId = updated.Id }));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new ApiError(ex.Message));
             }
             catch (Exception ex)
             {
@@ -167,8 +145,7 @@ namespace FTM.API.Controllers
         {
             try
             {
-                var fund = await _unitOfWork.Repository<FTFund>().GetQuery()
-                    .FirstOrDefaultAsync(f => f.Id == fundId && f.IsDeleted == false);
+                var fund = await _fundService.GetByIdAsync(fundId);
 
                 if (fund == null)
                 {
@@ -177,15 +154,13 @@ namespace FTM.API.Controllers
 
                 var donation = new FTFundDonation
                 {
-                    Id = Guid.NewGuid(),
                     FTFundId = fundId,
                     FTMemberId = request.MemberId,
                     DonationMoney = request.Amount,
                     DonorName = request.DonorName,
                     PaymentMethod = request.PaymentMethod,
                     PaymentNotes = request.PaymentNotes,
-                    Status = DonationStatus.Pending,
-                    IsDeleted = false
+                    Status = DonationStatus.Pending
                 };
 
                 string? qrCodeUrl = null;
@@ -218,15 +193,14 @@ namespace FTM.API.Controllers
                         donation.Id, orderCode);
                 }
 
-                await _unitOfWork.Repository<FTFundDonation>().AddAsync(donation);
-                await _unitOfWork.CompleteAsync();
+                var created = await _donationService.CreateDonationAsync(donation);
 
-                _logger.LogInformation("Created donation {DonationId} for fund {FundId}", donation.Id, fundId);
+                _logger.LogInformation("Created donation {DonationId} for fund {FundId}", created.Id, fundId);
 
                 var result = new
                 {
-                    DonationId = donation.Id,
-                    OrderCode = donation.PayOSOrderCode?.ToString(),
+                    DonationId = created.Id,
+                    OrderCode = created.PayOSOrderCode?.ToString(),
                     QRCodeUrl = qrCodeUrl,
                     BankInfo = request.PaymentMethod == PaymentMethod.BankTransfer ? new
                     {
@@ -234,8 +208,8 @@ namespace FTM.API.Controllers
                         BankName = fund.BankName,
                         AccountNumber = fund.BankAccountNumber,
                         AccountHolderName = fund.AccountHolderName,
-                        Amount = donation.DonationMoney,
-                        Description = $"UH {donation.PayOSOrderCode}"
+                        Amount = created.DonationMoney,
+                        Description = $"UH {created.PayOSOrderCode}"
                     } : null,
                     RequiresManualConfirmation = request.PaymentMethod == PaymentMethod.Cash || qrCodeUrl == null,
                     Message = request.PaymentMethod == PaymentMethod.Cash 
