@@ -1,8 +1,10 @@
-﻿using FTM.Infrastructure.Data;
+﻿using FTM.API.Helpers;
+using FTM.Infrastructure.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using System;
+using System.Diagnostics;
 
 namespace FTM.API.Extensions
 {
@@ -20,9 +22,14 @@ namespace FTM.API.Extensions
                     options.CommandTimeout(300);
                     options.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
                 });
+
+                options.EnableDetailedErrors();          // REQUIRED
+                options.EnableSensitiveDataLogging();    // REQUIRED
             },
             contextLifetime: ServiceLifetime.Scoped,
             optionsLifetime: ServiceLifetime.Scoped);
+
+
 
             return services;
         }
@@ -40,6 +47,9 @@ namespace FTM.API.Extensions
                     options.CommandTimeout(300);
                     options.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
                 });
+
+                options.EnableDetailedErrors();          // REQUIRED
+                options.EnableSensitiveDataLogging();    // REQUIRED
             },
             contextLifetime: ServiceLifetime.Scoped,
             optionsLifetime: ServiceLifetime.Scoped);
