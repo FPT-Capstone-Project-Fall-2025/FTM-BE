@@ -1,0 +1,402 @@
+{
+    "info": {
+        "name": "Fund Expense API Tests",
+        "description": "Test collection for FTFundExpense endpoints with Login",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "https://localhost:5001/api",
+            "type": "string"
+        },
+        {
+            "key": "token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "treeId",
+            "value": "26259d4d-4ac5-49f4-bebb-93cda81663ed",
+            "type": "string"
+        },
+        {
+            "key": "fundId",
+            "value": "YOUR_FUND_ID",
+            "type": "string"
+        },
+        {
+            "key": "expenseId",
+            "value": "YOUR_EXPENSE_ID",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "0. Login (Get Token)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "if (pm.response.code === 200) {",
+                            "    var jsonData = pm.response.json();",
+                            "    if (jsonData.data && jsonData.data.token) {",
+                            "        pm.collectionVariables.set('token', jsonData.data.token);",
+                            "        console.log('✅ Token auto-saved!');",
+                            "    }",
+                            "}"
+                        ]
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"username\": \"longtpit2573@gmail.com\",\n  \"password\": \"Password2573@\"\n}"
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/account/login",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "account",
+                        "login"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "1. Get Expenses by Fund",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    },
+                    {
+                        "key": "X-Ftid",
+                        "value": "{{treeId}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/fund-expenses/fund/{{fundId}}?page=1&pageSize=20",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "fund-expenses",
+                        "fund",
+                        "{{fundId}}"
+                    ],
+                    "query": [
+                        {
+                            "key": "page",
+                            "value": "1"
+                        },
+                        {
+                            "key": "pageSize",
+                            "value": "20"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "2. Get Pending Expenses",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    },
+                    {
+                        "key": "X-Ftid",
+                        "value": "{{treeId}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/fund-expenses/pending?page=1&pageSize=20",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "fund-expenses",
+                        "pending"
+                    ],
+                    "query": [
+                        {
+                            "key": "page",
+                            "value": "1"
+                        },
+                        {
+                            "key": "pageSize",
+                            "value": "20"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "3. Get Expense by ID",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    },
+                    {
+                        "key": "X-Ftid",
+                        "value": "{{treeId}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/fund-expenses/{{expenseId}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "fund-expenses",
+                        "{{expenseId}}"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "4. Get Statistics",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    },
+                    {
+                        "key": "X-Ftid",
+                        "value": "{{treeId}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/fund-expenses/fund/{{fundId}}/statistics",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "fund-expenses",
+                        "fund",
+                        "{{fundId}}",
+                        "statistics"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "5. Create Expense",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    },
+                    {
+                        "key": "X-Ftid",
+                        "value": "{{treeId}}"
+                    }
+                ],
+                "body": {
+                    "mode": "formdata",
+                    "formdata": [
+                        {
+                            "key": "fundId",
+                            "value": "{{fundId}}",
+                            "type": "text"
+                        },
+                        {
+                            "key": "amount",
+                            "value": "2000000",
+                            "type": "text"
+                        },
+                        {
+                            "key": "description",
+                            "value": "Mua đồ trang trí Tết",
+                            "type": "text"
+                        },
+                        {
+                            "key": "event",
+                            "value": "Tết 2025",
+                            "type": "text"
+                        },
+                        {
+                            "key": "recipient",
+                            "value": "Cửa hàng ABC",
+                            "type": "text"
+                        },
+                        {
+                            "key": "receiptImages",
+                            "type": "file",
+                            "src": []
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/fund-expenses",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "fund-expenses"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "6. Update Expense",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    },
+                    {
+                        "key": "X-Ftid",
+                        "value": "{{treeId}}"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"amount\": 2500000,\n  \"description\": \"Mua đồ trang trí Tết (Updated)\"\n}"
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/fund-expenses/{{expenseId}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "fund-expenses",
+                        "{{expenseId}}"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "7. Approve Expense",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    },
+                    {
+                        "key": "X-Ftid",
+                        "value": "{{treeId}}"
+                    }
+                ],
+                "body": {
+                    "mode": "formdata",
+                    "formdata": [
+                        {
+                            "key": "notes",
+                            "value": "Đã thanh toán",
+                            "type": "text"
+                        },
+                        {
+                            "key": "paymentProof",
+                            "type": "file",
+                            "src": []
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/fund-expenses/{{expenseId}}/approve",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "fund-expenses",
+                        "{{expenseId}}",
+                        "approve"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "8. Reject Expense",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    },
+                    {
+                        "key": "X-Ftid",
+                        "value": "{{treeId}}"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"reason\": \"Hóa đơn không hợp lệ\"\n}"
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/fund-expenses/{{expenseId}}/reject",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "fund-expenses",
+                        "{{expenseId}}",
+                        "reject"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "9. Delete Expense",
+            "request": {
+                "method": "DELETE",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}"
+                    },
+                    {
+                        "key": "X-Ftid",
+                        "value": "{{treeId}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/fund-expenses/{{expenseId}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "fund-expenses",
+                        "{{expenseId}}"
+                    ]
+                }
+            }
+        }
+    ]
+}

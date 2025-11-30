@@ -1,9 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="IdentityModel" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.UI" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+		<PackageReference Include="XAct.Core.PCL" />
+		<PackageReference Include="Infobip.Api.Client" />
+		<PackageReference Include="Azure.Storage.Blobs" />
+		<PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\FTM.Domain\FTM.Domain.csproj" />
+		<ProjectReference Include="..\FTM.Infrastructure\FTM.Infrastructure.csproj" />
+	</ItemGroup>
 
 </Project>

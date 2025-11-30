@@ -1,8 +1,10 @@
-﻿using FTM.Infrastructure.Data;
+﻿using FTM.API.Helpers;
+using FTM.Infrastructure.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using System;
+using System.Diagnostics;
 
 namespace FTM.API.Extensions
 {
@@ -10,8 +12,8 @@ namespace FTM.API.Extensions
     {
         public static IServiceCollection AddIdentityAppDbContext(this IServiceCollection services)
         {
-           
-            string connectionString = GetCustomConnectionString("test_gp_identity");
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            string connectionString = GetCustomConnectionString("gp_identity_test");
 
             services.AddDbContext<AppIdentityDbContext>(options =>
             {
@@ -20,9 +22,14 @@ namespace FTM.API.Extensions
                     options.CommandTimeout(300);
                     options.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
                 });
+
+                options.EnableDetailedErrors();          // REQUIRED
+                options.EnableSensitiveDataLogging();    // REQUIRED
             },
-            contextLifetime: ServiceLifetime.Transient,
-            optionsLifetime: ServiceLifetime.Transient);
+            contextLifetime: ServiceLifetime.Scoped,
+            optionsLifetime: ServiceLifetime.Scoped);
+
+
 
             return services;
         }
@@ -30,7 +37,8 @@ namespace FTM.API.Extensions
 
         public static IServiceCollection AddFTMDbContext(this IServiceCollection services)
         {
-            string connectionString = GetCustomConnectionString("test_gp");
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            string connectionString = GetCustomConnectionString("gp_test");
 
             services.AddDbContext<FTMDbContext>(options =>
             {
@@ -39,9 +47,12 @@ namespace FTM.API.Extensions
                     options.CommandTimeout(300);
                     options.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
                 });
+
+                options.EnableDetailedErrors();          // REQUIRED
+                options.EnableSensitiveDataLogging();    // REQUIRED
             },
-            contextLifetime: ServiceLifetime.Transient,
-            optionsLifetime: ServiceLifetime.Transient);
+            contextLifetime: ServiceLifetime.Scoped,
+            optionsLifetime: ServiceLifetime.Scoped);
 
             return services;
         }
@@ -55,7 +66,7 @@ namespace FTM.API.Extensions
                 Port = 5432,
                 Database = dbName,
                 Username = "appuser",
-                Password = "secret@123",
+                Password = "secret",
                 Timeout = 5,         
                 CommandTimeout = 300, 
                 Pooling = true,      
