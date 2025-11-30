@@ -1,15 +1,7 @@
-using FTM.API.Controllers;
 using FTM.API.Extensions;
 using FTM.Application.Hubs;
-using FTM.Application.Services;
-using FTM.Domain.Entities.Identity;
-using FTM.Infrastructure.Data;
 using FTM.Infrastructure.Configurations;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
-using System.Net;
-using System.Net.Mail;
-using System.Text;
+using FTM.Infrastructure.Data;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSignalR();
@@ -38,7 +30,7 @@ builder.Services.AddControllers()
     {
         options.SuppressModelStateInvalidFilter = true;
     });
-
+builder.Services.AddOpenTelemetryConfig(builder.Environment);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSwaggerDocumentation();

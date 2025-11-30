@@ -2,6 +2,21 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
+  <ItemGroup Label="For OpenTelemetry">
+    <!--Core OpenTelemetry-->
+    <PackageVersion Include="OpenTelemetry" Version="1.14.0" />
+    <PackageVersion Include="OpenTelemetry.Api" Version="1.14.0" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.14.0" />
+    <!--Tracing instrumentation-->
+    <PackageVersion Include="Npgsql" Version="7.0.10" />
+    <PackageVersion Include="Npgsql.OpenTelemetry" Version="7.0.10" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.14.0-beta.2" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.14.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.14.0" />
+    <!--Exporters-->
+    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.14.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.14.0" />
+  </ItemGroup>
   <ItemGroup Label="For Mapping">
     <PackageVersion Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
     <PackageVersion Include="payOS" Version="2.0.0" />
