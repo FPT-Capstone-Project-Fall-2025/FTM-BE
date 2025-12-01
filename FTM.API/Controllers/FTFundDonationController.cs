@@ -16,15 +16,18 @@ namespace FTM.API.Controllers
         private readonly IFTFundDonationService _donationService;
         private readonly ILogger<FTFundDonationController> _logger;
         private readonly IBlobStorageService _blobStorageService;
+        private readonly IFTMemberService _memberService;
 
         public FTFundDonationController(
             IFTFundDonationService donationService,
             ILogger<FTFundDonationController> logger,
-            IBlobStorageService blobStorageService)
+            IBlobStorageService blobStorageService,
+            IFTMemberService memberService)
         {
             _donationService = donationService;
             _logger = logger;
             _blobStorageService = blobStorageService;
+            _memberService = memberService;
         }
 
         /// <summary>
@@ -204,11 +207,17 @@ namespace FTM.API.Controllers
         {
             try
             {
-                var confirmerId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
+                var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
+                var ftId = Guid.Parse(Request.Headers["X-Ftid"].ToString());
 
-                var donation = await _donationService.ConfirmDonationAsync(donationId, confirmerId, request.Notes);
+                // Get FTMember from UserId and FTId
+                var memberDto = await _memberService.GetByUserId(ftId, userId);
+                if (memberDto == null)
+                    return BadRequest(new ApiError("Member not found in this family tree"));
 
-                _logger.LogInformation("Confirmed donation {DonationId} by {ConfirmerId}", donationId, confirmerId);
+                var donation = await _donationService.ConfirmDonationAsync(donationId, memberDto.Id, request.Notes);
+
+                _logger.LogInformation("Confirmed donation {DonationId} by member {MemberId}", donationId, memberDto.Id);
 
                 return Ok(new ApiSuccess("Donation confirmed successfully", new
                 {
@@ -238,9 +247,17 @@ namespace FTM.API.Controllers
         {
             try
             {
-                var donation = await _donationService.RejectDonationAsync(donationId, request.Reason);
+                var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
+                var ftId = Guid.Parse(Request.Headers["X-Ftid"].ToString());
 
-                _logger.LogInformation("Rejected donation {DonationId}", donationId);
+                // Get FTMember from UserId and FTId
+                var memberDto = await _memberService.GetByUserId(ftId, userId);
+                if (memberDto == null)
+                    return BadRequest(new ApiError("Member not found in this family tree"));
+
+                var donation = await _donationService.RejectDonationAsync(donationId, memberDto.Id, request.Reason);
+
+                _logger.LogInformation("Rejected donation {DonationId} by member {MemberId}", donationId, memberDto.Id);
 
                 return Ok(new ApiSuccess("Donation rejected successfully", new
                 {
