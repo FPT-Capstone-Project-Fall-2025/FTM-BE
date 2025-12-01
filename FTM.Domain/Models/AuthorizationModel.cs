@@ -11,7 +11,7 @@ namespace FTM.Domain.Models
 {
     public class AuthorizationModel
     {
-        [EnumDataType(typeof(FeatureType), ErrorMessage = "Vui lòng chọn đúng tính năng được thêm quyền.(MEMBER: 7001, EVENT: 7002, FUND: 7003, ALL: 7004)")]
+        [EnumDataType(typeof(FeatureType), ErrorMessage = "Vui lòng chọn đúng tính năng được thêm quyền.(MEMBER: 7001, EVENT: 7002, FUND: 7003, ALL: 7004, HONOR: 7005)")]
         public FeatureType FeatureCode { get; set; }
 
         [ValidEnumList(typeof(MethodType), ErrorMessage = "Vui lòng chọn đúng quyền. (VIEW: 6001, ADD: 6002, UPDATE: 6003, DELETE: 6004, ALL: 6005)")]
