@@ -176,11 +176,17 @@ namespace FTM.Application.Services
 
             _unitOfWork.Repository<FTFundExpense>().Update(expense);
 
-            // Deduct from fund balance
-            if (expense.Fund != null)
+            // Deduct from fund balance - Load fund separately to avoid tracking conflicts
+            if (expense.FTFundId != Guid.Empty)
             {
-                expense.Fund.CurrentMoney -= expense.ExpenseAmount;
-                _unitOfWork.Repository<FTFund>().Update(expense.Fund);
+                var fund = await _unitOfWork.Repository<FTFund>().GetQuery()
+                    .FirstOrDefaultAsync(f => f.Id == expense.FTFundId);
+                    
+                if (fund != null)
+                {
+                    fund.CurrentMoney -= expense.ExpenseAmount;
+                    _unitOfWork.Repository<FTFund>().Update(fund);
+                }
             }
 
             await _unitOfWork.CompleteAsync();
@@ -188,7 +194,7 @@ namespace FTM.Application.Services
             return expense;
         }
 
-        public async Task<FTFundExpense> RejectExpenseAsync(Guid id, string reason)
+        public async Task<FTFundExpense> RejectExpenseAsync(Guid id, Guid rejectedBy, string reason)
         {
             var expense = await _unitOfWork.Repository<FTFundExpense>().GetByIdAsync(id);
 
@@ -199,6 +205,7 @@ namespace FTM.Application.Services
                 throw new InvalidOperationException("Can only reject pending expenses");
 
             expense.Status = TransactionStatus.Rejected;
+            expense.ApprovedBy = rejectedBy;
             expense.ApprovalFeedback = $"Rejected: {reason}";
             expense.ApprovedOn = DateTimeOffset.UtcNow;
 

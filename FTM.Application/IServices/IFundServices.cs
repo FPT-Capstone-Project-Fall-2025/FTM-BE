@@ -75,7 +75,7 @@ namespace FTM.Application.IServices
         /// <summary>
         /// Reject donation
         /// </summary>
-        Task<FTFundDonation> RejectDonationAsync(Guid id, string reason);
+        Task<FTFundDonation> RejectDonationAsync(Guid id, Guid rejectedBy, string reason);
 
         /// <summary>
         /// Get donation statistics for a fund
@@ -125,7 +125,7 @@ namespace FTM.Application.IServices
         /// <summary>
         /// Reject expense
         /// </summary>
-        Task<FTFundExpense> RejectExpenseAsync(Guid id, string reason);
+        Task<FTFundExpense> RejectExpenseAsync(Guid id, Guid rejectedBy, string reason);
 
         /// <summary>
         /// Get expense statistics for a fund

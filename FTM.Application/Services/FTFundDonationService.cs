@@ -178,11 +178,17 @@ namespace FTM.Application.Services
 
             _unitOfWork.Repository<FTFundDonation>().Update(donation);
 
-            // Update fund balance
-            if (donation.Fund != null)
+            // Update fund balance - Load fund separately to avoid tracking conflicts
+            if (donation.FTFundId != Guid.Empty)
             {
-                donation.Fund.CurrentMoney += donation.DonationMoney;
-                _unitOfWork.Repository<FTFund>().Update(donation.Fund);
+                var fund = await _unitOfWork.Repository<FTFund>().GetQuery()
+                    .FirstOrDefaultAsync(f => f.Id == donation.FTFundId);
+                    
+                if (fund != null)
+                {
+                    fund.CurrentMoney += donation.DonationMoney;
+                    _unitOfWork.Repository<FTFund>().Update(fund);
+                }
             }
 
             await _unitOfWork.CompleteAsync();
@@ -190,7 +196,7 @@ namespace FTM.Application.Services
             return donation;
         }
 
-        public async Task<FTFundDonation> RejectDonationAsync(Guid id, string reason)
+        public async Task<FTFundDonation> RejectDonationAsync(Guid id, Guid rejectedBy, string reason)
         {
             var donation = await _unitOfWork.Repository<FTFundDonation>().GetQuery()
                 .FirstOrDefaultAsync(d => d.Id == id && d.IsDeleted == false);
@@ -202,6 +208,7 @@ namespace FTM.Application.Services
                 throw new InvalidOperationException("Can only reject pending donations");
 
             donation.Status = DonationStatus.Rejected;
+            donation.ConfirmedBy = rejectedBy;
             donation.ConfirmationNotes = $"Rejected: {reason}";
             donation.ConfirmedOn = DateTimeOffset.UtcNow;
 

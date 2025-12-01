@@ -14,15 +14,18 @@ namespace FTM.API.Controllers
         private readonly IFTFundExpenseService _expenseService;
         private readonly ILogger<FTFundExpenseController> _logger;
         private readonly IBlobStorageService _blobStorageService;
+        private readonly IFTMemberService _memberService;
 
         public FTFundExpenseController(
             IFTFundExpenseService expenseService,
             ILogger<FTFundExpenseController> logger,
-            IBlobStorageService blobStorageService)
+            IBlobStorageService blobStorageService,
+            IFTMemberService memberService)
         {
             _expenseService = expenseService;
             _logger = logger;
             _blobStorageService = blobStorageService;
+            _memberService = memberService;
         }
 
         /// <summary>
@@ -300,7 +303,13 @@ namespace FTM.API.Controllers
         {
             try
             {
-                var approverId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
+                var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
+                var ftId = Guid.Parse(Request.Headers["X-Ftid"].ToString());
+
+                // Get FTMember from UserId and FTId
+                var memberDto = await _memberService.GetByUserId(ftId, userId);
+                if (memberDto == null)
+                    return BadRequest(new ApiError("Member not found in this family tree"));
 
                 string? paymentProofUrl = null;
 
@@ -312,9 +321,9 @@ namespace FTM.API.Controllers
                         $"{expenseId}/payment-proof/{Guid.NewGuid()}{Path.GetExtension(request.PaymentProof.FileName)}");
                 }
 
-                var expense = await _expenseService.ApproveExpenseAsync(expenseId, approverId, request.Notes, paymentProofUrl);
+                var expense = await _expenseService.ApproveExpenseAsync(expenseId, memberDto.Id, request.Notes, paymentProofUrl);
 
-                _logger.LogInformation("Approved expense {ExpenseId} by {ApproverId}", expenseId, approverId);
+                _logger.LogInformation("Approved expense {ExpenseId} by member {MemberId}", expenseId, memberDto.Id);
 
                 return Ok(new ApiSuccess("Expense approved successfully", new
                 {
@@ -345,9 +354,17 @@ namespace FTM.API.Controllers
         {
             try
             {
-                var expense = await _expenseService.RejectExpenseAsync(expenseId, request.Reason);
+                var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
+                var ftId = Guid.Parse(Request.Headers["X-Ftid"].ToString());
 
-                _logger.LogInformation("Rejected expense {ExpenseId}", expenseId);
+                // Get FTMember from UserId and FTId
+                var memberDto = await _memberService.GetByUserId(ftId, userId);
+                if (memberDto == null)
+                    return BadRequest(new ApiError("Member not found in this family tree"));
+
+                var expense = await _expenseService.RejectExpenseAsync(expenseId, memberDto.Id, request.Reason);
+
+                _logger.LogInformation("Rejected expense {ExpenseId} by member {MemberId}", expenseId, memberDto.Id);
 
                 return Ok(new ApiSuccess("Expense rejected successfully", new
                 {
