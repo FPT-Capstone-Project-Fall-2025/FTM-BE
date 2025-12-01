@@ -35,6 +35,7 @@ namespace FTM.Application.Services
         private readonly IFTUserRepository _ftUserRepository;
         private readonly IMapper _mapper;
         private readonly IBlobStorageService _blobStorageService;
+        private readonly IFTMemberRepository _fTMemberRepository;
 
         public FamilyTreeService(
             FTMDbContext context,
@@ -48,7 +49,8 @@ namespace FTM.Application.Services
             IFTUserRepository ftUserRepository,
             UserManager<ApplicationUser> userManager,
             RoleManager<ApplicationRole> roleManager,
-            IBlobStorageService blobStorageService)
+            IBlobStorageService blobStorageService,
+            IFTMemberRepository fTMemberRepository)
         {
             _context = context;
             _appIdentityDbContext = appIdentityDbContext;
@@ -62,6 +64,7 @@ namespace FTM.Application.Services
             _userManager = userManager;
             _roleManager = roleManager;
             _blobStorageService = blobStorageService;
+            _fTMemberRepository = fTMemberRepository;
         }
 
         public async Task<FamilyTreeDetailsDto> CreateFamilyTreeAsync(UpsertFamilyTreeRequest request)
@@ -79,8 +82,8 @@ namespace FTM.Application.Services
                 }
 
                 // Validate mode
-                if (request.GPModeCode != FamilyTreeModes.PRIVATE && 
-                    request.GPModeCode != FamilyTreeModes.PUBLIC && 
+                if (request.GPModeCode != FamilyTreeModes.PRIVATE &&
+                    request.GPModeCode != FamilyTreeModes.PUBLIC &&
                     request.GPModeCode != FamilyTreeModes.SHARED)
                 {
                     throw new UnauthorizedAccessException("Vui lòng chọn chế độ cho cây gia phả");
@@ -89,18 +92,18 @@ namespace FTM.Application.Services
                 // Handle File
                 var file = request.File;
                 var filePath = "";
-                if(file != null)
+                if (file != null)
                 {
                     // Upload to Blob Storage
                     filePath = await _blobStorageService.UploadFileAsync(file, "familytrees", null);
-                }    
+                }
 
                 var familyTree = new FamilyTree
                 {
                     Id = Guid.NewGuid(),
                     Name = request.Name,
                     Owner = _currentUserResolver.Name,
-                    OwnerId =  _currentUserResolver.UserId,
+                    OwnerId = _currentUserResolver.UserId,
                     Description = request.Description,
                     GPModeCode = request.GPModeCode,
                     FilePath = filePath,
@@ -124,7 +127,7 @@ namespace FTM.Application.Services
                     FTId = familyTree.Id,
                     FTRole = FTMRole.FTOwner
                 };
-                
+
                 await _ftUserRepository.AddAsync(owner);
                 await _unitOfWork.CompleteAsync();
 
@@ -196,7 +199,7 @@ namespace FTM.Application.Services
                 if (familyTree == null)
                     throw new ArgumentException("Không tìm thấy gia phả");
 
-                if(request.OwnerId != null)
+                if (request.OwnerId != null)
                 {
                     var user = await _userManager.FindByIdAsync(request.OwnerId.ToString());
                     if (user is null)
@@ -212,7 +215,7 @@ namespace FTM.Application.Services
                     owner.UserId = user.Id;
                     _ftUserRepository.Update(owner);
                 }
-                
+
 
                 // Set default mode if not provided
                 if (request.GPModeCode == null || request.GPModeCode == 0)
@@ -221,8 +224,8 @@ namespace FTM.Application.Services
                 }
 
                 // Validate mode
-                if (request.GPModeCode != FamilyTreeModes.PRIVATE && 
-                    request.GPModeCode != FamilyTreeModes.PUBLIC && 
+                if (request.GPModeCode != FamilyTreeModes.PRIVATE &&
+                    request.GPModeCode != FamilyTreeModes.PUBLIC &&
                     request.GPModeCode != FamilyTreeModes.SHARED)
                 {
                     throw new ArgumentException("Đối tượng có thể truy cập và xem cây gia phả không hợp lệ.");
@@ -238,12 +241,12 @@ namespace FTM.Application.Services
 
                 // Update properties
                 familyTree.Name = request.Name ?? familyTree.Name;
-                if(request.OwnerId != null)
+                if (request.OwnerId != null)
                 {
                     familyTree.OwnerId = request.OwnerId.Value;
                     familyTree.Owner = newOwner;
                 }
-                familyTree.Description = request.Description?? familyTree.Description;
+                familyTree.Description = request.Description ?? familyTree.Description;
                 familyTree.GPModeCode = request.GPModeCode ?? familyTree.GPModeCode;
                 familyTree.LastModifiedOn = DateTimeOffset.UtcNow;
                 familyTree.LastModifiedBy = _currentUserResolver.Username;
@@ -292,7 +295,7 @@ namespace FTM.Application.Services
 
         public async Task<IReadOnlyList<FamilyTreeDataTableDto>> GetMyFamilyTreesAsync(FamilyTreeSpecParams specParams)
         {
-            var spec = new MyFamilyTreeSpecification(_currentUserResolver.UserId,specParams);
+            var spec = new MyFamilyTreeSpecification(_currentUserResolver.UserId, specParams);
             var fts = await _familyTreeRepository.ListAsync(spec);
 
             return _mapper.Map<IReadOnlyList<FamilyTreeDataTableDto>>(fts);
@@ -340,6 +343,32 @@ namespace FTM.Application.Services
         {
             var spec = new MyFamilyTreeForCountSpecification(_currentUserResolver.UserId, specParams);
             return await _familyTreeRepository.CountAsync(spec);
+        }
+
+        public async Task OutFamilyTreeAsync(Guid ftId, Guid userId)
+        {
+            if (_currentUserResolver.UserId != userId) throw new ArgumentException("Bạn không có quyền");
+
+            var user = await _ftUserRepository.FindAsync(ftId, userId);
+
+            if (user == null) throw new ArgumentException("Người dùng không thuộc trong gia tộc này hoặc gia tộc không tồn tại");
+
+            if (user.FTRole == FTMRole.FTOwner) throw new ArgumentException("Không thể rời gia tộc khi bạn là người sở hữu gia tộc");
+
+
+            if (user.FTRole == FTMRole.FTMember)
+            {
+                var member = await _fTMemberRepository.GetMemberByUserId(ftId, userId);
+
+                if (member != null)
+                {
+                    member.UserId = null;
+                    _fTMemberRepository.Update(member);
+                }
+            }
+
+            _ftUserRepository.Delete(user);
+            await _unitOfWork.CompleteAsync();
         }
     }
 }
