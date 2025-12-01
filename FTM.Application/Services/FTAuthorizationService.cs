@@ -266,6 +266,15 @@ namespace FTM.Application.Services
                                    }
             });
 
+            memberAuthor.AuthorizationList.Add(new AuthorizationModel
+            {
+                FeatureCode = FeatureType.HONOR,
+                MethodsList = new HashSet<MethodType>
+                                   {
+                                        MethodType.VIEW,
+                                   }
+            });
+
             foreach (var authorization in memberAuthor.AuthorizationList)
             {
                 foreach (var method in authorization.MethodsList)
@@ -313,6 +322,15 @@ namespace FTM.Application.Services
             authorizationModels.Add(new AuthorizationModel
             {
                 FeatureCode = FeatureType.EVENT,
+                MethodsList = new HashSet<MethodType>
+                                   {
+                                        MethodType.VIEW, MethodType.ADD, MethodType.UPDATE, MethodType.DELETE
+                                   }
+            });
+
+            authorizationModels.Add(new AuthorizationModel
+            {
+                FeatureCode = FeatureType.HONOR,
                 MethodsList = new HashSet<MethodType>
                                    {
                                         MethodType.VIEW, MethodType.ADD, MethodType.UPDATE, MethodType.DELETE

@@ -12,6 +12,7 @@ namespace FTM.Domain.Enums
         MEMBER = Category.FT_AUTHORIZATION_FEATURE * 1000 + 1,
         EVENT = Category.FT_AUTHORIZATION_FEATURE * 1000 + 2,
         FUND = Category.FT_AUTHORIZATION_FEATURE * 1000 + 3,
-        ALL = Category.FT_AUTHORIZATION_FEATURE * 1000 + 4
+        ALL = Category.FT_AUTHORIZATION_FEATURE * 1000 + 4,
+        HONOR = Category.FT_AUTHORIZATION_FEATURE * 1000 + 5
     }
 }
