@@ -99,7 +99,7 @@ namespace FTM.Application.Services
                 if (invitation.FTMemberId != null)
                 {
                     connectedFTMember = await _fTMemberRepository.GetByIdAsync(invitation.FTMemberId.Value);
-                    if(connectedFTMember == null) throw new ArgumentException("Thành viên trong cây gia phả không tồn tại.");
+                    if (connectedFTMember == null) throw new ArgumentException("Thành viên trong cây gia phả không tồn tại.");
                 }
 
                 // Member Invitation Response
@@ -154,8 +154,9 @@ namespace FTM.Application.Services
 
             //Set the Invitation Notification Readed
             var invitationNotification = await _fTNotificationRepository.FindByInvitationIdAsync(invitationId);
-            if (invitationNotification != null) {
-                invitationNotification.IsRead = true;   
+            if (invitationNotification != null)
+            {
+                invitationNotification.IsRead = true;
             }
 
             // Send invitation response to inviter
@@ -186,7 +187,7 @@ namespace FTM.Application.Services
             var invitedUser = await _userManager.FindByEmailAsync(request.InvitedUserEmail.ToString().Trim());
 
             if (familyTree == null)
-                throw new ArgumentException("Gia phả không tồn tại trong hệ thống.");
+                throw new ArgumentException("Gia tộc không tồn tại trong hệ thống.");
 
             if (invitedUser == null)
                 throw new ArgumentException("Người được mời không tồn tại trong hệ thống.");
@@ -216,7 +217,7 @@ namespace FTM.Application.Services
             var ftMember = await _fTMemberRepository.GetByIdAsync(request.FTMemberId);
 
             if (familyTree == null)
-                throw new ArgumentException("Gia phả không tồn tại trong hệ thống.");
+                throw new ArgumentException("Gia tộc không tồn tại trong hệ thống.");
 
             if (ftMember == null)
                 throw new ArgumentException("Thành viên được liên kết không tồn tại trong hệ thống.");
@@ -260,30 +261,35 @@ namespace FTM.Application.Services
 
         public async Task SendAsync(FTInvitation invitation)
         {
-            // Send By Email
-            string beURL = Environment.GetEnvironmentVariable("BE_URL");
-            string acceptUrl = $"{beURL}/api/invitation/respond?relatedId={invitation.Id}&accepted=true";
-            string rejectUrl = $"{beURL}/api/invitation/respond?relatedId={invitation.Id}&accepted=false";
+            try
+            {
+                // Send By Email
+                string beURL = Environment.GetEnvironmentVariable("BE_URL");
+                string acceptUrl = $"{beURL}/api/invitation/respond?relatedId={invitation.Id}&accepted=true";
+                string rejectUrl = $"{beURL}/api/invitation/respond?relatedId={invitation.Id}&accepted=false";
 
-            string body = $@"
-            <div style='font-family: Arial; color:#333'>
-                <h2>Lời mời liên kết thành viên trong cây gia phả</h2>
-                <p><b>{_currentUserResolver.Name}</b> đã mời bạn tham gia gia phả <b>Dòng họ {invitation.FTName}</b> với thành viên <b>{invitation.FTMemberName}</b>.</p>
-                <p>Bạn có muốn chấp nhận lời mời này không?</p>
-                <div style='margin-top:20px'>
-                    <a href='{acceptUrl}' 
-                       style='background-color:#4CAF50;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;margin-right:10px;'>
-                        ✅ Chấp nhận
-                    </a>
-                    <a href='{rejectUrl}' 
-                       style='background-color:#f44336;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;'>
-                        ❌ Từ chối
-                    </a>
-                </div>
-                <p style='margin-top:30px;color:#888'>Trân trọng,<br>Đội ngũ Gia Phả Trực Tuyến</p>
-            </div>";
+                string body = $@"
+                                <div style='font-family: Arial; color:#333'>
+                                    <h2>Lời mời liên kết thành viên trong cây gia phả</h2>
+                                    <p><b>{_currentUserResolver.Name}</b> đã mời bạn tham gia gia phả <b>Dòng họ {invitation.FTName}</b> với thành viên <b>{invitation.FTMemberName}</b>.</p>
+                                    <p>Bạn có muốn chấp nhận lời mời này không?</p>
+                                    <div style='margin-top:20px'>
+                                        <a href='{acceptUrl}' 
+                                           style='background-color:#4CAF50;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;margin-right:10px;'>
+                                            ✅ Chấp nhận
+                                        </a>
+                                        <a href='{rejectUrl}' 
+                                           style='background-color:#f44336;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;'>
+                                            ❌ Từ chối
+                                        </a>
+                                    </div>
+                                    <p style='margin-top:30px;color:#888'>Trân trọng,<br>Đội ngũ Gia Phả Trực Tuyến</p>
+                                </div>";
 
-            await _emailSender.SendEmailAsync(invitation.Email, "Lời mời tham gia gia phả", body);
+                await _emailSender.SendEmailAsync(invitation.Email, "Lời mời tham gia gia phả", body);
+            }
+            catch (Exception ex) {
+            }
 
             //Send By Signal R
             var notification = new FTNotification
@@ -306,30 +312,37 @@ namespace FTM.Application.Services
 
         public async Task SendToGuestAsync(FTInvitation invitation)
         {
-            // Send By Email
-            string beURL = Environment.GetEnvironmentVariable("BE_URL");
-            string acceptUrl = $"{beURL}/api/invitation/respond?relatedId={invitation.Id}&accepted=true";
-            string rejectUrl = $"{beURL}/api/invitation/respond?relatedId={invitation.Id}&accepted=false";
+            try
+            {
+                // Send By Email
+                string beURL = Environment.GetEnvironmentVariable("BE_URL");
+                string acceptUrl = $"{beURL}/api/invitation/respond?relatedId={invitation.Id}&accepted=true";
+                string rejectUrl = $"{beURL}/api/invitation/respond?relatedId={invitation.Id}&accepted=false";
 
-            string body = $@"
-            <div style='font-family: Arial; color:#333'>
-                <h2>Lời mời tham gia cây gia phả</h2>
-                <p><b>{_currentUserResolver.Name}</b> đã mời bạn tham gia gia phả <b>Dòng họ {invitation.FTName}</b> với vai trò là khách.</p>
-                <p>Bạn có muốn chấp nhận lời mời này không?</p>
-                <div style='margin-top:20px'>
-                    <a href='{acceptUrl}' 
-                       style='background-color:#4CAF50;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;margin-right:10px;'>
-                        ✅ Chấp nhận
-                    </a>
-                    <a href='{rejectUrl}' 
-                       style='background-color:#f44336;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;'>
-                        ❌ Từ chối
-                    </a>
-                </div>
-                <p style='margin-top:30px;color:#888'>Trân trọng,<br>Đội ngũ Gia Phả Trực Tuyến</p>
-            </div>";
+                string body = $@"
+                                <div style='font-family: Arial; color:#333'>
+                                    <h2>Lời mời tham gia cây gia phả</h2>
+                                    <p><b>{_currentUserResolver.Name}</b> đã mời bạn tham gia gia phả <b>Dòng họ {invitation.FTName}</b> với vai trò là khách.</p>
+                                    <p>Bạn có muốn chấp nhận lời mời này không?</p>
+                                    <div style='margin-top:20px'>
+                                        <a href='{acceptUrl}' 
+                                           style='background-color:#4CAF50;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;margin-right:10px;'>
+                                            ✅ Chấp nhận
+                                        </a>
+                                        <a href='{rejectUrl}' 
+                                           style='background-color:#f44336;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;'>
+                                            ❌ Từ chối
+                                        </a>
+                                    </div>
+                                    <p style='margin-top:30px;color:#888'>Trân trọng,<br>Đội ngũ Gia Phả Trực Tuyến</p>
+                                </div>";
 
-            await _emailSender.SendEmailAsync(invitation.Email, "Lời mời tham gia gia phả", body);
+                await _emailSender.SendEmailAsync(invitation.Email, "Lời mời tham gia gia phả", body);
+            }
+            catch (Exception ex)
+            {
+
+            }
 
             //Send By Signal R
             var notification = new FTNotification

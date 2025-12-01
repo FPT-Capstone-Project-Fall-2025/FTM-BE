@@ -662,19 +662,28 @@ namespace FTM.Application.Services
             return await _fTUserRepository.CountAsync(spec);
         }
 
-        public async Task DeleteGuest(Guid ftId, Guid ftUserId)
+        public async Task DeleteUser(Guid ftId, Guid ftUserId)
         {
-            var guest = await _fTUserRepository.FindAsync(ftId, ftUserId);
+            var user = await _fTUserRepository.FindAsync(ftId, ftUserId);
 
-            if (guest != null && guest.FTRole == FTMRole.FTGuest)
+            if(user == null) throw new ArgumentException("Người dùng không thuộc trong gia tộc này hoặc gia tộc không tồn tại");
+
+            if (user.FTRole == FTMRole.FTOwner) throw new ArgumentException("Không thể xóa người sở hữu gia tộc");
+
+
+            if(user.FTRole == FTMRole.FTMember)
             {
-                _fTUserRepository.Delete(guest);
-                await _unitOfWork.CompleteAsync();
+                var member = await _fTMemberRepository.GetMemberByUserId(ftId, ftUserId);
+
+                if (member != null)
+                {
+                    member.UserId = null;
+                    _fTMemberRepository.Update(member);
+                }
             }
-            else
-            {
-                throw new ArgumentException("Thành viên không phải là khách trong gia tộc này hoặc gia tộc không tồn tại");
-            }
+
+            _fTUserRepository.Delete(user);
+            await _unitOfWork.CompleteAsync();
         }
     }
 }

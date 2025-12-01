@@ -162,6 +162,20 @@ namespace FTM.API.Controllers
         }
 
         /// <summary>
+        /// rời gia phả (soft delete)
+        /// </summary>
+        [HttpPost("{ftId}/user/{userId}/out")]
+        public async Task<IActionResult> OutOfFamilyTree([FromRoute] Guid ftId, [FromRoute] Guid userId)
+        {
+            if (ftId == Guid.Empty || userId == Guid.Empty)
+                return BadRequest(new ApiError("ID không hợp lệ"));
+
+            await _familyTreeService.OutFamilyTreeAsync(ftId, userId);
+            return Ok(new ApiSuccess("Rời gia tộc thành công", string.Empty));
+        }
+
+
+        /// <summary>
         /// Lấy danh sách tất cả gia phả
         /// </summary>
         /// <returns>Danh sách gia phả</returns>
