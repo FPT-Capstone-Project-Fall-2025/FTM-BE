@@ -51,6 +51,11 @@ namespace FTM.Infrastructure.Repositories.Implement
                               .FirstOrDefaultAsync(m => m.Id == id);
         }
 
+        public async Task<FTMember?> GetMemberByUserId(Guid ftId, Guid userId)
+        {
+            return await _context.FTMembers.FirstOrDefaultAsync(m => m.FTId == ftId && m.UserId == userId && m.IsDeleted == false);
+        }
+
         public async Task<List<FTMember>> GetMembersTree(Guid ftId)
         {
             return await _context.FTMembers

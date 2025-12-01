@@ -70,7 +70,8 @@ namespace FTM.API.Middleware
             // If the user is guest
             if (isGuest && 
                 ((attr.Feature == FeatureType.MEMBER && attr.Method == MethodType.VIEW) 
-                 || (attr.Feature == FeatureType.EVENT && attr.Method == MethodType.VIEW)))
+                 || (attr.Feature == FeatureType.EVENT && attr.Method == MethodType.VIEW)
+                 || (attr.Feature == FeatureType.HONOR && attr.Method == MethodType.VIEW)))
             {
                 await _next(context);
                 return;

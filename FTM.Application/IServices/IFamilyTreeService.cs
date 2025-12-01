@@ -16,5 +16,6 @@ namespace FTM.Application.IServices
         Task<int> CountFamilyTreesAsync(FamilyTreeSpecParams specParams);
         Task<int> CountMyFamilyTreesAsync(FamilyTreeSpecParams specParams);
         Task<IReadOnlyList<FamilyTreeDataTableDto>> GetMyFamilyTreesAsync(FamilyTreeSpecParams specParams);
+        Task OutFamilyTreeAsync(Guid ftId, Guid userId);
     }
 }
