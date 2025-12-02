@@ -363,7 +363,7 @@ namespace FTM.API.Controllers
         /// Images are automatically linked to the donation upon upload
         /// </summary>
         [HttpPost("{donationId}/upload-proof")]
-        [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> UploadProofImages(Guid donationId, [FromForm] List<IFormFile> images)
         {
             try
