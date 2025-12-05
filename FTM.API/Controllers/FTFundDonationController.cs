@@ -144,6 +144,7 @@ namespace FTM.API.Controllers
                     FundName = d.Fund?.FundName,
                     d.PayOSOrderCode,
                     d.CreatedByUserId,
+                    d.DonorName,
                     HasProofImages = !string.IsNullOrEmpty(d.ProofImages),
                     ProofImageCount = string.IsNullOrEmpty(d.ProofImages) ? 0 : d.ProofImages.Split(',').Length
                 });
