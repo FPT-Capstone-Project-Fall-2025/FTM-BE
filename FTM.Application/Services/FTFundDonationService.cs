@@ -91,7 +91,7 @@ namespace FTM.Application.Services
         public async Task<List<FTFundDonation>> GetUserPendingDonationsAsync(Guid userId)
         {
             return await _unitOfWork.Repository<FTFundDonation>().GetQuery()
-                .Where(d => d.FTMemberId == userId && 
+                .Where(d => d.FTMemberId == userId || d.CreatedByUserId == userId &&
                            d.Status == DonationStatus.Pending && 
                            d.IsDeleted == false)
                 .Include(d => d.Fund)
