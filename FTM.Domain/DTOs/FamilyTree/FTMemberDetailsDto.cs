@@ -58,6 +58,8 @@ namespace FTM.Domain.DTOs.FamilyTree
 
         public string? StoryDescription { get; set; }
 
+        public bool IsDivorced {  get; set; }
+
         public Guid? UserId { get; set; }
 
         public  MEthnicDto? Ethnic { get; set; }
