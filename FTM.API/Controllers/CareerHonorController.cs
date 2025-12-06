@@ -33,7 +33,7 @@ namespace FTM.API.Controllers
         /// <param name="isDisplayed">Filter by display status</param>
         /// <param name="requestParams">Pagination parameters</param>
         [HttpGet]
-        [FTAuthorize(MethodType.VIEW, FeatureType.HONOR)]
+        //[FTAuthorize(MethodType.VIEW, FeatureType.HONOR)]
         public async Task<IActionResult> GetCareerHonors(
             [FromQuery] Guid? familyTreeId,
             [FromQuery] Guid? memberId,
@@ -68,7 +68,7 @@ namespace FTM.API.Controllers
         /// Get career honor by ID
         /// </summary>
         [HttpGet("{id}")]
-        [FTAuthorize(MethodType.VIEW, FeatureType.HONOR)]
+        //[FTAuthorize(MethodType.VIEW, FeatureType.HONOR)]
         public async Task<IActionResult> GetCareerHonorById(Guid id)
         {
             try
