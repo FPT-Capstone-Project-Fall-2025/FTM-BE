@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static FTM.Domain.Constants.Constants;
 
 namespace FTM.Infrastructure.Repositories.Implement
 {
@@ -59,12 +60,27 @@ namespace FTM.Infrastructure.Repositories.Implement
         public async Task<List<FTMember>> GetMembersTree(Guid ftId)
         {
             return await _context.FTMembers
-                .Include(m => m.FTRelationshipFrom)
-                .Include(m => m.FTRelationshipTo)
-                .Include(m => m.FTMemberFiles)
-                .Where(x => x.FTId == ftId && x.IsDeleted == false)
-                .OrderBy(m => m.Birthday)
-                .ToListAsync();
+        //.Include(m => m.FTRelationshipFrom)
+        //.Include(m => m.FTRelationshipTo)
+        //.Include(m => m.FTMemberFiles)
+        //.Where(x => x.FTId == ftId && x.IsDeleted == false)
+        //.AsNoTracking()
+        //.OrderBy(m => m.Birthday)
+        //.ToListAsync();
+                    .Where(x => x.FTId == ftId && x.IsDeleted == false)
+                    // Include relationships WITH their related members
+                    .Include(m => m.FTRelationshipFrom
+                        .Where(r => r.CategoryCode == FTRelationshipCategory.PARTNER ||
+                                    r.CategoryCode == FTRelationshipCategory.CHILDREN))
+                           .ThenInclude(r => r.ToFTMember) // Load the partner member
+                    .Include(m => m.FTRelationshipTo
+                        .Where(r => r.CategoryCode == FTRelationshipCategory.CHILDREN))
+                            .ThenInclude(r => r.FromFTMember) // Load the parent member
+                    .Include(m => m.FTMemberFiles
+                        .Where(f => f.Title.Contains("Avatar") && f.IsDeleted == false))
+                    .AsNoTracking()
+                    .OrderBy(m => m.Birthday)
+                    .ToListAsync();
         }
 
         public async Task<List<FTMember>> GetMembersWithoutUserAsync(Guid ftId)
