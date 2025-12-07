@@ -2,6 +2,9 @@ using FTM.API.Extensions;
 using FTM.Application.Hubs;
 using FTM.Infrastructure.Configurations;
 using FTM.Infrastructure.Data;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using System;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSignalR();
@@ -62,7 +65,28 @@ app.MapHealthChecks("/health");
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notification");
 
-// Seed data on startup with better error handling
+
+// AUTO-MIGRATION
+using (var scope = app.Services.CreateScope())
+{
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    var dbContexts = scope.ServiceProvider.GetServices<DbContext>();
+
+    foreach (var db in dbContexts)
+    {
+        try
+        {
+            logger.LogInformation("Applying migrations for DbContext: {DbContext}", db.GetType().Name);
+            db.Database.Migrate();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Migration failed for DbContext: {DbContext}", db.GetType().Name);
+        }
+    }
+}
+
+// SEEDING
 try
 {
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
@@ -74,6 +98,6 @@ catch (Exception ex)
 {
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
     logger.LogError(ex, "Failed to seed data on startup");
-    // Don't throw - let app continue running
 }
+
 app.Run();

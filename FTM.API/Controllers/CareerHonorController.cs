@@ -4,6 +4,7 @@ using FTM.API.Helpers;
 using FTM.API.Reponses;
 using FTM.Application.IServices;
 using FTM.Domain.DTOs.HonorBoard;
+using FTM.Domain.Enums;
 using FTM.Domain.Specification.HonorBoard;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -32,6 +33,7 @@ namespace FTM.API.Controllers
         /// <param name="isDisplayed">Filter by display status</param>
         /// <param name="requestParams">Pagination parameters</param>
         [HttpGet]
+        //[FTAuthorize(MethodType.VIEW, FeatureType.HONOR)]
         public async Task<IActionResult> GetCareerHonors(
             [FromQuery] Guid? familyTreeId,
             [FromQuery] Guid? memberId,
@@ -66,6 +68,7 @@ namespace FTM.API.Controllers
         /// Get career honor by ID
         /// </summary>
         [HttpGet("{id}")]
+        //[FTAuthorize(MethodType.VIEW, FeatureType.HONOR)]
         public async Task<IActionResult> GetCareerHonorById(Guid id)
         {
             try
@@ -85,6 +88,7 @@ namespace FTM.API.Controllers
         /// Create a new career honor
         /// </summary>
         [HttpPost]
+        [FTAuthorize(MethodType.ADD, FeatureType.HONOR)]
         public async Task<IActionResult> CreateCareerHonor([FromForm] CreateCareerHonorRequest request)
         {
             try
@@ -113,6 +117,7 @@ namespace FTM.API.Controllers
         /// Update an existing career honor
         /// </summary>
         [HttpPut("{id}")]
+        [FTAuthorize(MethodType.UPDATE, FeatureType.HONOR)]
         public async Task<IActionResult> UpdateCareerHonor(Guid id, [FromForm] UpdateCareerHonorRequest request)
         {
             try
@@ -139,6 +144,7 @@ namespace FTM.API.Controllers
         /// Delete a career honor (soft delete)
         /// </summary>
         [HttpDelete("{id}")]
+        [FTAuthorize(MethodType.DELETE, FeatureType.HONOR)]
         public async Task<IActionResult> DeleteCareerHonor(Guid id)
         {
             try

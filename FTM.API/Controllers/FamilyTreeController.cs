@@ -54,15 +54,15 @@ namespace FTM.API.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                return BadRequest(new ApiError("Lỗi xảy ra"));
             }
             catch (UnauthorizedAccessException ex)
             {
-                return Unauthorized(new ApiError(ex.Message));
+                return Unauthorized(new ApiError("Lỗi xảy ra"));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ApiError($"Lỗi hệ thống: {ex.Message}"));
+                return StatusCode(500, new ApiError($"Lỗi hệ thống"));
             }
         }
 
@@ -82,11 +82,11 @@ namespace FTM.API.Controllers
             }
             catch (ArgumentException ex)
             {
-                return NotFound(new ApiError(ex.Message));
+                return NotFound(new ApiError("Lỗi xảy ra"));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ApiError($"Lỗi hệ thống: {ex.Message}"));
+                return StatusCode(500, new ApiError($"Lỗi hệ thống"));
             }
         }
 
@@ -121,15 +121,15 @@ namespace FTM.API.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                return BadRequest(new ApiError("Lỗi xảy ra"));
             }
             catch (UnauthorizedAccessException ex)
             {
-                return Unauthorized(new ApiError(ex.Message));
+                return Unauthorized(new ApiError("Lỗi xảy ra"));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ApiError($"Lỗi hệ thống: {ex.Message}"));
+                return StatusCode(500, new ApiError($"Lỗi hệ thống"));
             }
         }
 
@@ -149,17 +149,31 @@ namespace FTM.API.Controllers
             }
             catch (ArgumentException ex)
             {
-                return NotFound(new ApiError(ex.Message));
+                return NotFound(new ApiError("Lỗi xảy ra"));
             }
             catch (UnauthorizedAccessException ex)
             {
-                return Unauthorized(new ApiError(ex.Message));
+                return Unauthorized(new ApiError("Lỗi xảy ra"));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ApiError($"Lỗi hệ thống: {ex.Message}"));
+                return StatusCode(500, new ApiError($"Lỗi hệ thống"));
             }
         }
+
+        /// <summary>
+        /// rời gia phả (soft delete)
+        /// </summary>
+        [HttpPost("{ftId}/user/{userId}/out")]
+        public async Task<IActionResult> OutOfFamilyTree([FromRoute] Guid ftId, [FromRoute] Guid userId)
+        {
+            if (ftId == Guid.Empty || userId == Guid.Empty)
+                return BadRequest(new ApiError("ID không hợp lệ"));
+
+            await _familyTreeService.OutFamilyTreeAsync(ftId, userId);
+            return Ok(new ApiSuccess("Rời gia tộc thành công", string.Empty));
+        }
+
 
         /// <summary>
         /// Lấy danh sách tất cả gia phả
