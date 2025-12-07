@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using System;
 using System.Diagnostics;
+using XAct;
 
 namespace FTM.API.Extensions
 {
@@ -13,7 +14,7 @@ namespace FTM.API.Extensions
         public static IServiceCollection AddIdentityAppDbContext(this IServiceCollection services)
         {
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-            string connectionString = GetCustomConnectionString("gp_identity_test");
+            string connectionString = GetCustomConnectionString(Environment.GetEnvironmentVariable("DB_NAME_AUTHEN"));
 
             services.AddDbContext<AppIdentityDbContext>(options =>
             {
@@ -38,7 +39,7 @@ namespace FTM.API.Extensions
         public static IServiceCollection AddFTMDbContext(this IServiceCollection services)
         {
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-            string connectionString = GetCustomConnectionString("gp_test");
+            string connectionString = GetCustomConnectionString(Environment.GetEnvironmentVariable("DB_NAME_SYSTEM"));
 
             services.AddDbContext<FTMDbContext>(options =>
             {
@@ -62,11 +63,11 @@ namespace FTM.API.Extensions
         {
             var builder = new NpgsqlConnectionStringBuilder
             {
-                Host = "128.199.168.119",
-                Port = 5432,
+                Host = Environment.GetEnvironmentVariable("DB_HOST"),
+                Port = int.Parse(Environment.GetEnvironmentVariable("DB_PORT")),
                 Database = dbName,
-                Username = "appuser",
-                Password = "secret",
+                Username = Environment.GetEnvironmentVariable("DB_USERNAME"),
+                Password = Environment.GetEnvironmentVariable("DB_PASSWORD"),
                 Timeout = 5,         
                 CommandTimeout = 300, 
                 Pooling = true,      
