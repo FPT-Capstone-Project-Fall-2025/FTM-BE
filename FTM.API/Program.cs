@@ -2,9 +2,6 @@ using FTM.API.Extensions;
 using FTM.Application.Hubs;
 using FTM.Infrastructure.Configurations;
 using FTM.Infrastructure.Data;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
-using System;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSignalR();
