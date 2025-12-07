@@ -403,14 +403,17 @@ namespace FTM.Application.Services
             if (!members.Any(m => m.IsRoot == true)) return new FTMemberTreeDto();
 
             var membersTreeDetails = members.Select(_mapper.Map<FTMemberTreeDetailsDto>);
-            var partnerIds = membersTreeDetails.SelectMany(m => m.Partners).ToList();
+           // var partnerIds = membersTreeDetails.SelectMany(m => m.Partners).ToList();
+            var partnerLookup = membersTreeDetails
+                                .SelectMany(m => m.Partners)
+                                .ToHashSet();
 
             return new FTMemberTreeDto()
             {
                 Root = members.First(m => m.IsRoot == true).Id,
                 Datalist = membersTreeDetails.Select(m =>
                 {
-                    m.IsPartner = partnerIds.Any(p => p == m.Id);
+                    m.IsPartner = partnerLookup.Any(p => p == m.Id);
                     return new KeyValueModel
                     {
                         Key = m.Id,
