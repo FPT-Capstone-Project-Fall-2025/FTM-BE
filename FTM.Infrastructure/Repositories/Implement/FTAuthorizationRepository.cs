@@ -55,6 +55,18 @@ namespace FTM.Infrastructure.Repositories.Implement
                                     .Where(a => a.FTId == ftId && a.FTMemberId == ftMemberId).ToListAsync();
         }
 
+        public async Task<bool> HasPermissionAsync(Guid ftId, Guid userId, FeatureType feature, MethodType method)
+        {
+            return await _context.FTAuthorizations
+                .AnyAsync(a =>
+                            a.FTId == ftId
+                            && a.AuthorizedMember.UserId == userId
+                            && (a.FeatureCode == FeatureType.ALL || a.FeatureCode == feature)
+                            && (a.MethodCode == MethodType.ALL || a.MethodCode == method)
+                            && a.IsDeleted == false
+                        );
+        }
+
         public async Task<bool> IsAuthorizationExisting(Guid ftId,Guid ftMemberId,FeatureType featureType, MethodType methodType)
         {
             return await _context.FTAuthorizations.AnyAsync(a =>

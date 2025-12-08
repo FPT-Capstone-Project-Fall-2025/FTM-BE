@@ -1,3 +1,4 @@
+using FTM.API.Helpers;
 using FTM.API.Reponses;
 using FTM.Application.IServices;
 using FTM.Domain.DTOs.Funds;
@@ -17,13 +18,19 @@ namespace FTM.API.Controllers
     {
         private readonly IFTCampaignDonationService _donationService;
         private readonly IPayOSPaymentService _payOSService;
+        private readonly IFTCampaignService _campaignService;
+        private readonly IBlobStorageService _blobStorageService;
 
         public FTCampaignDonationController(
             IFTCampaignDonationService donationService,
-            IPayOSPaymentService payOSService)
+            IPayOSPaymentService payOSService,
+            IFTCampaignService campaignService,
+            IBlobStorageService blobStorageService)
         {
             _donationService = donationService;
             _payOSService = payOSService;
+            _campaignService = campaignService;
+            _blobStorageService = blobStorageService;
         }
 
         #region Query Operations
@@ -32,6 +39,7 @@ namespace FTM.API.Controllers
         /// Get donation by ID
         /// </summary>
         [HttpGet("{id:guid}")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> GetDonationById(Guid id)
         {
             try
@@ -52,6 +60,7 @@ namespace FTM.API.Controllers
         /// Get all donations for a campaign (paginated)
         /// </summary>
         [HttpGet("campaign/{campaignId:guid}")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> GetCampaignDonations(
             Guid campaignId,
             [FromQuery] int page = 1,
@@ -72,7 +81,7 @@ namespace FTM.API.Controllers
         /// Get user's donation history (paginated)
         /// </summary>
         [HttpGet("user/{userId:guid}")]
-        [Authorize]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> GetUserDonations(
             Guid userId,
             [FromQuery] int page = 1,
@@ -90,9 +99,53 @@ namespace FTM.API.Controllers
         }
 
         /// <summary>
+        /// Get pending donations for campaigns managed by the specified manager
+        /// </summary>
+        [HttpGet("pending/manager/{managerId:guid}")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
+        public async Task<IActionResult> GetPendingDonationsForManager(
+            Guid managerId,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                var result = await _donationService.GetPendingDonationsForManagerAsync(managerId, page, pageSize);
+                return Ok(new ApiSuccess("Pending donations retrieved successfully", result));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Get my pending donations (donations waiting for proof upload or confirmation)
+        /// Used by FE to show user their own pending donations that need proof images
+        /// </summary>
+        [HttpGet("my-pending")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
+        public async Task<IActionResult> GetMyPendingDonations([FromQuery] Guid? userId = null)
+        {
+            try
+            {
+                if (!userId.HasValue)
+                    return BadRequest(new ApiError("User ID is required"));
+
+                var result = await _donationService.GetUserPendingDonationsAsync(userId.Value);
+                return Ok(new ApiSuccess("Your pending donations retrieved successfully", result));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
+            }
+        }
+
+        /// <summary>
         /// Get top donors for a campaign
         /// </summary>
         [HttpGet("campaign/{campaignId:guid}/top-donors")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> GetTopDonors(
             Guid campaignId,
             [FromQuery] int limit = 10)
@@ -112,12 +165,50 @@ namespace FTM.API.Controllers
         /// Get donation statistics for a campaign
         /// </summary>
         [HttpGet("campaign/{campaignId:guid}/statistics")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> GetDonationStatistics(Guid campaignId)
         {
             try
             {
                 var result = await _donationService.GetDonationStatisticsAsync(campaignId);
                 return Ok(new ApiSuccess(result));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Get pending donations for a specific campaign (waiting for manager confirmation)
+        /// </summary>
+        [HttpGet("campaign/{campaignId:guid}/pending")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
+        public async Task<IActionResult> GetPendingDonationsByCampaign(Guid campaignId)
+        {
+            try
+            {
+                var result = await _donationService.GetPendingDonationsByCampaignAsync(campaignId);
+                return Ok(new ApiSuccess("Pending donations retrieved successfully", result));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Get all pending donations across all campaigns (for admin/manager)
+        /// Optional: filter by familyTreeId
+        /// </summary>
+        [HttpGet("pending")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
+        public async Task<IActionResult> GetAllPendingDonations([FromQuery] Guid? familyTreeId = null)
+        {
+            try
+            {
+                var result = await _donationService.GetAllPendingDonationsAsync(familyTreeId);
+                return Ok(new ApiSuccess("Pending donations retrieved successfully", result));
             }
             catch (Exception ex)
             {
@@ -135,6 +226,7 @@ namespace FTM.API.Controllers
         /// For BankTransfer: generates VietQR code
         /// </summary>
         [HttpPost("campaign/{campaignId:guid}/donate")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> DonateToCampaign(Guid campaignId, [FromBody] CampaignDonateRequest request)
         {
             try
@@ -154,7 +246,8 @@ namespace FTM.API.Controllers
                     PaymentMethod = request.PaymentMethod,
                     DonorNotes = request.PaymentNotes,
                     IsAnonymous = request.IsAnonymous ?? false,
-                    Status = DonationStatus.Pending
+                    Status = DonationStatus.Pending,
+                    ProofImages = request.ProofImages // Store proof images if provided
                 };
 
                 // For online payments, generate VietQR
@@ -210,6 +303,8 @@ namespace FTM.API.Controllers
         /// Create online donation (returns QR code for bank transfer)
         /// </summary>
         [HttpPost("online")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
+
         public async Task<IActionResult> CreateOnlineDonation([FromBody] CreateOnlineDonationDto request)
         {
             try
@@ -271,7 +366,7 @@ namespace FTM.API.Controllers
         /// Create cash donation (requires manual confirmation)
         /// </summary>
         [HttpPost("cash")]
-        [Authorize]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> CreateCashDonation([FromBody] CreateCashDonationDto request)
         {
             try
@@ -371,49 +466,225 @@ namespace FTM.API.Controllers
         }
 
         #endregion
+
+        #region Donation Confirmation
+
+        /// <summary>
+        /// Upload proof images to blob storage for a specific donation
+        /// Images are automatically linked to the donation upon upload
+        /// </summary>
+        [HttpPost("{donationId:guid}/upload-proof")]
+        [Consumes("multipart/form-data")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
+
+        public async Task<IActionResult> UploadProofImages(Guid donationId, [FromForm] List<IFormFile> images)
+        {
+            try
+            {
+                // Validate donation exists
+                var donation = await _donationService.GetByIdAsync(donationId);
+                if (donation == null)
+                    return NotFound(new ApiError("Donation not found"));
+
+                // Validate donation status
+                if (donation.Status == DonationStatus.Completed)
+                    return BadRequest(new ApiError("Cannot upload proof for already confirmed donation"));
+
+                if (donation.Status == DonationStatus.Rejected)
+                    return BadRequest(new ApiError("Cannot upload proof for rejected donation"));
+
+                if (images == null || !images.Any())
+                    return BadRequest(new ApiError("No images provided"));
+
+                if (images.Count > 5)
+                    return BadRequest(new ApiError("Maximum 5 images allowed"));
+
+                var uploadedUrls = new List<string>();
+                foreach (var image in images)
+                {
+                    // Validate file type
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+                    var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
+                    
+                    if (!allowedExtensions.Contains(extension))
+                        return BadRequest(new ApiError($"Invalid file type: {extension}. Allowed: {string.Join(", ", allowedExtensions)}"));
+
+                    // Validate file size (max 5MB)
+                    if (image.Length > 5 * 1024 * 1024)
+                        return BadRequest(new ApiError($"File {image.FileName} exceeds 5MB limit"));
+
+                    // Upload to blob storage
+                    var fileName = $"donation-proof_{donationId}_{Guid.NewGuid()}{extension}";
+                    var blobUrl = await _blobStorageService.UploadFileAsync(image, "donation-proofs", fileName);
+                    uploadedUrls.Add(blobUrl);
+                }
+
+                // Automatically update donation with proof images
+                var existingProofs = string.IsNullOrWhiteSpace(donation.ProofImages) 
+                    ? new List<string>() 
+                    : donation.ProofImages.Split(',').ToList();
+                
+                existingProofs.AddRange(uploadedUrls);
+                donation.ProofImages = string.Join(",", existingProofs);
+                
+                await _donationService.UpdateAsync(donation);
+
+                return Ok(new ApiSuccess("Images uploaded and linked to donation successfully", new
+                {
+                    DonationId = donationId,
+                    ImageUrls = uploadedUrls,
+                    AllProofImages = existingProofs,
+                    CommaSeparated = donation.ProofImages,
+                    Count = uploadedUrls.Count,
+                    TotalProofs = existingProofs.Count
+                }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError("Error uploading images", ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Confirm cash/bank transfer donation (proof images should be uploaded via upload-proof endpoint first)
+        /// Only CampaignManager can confirm donations
+        /// </summary>
+        [HttpPost("{donationId:guid}/confirm")]
+        [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
+        public async Task<IActionResult> ConfirmDonation(Guid donationId, [FromBody] ConfirmDonationDto request)
+        {
+            try
+            {
+                if (donationId != request.DonationId)
+                    return BadRequest(new ApiError("Donation ID mismatch"));
+
+                // Get donation
+                var donation = await _donationService.GetByIdAsync(donationId);
+                if (donation == null)
+                    return NotFound(new ApiError("Donation not found"));
+
+                // Get campaign to check manager authorization
+                var campaign = await _donationService.GetCampaignForDonationAsync(donation.CampaignId);
+                if (campaign == null)
+                    return NotFound(new ApiError("Campaign not found"));
+
+                // Authorization: Only CampaignManager can confirm
+                if (campaign.CampaignManagerId != request.ConfirmedBy)
+                    return StatusCode(403, new ApiError("Only the Campaign Manager can confirm donations. You are not authorized to perform this action."));
+
+                // Validate current status
+                if (donation.Status == DonationStatus.Completed)
+                    return BadRequest(new ApiError("Donation already confirmed"));
+
+                if (donation.Status == DonationStatus.Rejected)
+                    return BadRequest(new ApiError("Cannot confirm rejected donation"));
+
+                // Validate proof images
+                if (string.IsNullOrWhiteSpace(donation.ProofImages))
+                    return BadRequest(new ApiError("Proof images are required. Please upload proof images first using the upload-proof endpoint."));
+
+                // Update donation properties
+                donation.Status = DonationStatus.Completed;
+                donation.ConfirmedBy = request.ConfirmedBy;
+                donation.ConfirmedOn = DateTimeOffset.UtcNow;
+                donation.ConfirmationNotes = request.Notes;
+
+                // Save changes
+                var updatedDonation = await _donationService.UpdateAsync(donation);
+
+                // Update campaign balance (already have campaign object from authorization check)
+                if (campaign != null)
+                {
+                    campaign.CurrentBalance += donation.DonationAmount;
+                    await _campaignService.UpdateAsync(campaign);
+                }
+
+                return Ok(new ApiSuccess("Donation confirmed successfully", new
+                {
+                    DonationId = updatedDonation.Id,
+                    Status = updatedDonation.Status.ToString(),
+                    Amount = updatedDonation.DonationAmount,
+                    ProofImages = updatedDonation.ProofImages?.Split(','),
+                    ConfirmedBy = updatedDonation.ConfirmedBy,
+                    ConfirmedOn = updatedDonation.ConfirmedOn,
+                    NewCampaignBalance = campaign?.CurrentBalance
+                }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError("Error confirming donation", ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// Reject a donation (for manager to reject pending donations with invalid proof or other reasons)
+        /// Only CampaignManager can reject donations
+        /// </summary>
+        [HttpPost("{donationId:guid}/reject")]
+        [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
+        public async Task<IActionResult> RejectDonation(Guid donationId, [FromBody] RejectCampaignDonationRequest request)
+        {
+            try
+            {
+                if (donationId != request.DonationId)
+                    return BadRequest(new ApiError("Donation ID mismatch"));
+
+                // Get donation
+                var donation = await _donationService.GetByIdAsync(donationId);
+                if (donation == null)
+                    return NotFound(new ApiError("Donation not found"));
+
+                // Get campaign to check manager authorization
+                var campaignForReject = await _donationService.GetCampaignForDonationAsync(donation.CampaignId);
+                if (campaignForReject == null)
+                    return NotFound(new ApiError("Campaign not found"));
+
+                // Authorization: Only CampaignManager can reject
+                if (campaignForReject.CampaignManagerId != request.RejectedBy)
+                    return StatusCode(403, new ApiError("Only the Campaign Manager can reject donations. You are not authorized to perform this action."));
+
+                // Validate current status
+                if (donation.Status != DonationStatus.Pending)
+                    return BadRequest(new ApiError("Can only reject pending donations"));
+
+                // Update donation status to Rejected
+                donation.Status = DonationStatus.Rejected;
+                donation.ConfirmedBy = request.RejectedBy;
+                donation.ConfirmedOn = DateTimeOffset.UtcNow;
+                donation.ConfirmationNotes = request.Reason;
+
+                // Save changes
+                var updatedDonation = await _donationService.UpdateAsync(donation);
+
+                return Ok(new ApiSuccess("Donation rejected successfully", new
+                {
+                    DonationId = updatedDonation.Id,
+                    Status = updatedDonation.Status.ToString(),
+                    RejectedBy = updatedDonation.ConfirmedBy,
+                    RejectedOn = updatedDonation.ConfirmedOn,
+                    Reason = updatedDonation.ConfirmationNotes,
+                    Amount = updatedDonation.DonationAmount
+                }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError("Error rejecting donation", ex.Message));
+            }
+        }
+
+        #endregion
     }
 
-    #region DTOs (if not already defined)
+    #region DTOs
 
-    public class CampaignDonateRequest
+    /// <summary>
+    /// Request DTO for rejecting a campaign donation
+    /// </summary>
+    public class RejectCampaignDonationRequest
     {
-        public Guid? MemberId { get; set; }
-        public string DonorName { get; set; } = string.Empty;
-        public decimal Amount { get; set; }
-        public PaymentMethod PaymentMethod { get; set; }
-        public string? PaymentNotes { get; set; }
-        public bool? IsAnonymous { get; set; }
-    }
-
-    public class CreateOnlineDonationDto
-    {
-        public Guid CampaignId { get; set; }
-        public Guid? MemberId { get; set; }
-        public string DonorName { get; set; } = string.Empty;
-        public decimal Amount { get; set; }
-        public string? Message { get; set; }
-        public bool IsAnonymous { get; set; }
-        public string ReturnUrl { get; set; } = string.Empty;
-        public string CancelUrl { get; set; } = string.Empty;
-    }
-
-    public class CreateCashDonationDto
-    {
-        public Guid CampaignId { get; set; }
-        public Guid? MemberId { get; set; }
-        public string DonorName { get; set; } = string.Empty;
-        public decimal Amount { get; set; }
-        public string? Notes { get; set; }
-        public bool IsAnonymous { get; set; }
-    }
-
-    public class PaymentCallbackDto
-    {
-        public string OrderCode { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
-        public decimal Amount { get; set; }
-        public string? TransactionId { get; set; }
-        public DateTime? TransactionDateTime { get; set; }
+        public Guid DonationId { get; set; }
+        public Guid? RejectedBy { get; set; } // Made nullable to handle string input
+        public string Reason { get; set; } = string.Empty;
     }
 
     #endregion

@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using AutoMapper.Execution;
 using FTM.Domain.DTOs.FamilyTree;
+using FTM.Domain.DTOs.Funds;
 using FTM.Domain.DTOs.Notifications;
 using FTM.Domain.Entities.Applications;
 using FTM.Domain.Entities.FamilyTree;
+using FTM.Domain.Entities.Funds;
 using FTM.Domain.Entities.Notifications;
 using FTM.Domain.Models;
 using Microsoft.IdentityModel.Tokens;
@@ -70,9 +72,18 @@ namespace FTM.Application.Helpers
                 .ForMember(dest => dest.FTMemberFiles, opt => opt.MapFrom(src => src.FTMemberFiles));
 
             CreateMap<FamilyTree, FamilyTreeDataTableDto>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedOn))
                 .ForMember(dest => dest.MemberCount, opt => opt.MapFrom(src => src.FTMembers.Any(m => m.IsDeleted == false) ? src.FTMembers.Count(m => m.IsDeleted == false) : 0));
 
-            CreateMap<FTMember, FTMemberSimpleDto>();
+            CreateMap<FTMember, FTMemberSimpleDto>()
+                .AfterMap((src, desc) => {
+                    if (!src.FTMemberFiles.IsNullOrEmpty())
+                    {
+                        desc.FilePath = src.FTMemberFiles.First().FilePath;
+                    }
+                });
+    
+
             CreateMap<FTMemberFileRequest, FTMemberFile>().ReverseMap();
             CreateMap<MReligionDto, MReligion>().ReverseMap();
             CreateMap<MEthnicDto, MEthnic>().ReverseMap();
@@ -84,7 +95,10 @@ namespace FTM.Application.Helpers
             CreateMap<UpsertFTAuthorizationRequest, FTAuthorizationDto>();
             CreateMap<FTAuthorization, FTAuthorizationDto>();
             CreateMap<FTInvitation, FTInvitationDto>();
+            CreateMap<FTInvitation, SimpleFTInvitationDto>();
             CreateMap<FTNotification, FTNotificationDto>();
+            CreateMap<FamilyTree, SimpleFamilyTreeDto>();
+            CreateMap<FTUser, FTUserDto>();
 
             CreateMap<UpdateFTMemberRequest, FTMember>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
@@ -136,6 +150,62 @@ namespace FTM.Application.Helpers
                     (src.FTRelationshipFrom != null && src.FTRelationshipFrom.Any(r => r.CategoryCode == FTRelationshipCategory.CHILDREN))
                     || (src.FTRelationshipFromPartner != null && src.FTRelationshipFromPartner.Any(r => r.CategoryCode == FTRelationshipCategory.CHILDREN))
                 ));
+
+            // Campaign Donation mappings
+            CreateMap<FTCampaignDonation, FTCampaignDonationResponseDto>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.CampaignId, opt => opt.MapFrom(src => src.CampaignId))
+                .ForMember(dest => dest.CampaignName, opt => opt.MapFrom(src => src.Campaign != null ? src.Campaign.CampaignName : null))
+                .ForMember(dest => dest.DonorName, opt => opt.MapFrom(src => src.DonorName))
+                .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.Amount, opt => opt.MapFrom(src => src.DonationAmount))
+                .ForMember(dest => dest.Message, opt => opt.MapFrom(src => src.DonorNotes))
+                .ForMember(dest => dest.IsAnonymous, opt => opt.MapFrom(src => src.IsAnonymous))
+                .ForMember(dest => dest.PayOSOrderCode, opt => opt.MapFrom(src => src.PayOSOrderCode != null ? src.PayOSOrderCode.ToString() : string.Empty))
+                .ForMember(dest => dest.TransactionId, opt => opt.MapFrom(src => src.PaymentTransactionId))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedOn.DateTime))
+                .ForMember(dest => dest.CompletedAt, opt => opt.MapFrom(src => src.ConfirmedOn.HasValue ? src.ConfirmedOn.Value.DateTime : (DateTime?)null))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.LastModifiedOn.DateTime));
+
+            // Campaign Expense mappings
+            CreateMap<FTCampaignExpense, FTCampaignExpenseResponseDto>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.CampaignId, opt => opt.MapFrom(src => src.CampaignId))
+                .ForMember(dest => dest.CampaignName, opt => opt.MapFrom(src => src.Campaign != null ? src.Campaign.CampaignName : null))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.ExpenseDescription))
+                .ForMember(dest => dest.Amount, opt => opt.MapFrom(src => src.ExpenseAmount))
+                .ForMember(dest => dest.ExpenseDate, opt => opt.MapFrom(src => src.ExpenseDate.DateTime))
+                .ForMember(dest => dest.ReceiptUrl, opt => opt.MapFrom(src => src.ReceiptImages))
+                .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.ApprovalStatus.ToString()))
+                .ForMember(dest => dest.RequestedById, opt => opt.MapFrom(src => src.AuthorizedBy))
+                .ForMember(dest => dest.RequestedByName, opt => opt.MapFrom(src => src.Authorizer != null ? src.Authorizer.Fullname : null))
+                .ForMember(dest => dest.ApprovedById, opt => opt.MapFrom(src => src.ApprovedBy))
+                .ForMember(dest => dest.ApprovedByName, opt => opt.MapFrom(src => src.Approver != null ? src.Approver.Fullname : null))
+                .ForMember(dest => dest.ApprovedAt, opt => opt.MapFrom(src => src.ApprovedOn.HasValue ? src.ApprovedOn.Value.DateTime : (DateTime?)null))
+                .ForMember(dest => dest.ApprovalNotes, opt => opt.MapFrom(src => src.ApprovalNotes))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedOn.DateTime))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.LastModifiedOn.DateTime));
+
+            // Campaign mappings
+            CreateMap<FTFundCampaign, FTCampaignResponseDto>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.CampaignName))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.CampaignDescription))
+                .ForMember(dest => dest.FamilyTreeId, opt => opt.MapFrom(src => src.FTId))
+                .ForMember(dest => dest.FamilyTreeName, opt => opt.MapFrom(src => src.FamilyTree != null ? src.FamilyTree.Name : null))
+                .ForMember(dest => dest.CampaignManagerId, opt => opt.MapFrom(src => src.CampaignManagerId))
+                .ForMember(dest => dest.CampaignManagerName, opt => opt.MapFrom(src => src.CampaignManager != null ? src.CampaignManager.Fullname : null))
+                .ForMember(dest => dest.TargetAmount, opt => opt.MapFrom(src => src.FundGoal))
+                .ForMember(dest => dest.CurrentAmount, opt => opt.MapFrom(src => src.CurrentBalance))
+                .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.StartDate.DateTime))
+                .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.EndDate.DateTime))
+                .ForMember(dest => dest.Purpose, opt => opt.MapFrom(src => src.Notes))
+                .ForMember(dest => dest.BeneficiaryInfo, opt => opt.MapFrom(src => src.AccountHolderName))
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => !src.IsDeleted))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedOn.DateTime))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.LastModifiedOn.DateTime))
+                .ForMember(dest => dest.TotalDonations, opt => opt.MapFrom(src => src.Donations != null ? src.Donations.Count : 0))
+                .ForMember(dest => dest.TotalDonors, opt => opt.MapFrom(src => src.Donations != null ? src.Donations.Select(d => d.FTMemberId).Distinct().Count() : 0));
 
         }
     }

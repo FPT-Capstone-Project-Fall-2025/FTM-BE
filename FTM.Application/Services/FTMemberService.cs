@@ -10,6 +10,7 @@ using FTM.Domain.Models;
 using FTM.Domain.Specification;
 using FTM.Domain.Specification.FamilyTrees;
 using FTM.Domain.Specification.FTMembers;
+using FTM.Domain.Specification.FTUsers;
 using FTM.Infrastructure.Repositories.Implement;
 using FTM.Infrastructure.Repositories.Interface;
 using Microsoft.AspNetCore.Identity;
@@ -37,7 +38,7 @@ namespace FTM.Application.Services
         private readonly IGenericRepository<FTRelationship> _fTRelationshipRepository;
         private readonly ICurrentUserResolver _currentUserResolver;
         private readonly IBlobStorageService _blobStorageService;
-        private readonly IFTInvitationService _invitationService;
+        private readonly IFTAuthorizationService _fTAuthorizationService;
         private readonly IFTMemberFileRepository _fTMemberFileRepository;
         private readonly IFTUserRepository _fTUserRepository;
         private readonly IUnitOfWork _unitOfWork;
@@ -52,7 +53,7 @@ namespace FTM.Application.Services
             IGenericRepository<FTRelationship> FTRelationshipRepository,
             ICurrentUserResolver CurrentUserResolver,
             IBlobStorageService blobStorageService,
-            IFTInvitationService invitationService,
+            IFTAuthorizationService fTAuthorizationService,
             IFTMemberFileRepository fTMemberFileRepository,
             IFTUserRepository fTUserRepository,
             IUnitOfWork unitOfWork,
@@ -65,6 +66,7 @@ namespace FTM.Application.Services
             _fTRelationshipRepository = FTRelationshipRepository;
             _currentUserResolver = CurrentUserResolver;
             _blobStorageService = blobStorageService;
+            _fTAuthorizationService = fTAuthorizationService;
             _fTMemberFileRepository = fTMemberFileRepository;
             _fTUserRepository = fTUserRepository;
             _unitOfWork = unitOfWork;
@@ -145,7 +147,6 @@ namespace FTM.Application.Services
                                if (request.UserId != null && request.UserId != Guid.Empty)
                                {
                                    var invitedUser = await _userManager.FindByIdAsync(request.UserId.ToString());
-
                                    if (invitedUser == null)
                                        throw new ArgumentException("Người được mời không tồn tại trong hệ thống.");
 
@@ -176,6 +177,22 @@ namespace FTM.Application.Services
                                    await _fTInvitationService.SendAsync(ftInvitation);
                                }
                                //----------------End Handle Invitation---------------------
+
+                               //----------------Handle Authorization---------------------
+                               if (request.UserId != null)
+                               {
+                                   var isOwner = await _fTAuthorizationService.IsOwnerAsync(request.FTId.Value, request.UserId.Value);
+                                   if (!isOwner)
+                                   {
+                                       await _fTAuthorizationService.SetMemberAuthorizationAsync(request.FTId.Value, ftMember.Id);
+                                   }
+                               }
+                               else
+                               {
+                                   await _fTAuthorizationService.SetMemberAuthorizationAsync(request.FTId.Value, ftMember.Id);
+
+                               }
+                               //----------------End Handle Authorization---------------------
 
                                await _unitOfWork.CompleteAsync();
                                newFMember = await _fTMemberRepository.GetDetaildedById(ftMember.Id);
@@ -239,17 +256,26 @@ namespace FTM.Application.Services
 
         private async Task AddPartnerMember(FTMember? rootOld, FTMember ftMember, UpsertFTMemberRequest request)
         {
+            // Root Member
             var firstPartner = await _fTRelationshipRepository.GetQuery()
                                         .Include(x => x.ToFTMember)
                                         .FirstOrDefaultAsync(x => x.FromFTMemberId == request.RootId
                                                             && x.CategoryCode == FTRelationshipCategory.PARTNER);
+            // Partner Member
+            var partnerOfFromFTMember = await _fTRelationshipRepository.GetQuery()
+                                        .Include(x => x.FromFTMember)
+                                        .FirstOrDefaultAsync(x => x.ToFTMemberId == request.RootId
+                                                            && x.CategoryCode == FTRelationshipCategory.PARTNER);
 
-            if (firstPartner != null && !firstPartner.ToFTMember.IsDivorced) throw new ArgumentException("Mỗi người chồng chỉ được có một người vợ.");
+            if (partnerOfFromFTMember != null && !partnerOfFromFTMember.FromFTMember.IsDivorced) throw new ArgumentException("Quan hệ hôn nhân một vợ một chồng.");
+
+            if (firstPartner != null && !firstPartner.ToFTMember.IsDivorced && firstPartner.ToFTMember.StatusCode != FTMemberStatus.UNDEFINED) throw new ArgumentException("Quan hệ hôn nhân một vợ một chồng.");
 
             if (firstPartner != null && firstPartner.ToFTMember.StatusCode == FTMemberStatus.UNDEFINED)
             {
                 var partnerToUpdate = await _fTMemberRepository.GetByIdAsync(firstPartner.ToFTMemberId);
                 //request.Id = partnerToUpdate.Id;
+                ftMember.Id = partnerToUpdate.Id;
                 partnerToUpdate = _mapper.Map(request, partnerToUpdate);
                 partnerToUpdate.StatusCode = 0;
 
@@ -357,6 +383,7 @@ namespace FTM.Application.Services
             {
                 var partnerToUpdate = await _fTMemberRepository.GetByIdAsync(parent.FromFTMemberPartnerId.Value);
                 //request.Id = partnerToUpdate.Id;
+                ftMember.Id = partnerToUpdate.Id;
                 partnerToUpdate = _mapper.Map(request, partnerToUpdate);
                 partnerToUpdate.StatusCode = 0;
 
@@ -446,6 +473,13 @@ namespace FTM.Application.Services
             var ftms = await _fTMemberRepository.ListAsync(spec);
 
             return _mapper.Map<IReadOnlyList<FTMemberSimpleDto>>(ftms);
+        }
+        public async Task<IReadOnlyList<FTUserDto>> GetListOfFTUsers(FTUserSpecParams specParams)
+        {
+            var spec = new FTUserSpecification(specParams);
+            var ftUsers = await _fTUserRepository.ListAsync(spec);
+
+            return _mapper.Map<IReadOnlyList<FTUserDto>>(ftUsers);
         }
 
         public async Task<int> CountMembers(FTMemberSpecParams specParams)
@@ -595,10 +629,12 @@ namespace FTM.Application.Services
                 if (connectedUser != null)
                 {
                     var ftUser = await _fTUserRepository.FindAsync(member.FTId, member.UserId.Value);
-                    if (ftUser != null)
+                    if (ftUser != null && ftUser.FTRole == FTMRole.FTMember)
                     {
                         ftUser.FTRole = FTMRole.FTGuest;
+                        await _fTAuthorizationService.DeleteAuthorizationAsync(member.FTId, member.Id);
                     }
+                    member.UserId = Guid.Empty;
                 }
             }
 
@@ -612,6 +648,42 @@ namespace FTM.Application.Services
             if (_ftMember == null) throw new ArgumentException("Thành viên không tồn tại");
 
             return _mapper.Map<MemberRelationshipDto>(_ftMember);
+        }
+
+        public async Task<IReadOnlyList<FTMemberSimpleDto>> GetListOfMembersWithoutUser(Guid ftId)
+        {
+            var memberWithoutUserList = await _fTMemberRepository.GetMembersWithoutUserAsync(ftId);
+            return _mapper.Map<IReadOnlyList<FTMemberSimpleDto>>(memberWithoutUserList);
+        }
+
+        public async Task<int> CountFTUsers(FTUserSpecParams specParams)
+        {
+            var spec = new FTUserForCountSpecification(specParams);
+            return await _fTUserRepository.CountAsync(spec);
+        }
+
+        public async Task DeleteUser(Guid ftId, Guid ftUserId)
+        {
+            var user = await _fTUserRepository.FindAsync(ftId, ftUserId);
+
+            if(user == null) throw new ArgumentException("Người dùng không thuộc trong gia tộc này hoặc gia tộc không tồn tại");
+
+            if (user.FTRole == FTMRole.FTOwner) throw new ArgumentException("Không thể xóa người sở hữu gia tộc");
+
+
+            if(user.FTRole == FTMRole.FTMember)
+            {
+                var member = await _fTMemberRepository.GetMemberByUserId(ftId, ftUserId);
+
+                if (member != null)
+                {
+                    member.UserId = null;
+                    _fTMemberRepository.Update(member);
+                }
+            }
+
+            _fTUserRepository.Delete(user);
+            await _unitOfWork.CompleteAsync();
         }
     }
 }

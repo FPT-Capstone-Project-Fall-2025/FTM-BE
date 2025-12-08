@@ -2,6 +2,7 @@
 using FTM.Domain.Entities.Notifications;
 using FTM.Infrastructure.Data;
 using FTM.Infrastructure.Repositories.Interface;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,14 @@ namespace FTM.Infrastructure.Repositories.Implement
             this._context = context;
             this._currentUserResolver = currentUserResolver;
         }
+
+        public async Task<FTNotification?> FindByInvitationIdAsync(Guid invitationId)
+        {
+            return await _context.FTNotifications
+                .Where(n => n.RelatedId == invitationId && n.IsDeleted == false && n.IsRead == false)
+                .FirstOrDefaultAsync();
+        }
+
 
         public async Task<List<FTNotification>> FindByuserIdAsync(Guid userId)
         {

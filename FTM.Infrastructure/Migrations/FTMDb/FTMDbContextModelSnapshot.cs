@@ -636,7 +636,6 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                         .HasColumnType("uuid");
 
                     b.Property<string>("FTMemberName")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("FTName")
@@ -1108,6 +1107,9 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("ProofImages")
+                        .HasColumnType("text");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
@@ -1463,6 +1465,9 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("ProofImages")
+                        .HasColumnType("text");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
@@ -1539,8 +1544,14 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.Property<DateTimeOffset>("LastModifiedOn")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("PaymentProofImage")
+                        .HasColumnType("text");
+
                     b.Property<DateTimeOffset?>("PlannedDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReceiptImages")
+                        .HasColumnType("text");
 
                     b.Property<string>("Recipient")
                         .HasMaxLength(500)
@@ -2042,8 +2053,7 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "FTMember")
                         .WithMany("FTInvitations")
                         .HasForeignKey("FTMemberId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("FT");
 
@@ -2108,8 +2118,7 @@ namespace FTM.Infrastructure.Migrations.FTMDb
                     b.HasOne("FTM.Domain.Entities.FamilyTree.FTMember", "FTMember")
                         .WithMany("FTMemberFiles")
                         .HasForeignKey("FTMemberId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("FTMember");
                 });

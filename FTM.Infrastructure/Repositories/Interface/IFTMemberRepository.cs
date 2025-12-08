@@ -13,5 +13,8 @@ namespace FTM.Infrastructure.Repositories.Interface
         Task<List<FTMember>>  GetMembersTree(Guid ftId);
         Task<FTMember?> GetMemberById(Guid id);
         Task<bool> IsConnectedTo(Guid ftId, Guid userId);
+        Task<FTMember?> GetMemberByUserId(Guid ftId, Guid userId);
+        Task<bool> IsExisted(Guid ftId, Guid ftMemberId);
+        Task<List<FTMember>> GetMembersWithoutUserAsync(Guid ftId);
     }
 }

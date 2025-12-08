@@ -51,6 +51,11 @@ namespace FTM.Infrastructure.Repositories.Implement
                               .FirstOrDefaultAsync(m => m.Id == id);
         }
 
+        public async Task<FTMember?> GetMemberByUserId(Guid ftId, Guid userId)
+        {
+            return await _context.FTMembers.FirstOrDefaultAsync(m => m.FTId == ftId && m.UserId == userId && m.IsDeleted == false);
+        }
+
         public async Task<List<FTMember>> GetMembersTree(Guid ftId)
         {
             return await _context.FTMembers
@@ -62,9 +67,22 @@ namespace FTM.Infrastructure.Repositories.Implement
                 .ToListAsync();
         }
 
-        public async Task<bool> IsConnectedTo(Guid ftId, Guid userId)
+        public async Task<List<FTMember>> GetMembersWithoutUserAsync(Guid ftId)
+        {
+            return await _context.FTMembers.Include(m => m.FTMemberFiles)
+                                           .Where(m => m.FTId == ftId 
+                                                    && (m.UserId == null || m.UserId == Guid.Empty) 
+                                                    && m.IsDeleted == false).ToListAsync();
+        }
+
+        public async Task<bool> IsConnectedTo(Guid ftId, Guid userId)   
         {
             return await _context.FTMembers.AnyAsync(m => m.FTId == ftId && m.UserId == userId && m.IsDeleted == false);
+        }
+
+        public async Task<bool> IsExisted(Guid ftId, Guid ftMemberId)
+        {
+            return await _context.FTMembers.AnyAsync(m => m.FTId == ftId && m.Id == ftMemberId && m.IsDeleted == false);
         }
     }
 }

@@ -10,5 +10,6 @@ namespace FTM.Application.IServices
     public interface IFTNotificationService
     {
         Task<IReadOnlyList<FTNotificationDto>> FindByuserIdAsync();
+        Task DeleteAsync(Guid relatedId);
     }
 }

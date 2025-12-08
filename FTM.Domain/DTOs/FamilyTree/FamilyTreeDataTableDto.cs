@@ -12,8 +12,8 @@ namespace FTM.Domain.DTOs.FamilyTree
         public string? FilePath { get; set; }
         public bool IsActive { get; set; }
         public int? GPModeCode { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime? LastModifiedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset? LastModifiedAt { get; set; }
         public string CreatedBy { get; set; }
         public string LastModifiedBy { get; set; }
         public int MemberCount { get; set; }

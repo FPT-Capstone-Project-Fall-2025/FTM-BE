@@ -13,6 +13,7 @@ namespace FTM.Application.IServices
         Task<TokenResult> Login(string username, string password);
         Task<TokenResult> LoginWithGoogle(string fullName, string email);
         Task<TokenResult> RefreshToken(string accessToken, string refreshToken);
+        bool IsTokenExpired(string token);
         Task RegisterByEmail(RegisterAccountRequest request);
         Task<bool> ConfirmEmail(Guid userId, string token);
         Task Logout(string accessToken);

@@ -1,4 +1,5 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using FTM.API.Helpers;
+using Microsoft.OpenApi.Models;
 
 namespace FTM.API.Extensions
 {
@@ -27,6 +28,7 @@ namespace FTM.API.Extensions
                 c.AddSecurityDefinition("Bearer", securitySchema);
                 var securityRequirement = new OpenApiSecurityRequirement { { securitySchema, new[] { "Bearer" } } };
                 c.AddSecurityRequirement(securityRequirement);
+                c.OperationFilter<FTAuthorizationHeaderOperationFilter>();
             });
 
             return services;

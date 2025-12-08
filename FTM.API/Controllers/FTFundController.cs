@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
-using FTM.Domain.Entities.Funds;
-using FTM.Infrastructure.Repositories.Interface;
-using Microsoft.EntityFrameworkCore;
+using FTM.API.Helpers;
 using FTM.API.Reponses;
+using FTM.Application.IServices;
+using FTM.Domain.Entities.Funds;
 using FTM.Domain.Enums;
 using FTM.Infrastructure.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FTM.API.Controllers
 {
@@ -12,16 +12,19 @@ namespace FTM.API.Controllers
     [Route("api/funds")]
     public class FTFundController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IFTFundService _fundService;
+        private readonly IFTFundDonationService _donationService;
         private readonly IPayOSPaymentService _paymentService;
         private readonly ILogger<FTFundController> _logger;
 
         public FTFundController(
-            IUnitOfWork unitOfWork,
+            IFTFundService fundService,
+            IFTFundDonationService donationService,
             IPayOSPaymentService paymentService,
             ILogger<FTFundController> logger)
         {
-            _unitOfWork = unitOfWork;
+            _fundService = fundService;
+            _donationService = donationService;
             _paymentService = paymentService;
             _logger = logger;
         }
@@ -30,13 +33,12 @@ namespace FTM.API.Controllers
         /// Get all funds for a family tree
         /// </summary>
         [HttpGet("tree/{treeId}")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> GetFundsByTreeId(Guid treeId)
         {
             try
             {
-                var funds = await _unitOfWork.Repository<FTFund>().GetQuery()
-                    .Where(f => f.FTId == treeId && f.IsDeleted == false)
-                    .ToListAsync();
+                var funds = await _fundService.GetFundsByTreeAsync(treeId);
 
                 var fundDtos = funds.Select(f => new
                 {
@@ -45,7 +47,14 @@ namespace FTM.API.Controllers
                     Description = f.FundNote,
                     f.CurrentMoney,
                     DonationCount = f.Donations?.Count ?? 0,
-                    ExpenseCount = f.Expenses?.Count ?? 0
+                    ExpenseCount = f.Expenses?.Count ?? 0,
+                    BankInfo = new
+                    {
+                        f.BankAccountNumber,
+                        f.BankName,
+                        f.BankCode,
+                        f.AccountHolderName
+                    }
                 });
 
                 return Ok(new ApiSuccess("Funds retrieved successfully", fundDtos));
@@ -61,31 +70,27 @@ namespace FTM.API.Controllers
         /// Create a new fund
         /// </summary>
         [HttpPost]
+        [FTAuthorize(MethodType.ADD, FeatureType.FUND)]
         public async Task<IActionResult> CreateFund([FromBody] CreateFundRequest request)
         {
             try
             {
                 var fund = new FTFund
                 {
-                    Id = Guid.NewGuid(),
                     FTId = request.FamilyTreeId,
                     FundName = request.FundName,
                     FundNote = request.Description,
-                    CurrentMoney = 0,
-                    IsDeleted = false,
-                    // Bank account info
                     BankAccountNumber = request.BankAccountNumber,
                     BankCode = request.BankCode,
                     BankName = request.BankName,
                     AccountHolderName = request.AccountHolderName
                 };
 
-                await _unitOfWork.Repository<FTFund>().AddAsync(fund);
-                await _unitOfWork.CompleteAsync();
+                var created = await _fundService.CreateFundAsync(fund);
 
-                _logger.LogInformation("Created new fund {FundId} for tree {TreeId}", fund.Id, request.FamilyTreeId);
+                _logger.LogInformation("Created new fund {FundId} for tree {TreeId}", created.Id, request.FamilyTreeId);
 
-                return Ok(new ApiSuccess("Fund created successfully", new { FundId = fund.Id }));
+                return Ok(new ApiSuccess("Fund created successfully", new { FundId = created.Id }));
             }
             catch (Exception ex)
             {
@@ -95,15 +100,52 @@ namespace FTM.API.Controllers
         }
 
         /// <summary>
+        /// Update fund information
+        /// </summary>
+        [HttpPut("{fundId}")]
+        [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
+        public async Task<IActionResult> UpdateFund(Guid fundId, [FromBody] UpdateFundRequest request)
+        {
+            try
+            {
+                var fund = new FTFund
+                {
+                    FundName = request.FundName,
+                    FundNote = request.Description,
+                    BankAccountNumber = request.BankAccountNumber,
+                    BankCode = request.BankCode,
+                    BankName = request.BankName,
+                    AccountHolderName = request.AccountHolderName,
+                    FundManagers = request.FundManagers
+                };
+
+                var updated = await _fundService.UpdateFundAsync(fundId, fund);
+
+                _logger.LogInformation("Updated fund {FundId}", fundId);
+
+                return Ok(new ApiSuccess("Fund updated successfully", new { FundId = updated.Id }));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new ApiError(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating fund {FundId}", fundId);
+                return StatusCode(500, new ApiError("Error updating fund", ex.Message));
+            }
+        }
+
+        /// <summary>
         /// Make a donation to fund
         /// </summary>
         [HttpPost("{fundId}/donate")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> DonateTo(Guid fundId, [FromBody] DonateRequest request)
         {
             try
             {
-                var fund = await _unitOfWork.Repository<FTFund>().GetQuery()
-                    .FirstOrDefaultAsync(f => f.Id == fundId && f.IsDeleted == false);
+                var fund = await _fundService.GetByIdAsync(fundId);
 
                 if (fund == null)
                 {
@@ -112,15 +154,13 @@ namespace FTM.API.Controllers
 
                 var donation = new FTFundDonation
                 {
-                    Id = Guid.NewGuid(),
                     FTFundId = fundId,
                     FTMemberId = request.MemberId,
                     DonationMoney = request.Amount,
                     DonorName = request.DonorName,
                     PaymentMethod = request.PaymentMethod,
                     PaymentNotes = request.PaymentNotes,
-                    Status = DonationStatus.Pending,
-                    IsDeleted = false
+                    Status = DonationStatus.Pending
                 };
 
                 string? qrCodeUrl = null;
@@ -153,15 +193,14 @@ namespace FTM.API.Controllers
                         donation.Id, orderCode);
                 }
 
-                await _unitOfWork.Repository<FTFundDonation>().AddAsync(donation);
-                await _unitOfWork.CompleteAsync();
+                var created = await _donationService.CreateDonationAsync(donation);
 
-                _logger.LogInformation("Created donation {DonationId} for fund {FundId}", donation.Id, fundId);
+                _logger.LogInformation("Created donation {DonationId} for fund {FundId}", created.Id, fundId);
 
                 var result = new
                 {
-                    DonationId = donation.Id,
-                    OrderCode = donation.PayOSOrderCode?.ToString(),
+                    DonationId = created.Id,
+                    OrderCode = created.PayOSOrderCode?.ToString(),
                     QRCodeUrl = qrCodeUrl,
                     BankInfo = request.PaymentMethod == PaymentMethod.BankTransfer ? new
                     {
@@ -169,8 +208,8 @@ namespace FTM.API.Controllers
                         BankName = fund.BankName,
                         AccountNumber = fund.BankAccountNumber,
                         AccountHolderName = fund.AccountHolderName,
-                        Amount = donation.DonationMoney,
-                        Description = $"UH {donation.PayOSOrderCode}"
+                        Amount = created.DonationMoney,
+                        Description = $"UH {created.PayOSOrderCode}"
                     } : null,
                     RequiresManualConfirmation = request.PaymentMethod == PaymentMethod.Cash || qrCodeUrl == null,
                     Message = request.PaymentMethod == PaymentMethod.Cash 
@@ -201,6 +240,21 @@ namespace FTM.API.Controllers
         public string? BankCode { get; set; }
         public string? BankName { get; set; }
         public string? AccountHolderName { get; set; }
+    }
+
+    public class UpdateFundRequest
+    {
+        public string? FundName { get; set; }
+        public string? Description { get; set; }
+        
+        // Bank account information for receiving donations
+        public string? BankAccountNumber { get; set; }
+        public string? BankCode { get; set; }
+        public string? BankName { get; set; }
+        public string? AccountHolderName { get; set; }
+        
+        // Fund managers list (JSON array of member IDs)
+        public string? FundManagers { get; set; }
     }
 
     public class DonateRequest

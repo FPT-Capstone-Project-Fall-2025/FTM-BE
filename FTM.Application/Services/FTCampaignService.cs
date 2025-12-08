@@ -7,6 +7,7 @@ using FTM.Domain.Helpers;
 using FTM.Domain.Interface;
 using FTM.Domain.Specification;
 using FTM.Infrastructure.Repositories.Interface;
+using FTM.Infrastructure.Repositories.IRepositories;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -20,20 +21,23 @@ namespace FTM.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ICurrentUserResolver _currentUserResolver;
+        private readonly IFTFundCampaignRepository _campaignRepository;
 
         public FTCampaignService(
             IUnitOfWork unitOfWork,
             IMapper mapper,
-            ICurrentUserResolver currentUserResolver)
+            ICurrentUserResolver currentUserResolver,
+            IFTFundCampaignRepository campaignRepository)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _currentUserResolver = currentUserResolver;
+            _campaignRepository = campaignRepository;
         }
 
         public async Task<FTFundCampaign?> GetByIdAsync(Guid id)
         {
-            var campaign = await _unitOfWork.Repository<FTFundCampaign>().GetByIdAsync(id);
+            var campaign = await _campaignRepository.GetByIdAsync(id);
             if (campaign == null || campaign.IsDeleted == true)
                 return null;
             return campaign;

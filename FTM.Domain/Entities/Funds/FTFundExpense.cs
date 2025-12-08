@@ -66,6 +66,18 @@ namespace FTM.Domain.Entities.Funds
         /// </summary>
         public DateTimeOffset? PlannedDate { get; set; }
 
+        /// <summary>
+        /// Receipt/proof image URLs (comma-separated)
+        /// Required for expense confirmation and approval
+        /// </summary>
+        public string? ReceiptImages { get; set; }
+
+        /// <summary>
+        /// Payment proof image URL uploaded by manager during approval
+        /// Required evidence that payment was actually made
+        /// </summary>
+        public string? PaymentProofImage { get; set; }
+
         // Navigation properties
         public virtual FTFund Fund { get; set; } = null!;
         public virtual FTMember? Approver { get; set; }

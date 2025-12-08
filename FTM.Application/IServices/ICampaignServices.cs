@@ -161,6 +161,37 @@ namespace FTM.Application.IServices
         /// <param name="campaignId">Campaign ID</param>
         /// <returns>Campaign with bank info</returns>
         Task<FTFundCampaign?> GetCampaignForDonationAsync(Guid campaignId);
+
+        /// <summary>
+        /// Get pending donations for a specific campaign
+        /// </summary>
+        /// <param name="campaignId">Campaign ID</param>
+        /// <returns>List of pending donations</returns>
+        Task<List<FTCampaignDonationResponseDto>> GetPendingDonationsByCampaignAsync(Guid campaignId);
+
+        /// <summary>
+        /// Get all pending donations across all campaigns (optional filter by family tree)
+        /// </summary>
+        /// <param name="familyTreeId">Optional family tree ID filter</param>
+        /// <returns>List of pending donations</returns>
+        Task<List<FTCampaignDonationResponseDto>> GetAllPendingDonationsAsync(Guid? familyTreeId);
+
+        /// <summary>
+        /// Get user's pending donations (for uploading proof images)
+        /// </summary>
+        /// <param name="userId">User ID</param>
+        /// <returns>List of user's pending donations</returns>
+        Task<List<FTCampaignDonationResponseDto>> GetUserPendingDonationsAsync(Guid userId);
+
+        /// <summary>
+        /// Get pending donations for campaigns managed by a user
+        /// </summary>
+        /// <param name="managerId">Manager user ID</param>
+        /// <param name="page">Page number</param>
+        /// <param name="pageSize">Page size</param>
+        /// <returns>Paginated pending donations</returns>
+        Task<PaginatedResponse<FTCampaignDonationResponseDto>> GetPendingDonationsForManagerAsync(
+            Guid managerId, int page, int pageSize);
     }
 
     public interface IFTCampaignExpenseService

@@ -201,6 +201,29 @@ namespace FTM.API.Controllers
                 return BadRequest(new ApiError("Invalid Token"));
             }
         }
+
+        [HttpPost("token-expiration/{token}")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public  IActionResult IsTokenExpired([FromRoute] string token)
+        {
+            if (!ModelState.IsValid)
+            {
+                ThrowModelErrors();
+            }
+            try
+            {
+                var result = _accountService.IsTokenExpired(token);
+                return Ok(new ApiSuccess("Check token expiration successfully", new {IsTokenExpired = result}));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError("Invalid Token"));
+            }
+        }
+
+
         [HttpGet("profile")]
 		[Authorize]
 		[ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]

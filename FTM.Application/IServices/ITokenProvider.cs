@@ -11,6 +11,7 @@ namespace FTM.Application.IServices
     {
         string GenerateJwtToken(IEnumerable<Claim> claims);
         string GenerateRefreshToken();
+        bool IsTokenExpired(string token);
         string GenerateThirdPartyJwtToken(IEnumerable<Claim> claims, DateTime expires);
         string GetIssuer();
         ClaimsPrincipal GetPrincipalFromExpiredToken(string token);

@@ -4,8 +4,10 @@ using FTM.API.Reponses;
 using FTM.Application.IServices;
 using FTM.Application.Services;
 using FTM.Domain.DTOs.FamilyTree;
+using FTM.Domain.Enums;
 using FTM.Domain.Specification.FamilyTrees;
 using FTM.Domain.Specification.FTMembers;
+using FTM.Domain.Specification.FTUsers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +16,7 @@ namespace FTM.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class FTMemberController : ControllerBase
     {
         private readonly IFTMemberService _fTMemberService;
@@ -24,6 +27,7 @@ namespace FTM.API.Controllers
 
         [HttpPost("{ftId}")]
         [Consumes("multipart/form-data")]
+        [FTAuthorize(MethodType.ADD, FeatureType.MEMBER)]
         public async Task<IActionResult> Add([FromRoute] Guid ftId, [FromForm] UpsertFTMemberRequest request)
         {
             if (!ModelState.IsValid)
@@ -37,6 +41,7 @@ namespace FTM.API.Controllers
         }
 
         [HttpGet("list")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> GetListOfMembers([FromQuery] SearchWithPaginationRequest requestParams)
         {
             var specParams = new FTMemberSpecParams()
@@ -55,7 +60,36 @@ namespace FTM.API.Controllers
                 requestParams.PageSize, totalItems, data)));
         }
 
+        [HttpGet("list-of-ftusers")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        public async Task<IActionResult> GetListOfFtUser([FromQuery] SearchWithPaginationRequest requestParams)
+        {
+            var specParams = new FTUserSpecParams()
+            {
+                Search = requestParams.Search ?? string.Empty,
+                PropertyFilters = requestParams.PropertyFilters ?? string.Empty,
+                OrderBy = requestParams.OrderBy ?? string.Empty,
+                Skip = ((requestParams.PageIndex) - 1) * (requestParams.PageSize),
+                Take = requestParams.PageSize
+            };
+
+            var data = await _fTMemberService.GetListOfFTUsers(specParams);
+            var totalItems = await _fTMemberService.CountFTUsers(specParams);
+
+            return Ok(new ApiSuccess("Lấy danh sách người dùng trong gia phả thành công", new Pagination<FTUserDto>(requestParams.PageIndex,
+                requestParams.PageSize, totalItems, data)));
+        }
+
+        [HttpGet("list-without-user")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
+        public async Task<IActionResult> GetListOfMembersWithoutUser(Guid ftId)
+        {
+            var data = await _fTMemberService.GetListOfMembersWithoutUser(ftId);
+            return Ok(new ApiSuccess("Lấy danh sách thành viên của gia phả thành công", data));
+        }
+
         [HttpGet("{ftid}/get-by-userid")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> GetDetailedMemberOfFamilyTreeByUserId([FromRoute] Guid ftid, [FromQuery] Guid userId)
         {
             var result = await _fTMemberService.GetByUserId(ftid, userId);
@@ -63,6 +97,7 @@ namespace FTM.API.Controllers
         }
 
         [HttpGet("{ftid}/get-by-memberid")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> GetDetailedMemberOfFamilyTreeByMemberId([FromRoute] Guid ftid, [FromQuery] Guid memberId)
         {
             var result = await _fTMemberService.GetByMemberId(ftid, memberId);
@@ -70,6 +105,7 @@ namespace FTM.API.Controllers
         }
 
         [HttpGet("member-tree")]
+        [FTAuthorize(MethodType.VIEW, FeatureType.MEMBER)]
         public async Task<IActionResult> GetMembersTreeViewAsync([FromQuery] Guid ftId)
         {
             var members = await _fTMemberService.GetMembersTree(ftId);
@@ -78,6 +114,7 @@ namespace FTM.API.Controllers
 
         [HttpPut("{ftId}")]
         [Consumes("multipart/form-data")]
+        [FTAuthorize(MethodType.UPDATE, FeatureType.MEMBER)]
         public async Task<IActionResult> UpdateMemberDetails([FromRoute] Guid ftId, [FromForm] UpdateFTMemberRequest request)
         {
             if (!ModelState.IsValid)
@@ -90,10 +127,19 @@ namespace FTM.API.Controllers
 
          
         [HttpDelete("{ftMemberId}")]
+        [FTAuthorize(MethodType.DELETE, FeatureType.MEMBER)]
         public async Task<IActionResult> DeleteMember([FromRoute] Guid ftMemberId)
         {
             await _fTMemberService.Delete(ftMemberId);
             return Ok(new ApiSuccess("Xoá thành viên của gia phả thành công"));
+        }
+
+        [HttpDelete("{ftId}/user/{ftUserId}")]
+        [FTAuthorize(MethodType.DELETE, FeatureType.MEMBER)]
+        public async Task<IActionResult> DeleteUser([FromRoute] Guid ftId, [FromRoute] Guid ftUserId)
+        {
+            await _fTMemberService.DeleteUser(ftId, ftUserId);
+            return Ok(new ApiSuccess("Xoá thành viên/khách của gia phả thành công"));
         }
 
         [HttpGet("{ftMemberId}/relationship")]

@@ -43,13 +43,10 @@ namespace FTM.Application.Services
 
         public async Task<FTCampaignDonation> AddAsync(FTCampaignDonation donation)
         {
-            // Validate campaign exists and is active
+            // Validate campaign exists
             var campaign = await _campaignService.GetByIdAsync(donation.CampaignId);
             if (campaign == null)
                 throw new InvalidOperationException("Campaign not found");
-            
-            if (campaign.Status != CampaignStatus.Active)
-                throw new InvalidOperationException("Campaign is not active");
 
             donation.Id = Guid.NewGuid();
             donation.Status = DonationStatus.Pending;
@@ -66,15 +63,14 @@ namespace FTM.Application.Services
 
         public async Task<FTCampaignDonation> UpdateAsync(FTCampaignDonation donation)
         {
-            var existing = await GetByIdAsync(donation.Id);
-            if (existing == null)
-                throw new InvalidOperationException("Donation not found");
-
+            // Set modified timestamp
             donation.LastModifiedOn = DateTimeOffset.UtcNow;
             donation.LastModifiedBy = _currentUserResolver.Username ?? "System";
 
+            // Update without fetching existing (entity already tracked from GetByIdAsync)
             _unitOfWork.Repository<FTCampaignDonation>().Update(donation);
             await _unitOfWork.CompleteAsync();
+            
             return donation;
         }
 
@@ -235,6 +231,96 @@ namespace FTM.Application.Services
             if (campaign == null || campaign.IsDeleted == true)
                 return null;
             return campaign;
+        }
+
+        public async Task<List<FTCampaignDonationResponseDto>> GetPendingDonationsByCampaignAsync(Guid campaignId)
+        {
+            var donations = await _unitOfWork.Repository<FTCampaignDonation>().GetQuery()
+                .Where(d => d.CampaignId == campaignId 
+                    && d.Status == DonationStatus.Pending 
+                    && d.IsDeleted == false)
+                .Include(d => d.Member)
+                .Include(d => d.Campaign)
+                .OrderBy(d => d.CreatedOn)
+                .ToListAsync();
+
+            return donations.Select(MapToDonationDto).ToList();
+        }
+
+        public async Task<List<FTCampaignDonationResponseDto>> GetAllPendingDonationsAsync(Guid? familyTreeId)
+        {
+            IQueryable<FTCampaignDonation> query = _unitOfWork.Repository<FTCampaignDonation>().GetQuery()
+                .Where(d => d.Status == DonationStatus.Pending && d.IsDeleted == false)
+                .Include(d => d.Member)
+                .Include(d => d.Campaign);
+
+            // Filter by family tree if provided
+            if (familyTreeId.HasValue)
+            {
+                query = query.Where(d => d.Campaign.FTId == familyTreeId.Value);
+            }
+
+            var donations = await query
+                .OrderBy(d => d.CreatedOn)
+                .ToListAsync();
+
+            return donations.Select(MapToDonationDto).ToList();
+        }
+
+        public async Task<List<FTCampaignDonationResponseDto>> GetUserPendingDonationsAsync(Guid userId)
+        {
+            var donations = await _unitOfWork.Repository<FTCampaignDonation>().GetQuery()
+                .Where(d => d.FTMemberId == userId 
+                    && d.Status == DonationStatus.Pending 
+                    && d.IsDeleted == false)
+                .Include(d => d.Member)
+                .Include(d => d.Campaign)
+                .OrderByDescending(d => d.CreatedOn) // Newest first
+                .ToListAsync();
+
+            return donations.Select(MapToDonationDto).ToList();
+        }
+
+        public async Task<PaginatedResponse<FTCampaignDonationResponseDto>> GetPendingDonationsForManagerAsync(
+            Guid managerId, int page, int pageSize)
+        {
+            // First, get campaigns managed by this user
+            var campaignQuery = _unitOfWork.Repository<FTFundCampaign>().GetQuery();
+            var campaignIds = await campaignQuery
+                .Where(c => c.CampaignManagerId == managerId && c.IsDeleted != true)
+                .Select(c => c.Id)
+                .ToListAsync();
+
+            // Then get pending donations for those campaigns
+            var donationQuery = _unitOfWork.Repository<FTCampaignDonation>().GetQuery();
+            
+            var totalCount = await donationQuery
+                .Where(d => campaignIds.Contains(d.CampaignId) && 
+                           d.Status == DonationStatus.Pending && 
+                           d.IsDeleted != true)
+                .CountAsync();
+
+            var donations = await donationQuery
+                .Where(d => campaignIds.Contains(d.CampaignId) && 
+                           d.Status == DonationStatus.Pending && 
+                           d.IsDeleted != true)
+                .Include(d => d.Campaign)       // Load campaign for CampaignName
+                .Include(d => d.Member)         // Load donor for DonorName
+                .Include(d => d.Confirmer)      // Load confirmer (if exists)
+                .OrderByDescending(d => d.CreatedOn)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var donationDtos = donations.Select(d => MapToDonationDto(d)).ToList();
+
+            return new PaginatedResponse<FTCampaignDonationResponseDto>
+            {
+                Items = donationDtos,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
         }
 
         private FTCampaignDonationResponseDto MapToDonationDto(FTCampaignDonation donation)

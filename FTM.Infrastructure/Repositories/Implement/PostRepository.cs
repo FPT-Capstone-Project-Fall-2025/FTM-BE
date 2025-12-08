@@ -31,7 +31,7 @@ namespace FTM.Infrastructure.Repositories
             // Filter by FamilyTreeId if provided
             if (specParams.FamilyTreeId.HasValue)
             {
-                query = query.Where(p => p.FTMemberId == specParams.FamilyTreeId.Value);
+                query = query.Where(p => p.FTId == specParams.FamilyTreeId.Value);
             }
 
             // Filter by MemberId if provided
@@ -45,8 +45,6 @@ namespace FTM.Infrastructure.Repositories
 
             // Apply pagination
             return await query
-                .Skip(specParams.Skip)
-                .Take(specParams.Take)
                 .ToListAsync();
         }
 

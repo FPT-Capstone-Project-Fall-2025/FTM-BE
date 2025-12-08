@@ -1,0 +1,61 @@
+name: FTM-BE Production CICD
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  production-cicd:
+    runs-on: ubuntu-latest
+    environment: PROD
+    steps:
+      # Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Login to Azure using Service Principal
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZ_CREDS }}
+          
+      # Login vào ACR
+      - name: Docker login to ACR
+        run: |
+          az acr login -n ${{ secrets.ACR_NAME }}
+
+      - name: Get Git short hash
+        id: vars
+        run: echo "GIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Build, tag, and push image to ACR
+        env:
+            ACR_NAME: ${{ secrets.ACR_NAME }}
+            ACR_REPOSITORY: ${{ secrets.ACR_REPOSITORY}}
+        run: |
+            docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/${{ secrets.ACR_REPOSITORY }}:${GIT_HASH} .
+            docker tag ${{ secrets.ACR_NAME }}.azurecr.io/${{ secrets.ACR_REPOSITORY }}:${GIT_HASH} ${{ secrets.ACR_NAME }}.azurecr.io/${{ secrets.ACR_REPOSITORY }}:latest
+            docker push ${{ secrets.ACR_NAME }}.azurecr.io/${{ secrets.ACR_REPOSITORY }} -a
+      
+      - name: Checkout Helm chart repo
+        uses: actions/checkout@v4
+        with:
+          repository: FPT-Capstone-Project-Fall-2025/FTM-GitOps
+          ref: main                             
+          path: .         
+          token: ${{ secrets.GH_TOKEN }} 
+
+      
+      - name: Update image tag
+        run: |
+          echo "Updating Helm chart image tag to ${GIT_HASH}..."
+          sed -i "s|tag: \".*\"|tag: \"${GIT_HASH}\"|g" ./helm/values/ftm-be/values.yaml
+
+      # Commit and push to repo chart
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ./helm/values/ftm-be/values.yaml
+          git commit -m "chore: update image tag to ${GIT_HASH}" || echo "No changes to commit"
+          git push origin main 

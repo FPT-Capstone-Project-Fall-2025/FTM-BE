@@ -23,5 +23,24 @@ namespace FTM.API.Controllers
             var result = await _fTNotificationService.FindByuserIdAsync();
             return Ok(new ApiSuccess("Lấy thông báo thành công", result));
         }
+
+        [HttpDelete]
+        public async Task<IActionResult> Remove(Guid relatedId)
+        {
+            if (!ModelState.IsValid)
+            {
+                return ThrowModelErrors();
+            }
+            await _fTNotificationService.DeleteAsync(relatedId);
+            return Ok(new ApiSuccess("Xóa thông báo thành công"));
+        }
+
+        private IActionResult ThrowModelErrors()
+        {
+            var message = string.Join(" | ", ModelState.Values
+                                                        .SelectMany(v => v.Errors)
+                                                        .Select(e => e.ErrorMessage));
+            return BadRequest(new ApiError(message));
+        }
     }
 }
