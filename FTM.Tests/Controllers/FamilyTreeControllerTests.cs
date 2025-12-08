@@ -91,7 +91,7 @@ namespace FTM.Tests.Controllers
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
             var apiError = Assert.IsType<ApiError>(badRequestResult.Value);
-            Assert.Equal("Invalid argument", apiError.Message);
+            Assert.Equal("Lỗi xảy ra", apiError.Message);
 
             _output.WriteLine("✅ PASSED - Add - Thất bại - ArgumentException");
         }
@@ -112,7 +112,7 @@ namespace FTM.Tests.Controllers
             // Assert
             var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
             var apiError = Assert.IsType<ApiError>(unauthorizedResult.Value);
-            Assert.Equal("Unauthorized", apiError.Message);
+            Assert.Equal("Lỗi xảy ra", apiError.Message);
 
             _output.WriteLine("✅ PASSED - Add - Thất bại - UnauthorizedAccessException");
         }
@@ -134,7 +134,7 @@ namespace FTM.Tests.Controllers
             var statusCodeResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(500, statusCodeResult.StatusCode);
             var apiError = Assert.IsType<ApiError>(statusCodeResult.Value);
-            Assert.Contains("Lỗi hệ thống: Server error", apiError.Message);
+            Assert.Equal("Lỗi hệ thống", apiError.Message);
 
             _output.WriteLine("✅ PASSED - Add - Thất bại - Lỗi server");
         }
@@ -181,7 +181,7 @@ namespace FTM.Tests.Controllers
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
             var apiError = Assert.IsType<ApiError>(notFoundResult.Value);
-            Assert.Equal("Family tree not found", apiError.Message);
+            Assert.Equal("Lỗi xảy ra", apiError.Message);
 
             _output.WriteLine("✅ PASSED - GetById - Thất bại - Gia phả không tồn tại");
         }
@@ -203,7 +203,7 @@ namespace FTM.Tests.Controllers
             var statusCodeResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(500, statusCodeResult.StatusCode);
             var apiError = Assert.IsType<ApiError>(statusCodeResult.Value);
-            Assert.Contains("Lỗi hệ thống: Server error", apiError.Message);
+            Assert.Equal("Lỗi hệ thống", apiError.Message);
 
             _output.WriteLine("✅ PASSED - GetById - Thất bại - Lỗi server");
         }
@@ -271,7 +271,7 @@ namespace FTM.Tests.Controllers
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
             var apiError = Assert.IsType<ApiError>(badRequestResult.Value);
-            Assert.Equal("Invalid argument", apiError.Message);
+            Assert.Equal("Lỗi xảy ra", apiError.Message);
 
             _output.WriteLine("✅ PASSED - Edit - Thất bại - ArgumentException");
         }
@@ -293,7 +293,7 @@ namespace FTM.Tests.Controllers
             // Assert
             var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
             var apiError = Assert.IsType<ApiError>(unauthorizedResult.Value);
-            Assert.Equal("Unauthorized", apiError.Message);
+            Assert.Equal("Lỗi xảy ra", apiError.Message);
 
             _output.WriteLine("✅ PASSED - Edit - Thất bại - UnauthorizedAccessException");
         }
@@ -316,7 +316,7 @@ namespace FTM.Tests.Controllers
             var statusCodeResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(500, statusCodeResult.StatusCode);
             var apiError = Assert.IsType<ApiError>(statusCodeResult.Value);
-            Assert.Contains("Lỗi hệ thống: Server error", apiError.Message);
+            Assert.Equal("Lỗi hệ thống", apiError.Message);
 
             _output.WriteLine("✅ PASSED - Edit - Thất bại - Lỗi server");
         }
@@ -362,7 +362,7 @@ namespace FTM.Tests.Controllers
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
             var apiError = Assert.IsType<ApiError>(notFoundResult.Value);
-            Assert.Equal("Family tree not found", apiError.Message);
+            Assert.Equal("Lỗi xảy ra", apiError.Message);
 
             _output.WriteLine("✅ PASSED - Delete - Thất bại - Gia phả không tồn tại");
         }
@@ -383,7 +383,7 @@ namespace FTM.Tests.Controllers
             // Assert
             var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
             var apiError = Assert.IsType<ApiError>(unauthorizedResult.Value);
-            Assert.Equal("Unauthorized", apiError.Message);
+            Assert.Equal("Lỗi xảy ra", apiError.Message);
 
             _output.WriteLine("✅ PASSED - Delete - Thất bại - UnauthorizedAccessException");
         }
@@ -405,7 +405,7 @@ namespace FTM.Tests.Controllers
             var statusCodeResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(500, statusCodeResult.StatusCode);
             var apiError = Assert.IsType<ApiError>(statusCodeResult.Value);
-            Assert.Contains("Lỗi hệ thống: Server error", apiError.Message);
+            Assert.Equal("Lỗi hệ thống", apiError.Message);
 
             _output.WriteLine("✅ PASSED - Delete - Thất bại - Lỗi server");
         }

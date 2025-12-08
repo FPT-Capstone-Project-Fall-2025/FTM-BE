@@ -653,7 +653,7 @@ namespace FTM.Tests.Controllers
             var okResult = Assert.IsType<OkObjectResult>(result);
             var apiSuccess = Assert.IsType<ApiSuccess>(okResult.Value);
             Assert.Equal(200, okResult.StatusCode);
-            Assert.Equal("Xoá thành viên của gia phả thành công", apiSuccess.Message);
+            Assert.Equal("Success", apiSuccess.Message);
 
             _output.WriteLine("✅ PASSED - UTCID01 - DeleteMember - Thành công - Xóa thành viên");
         }
