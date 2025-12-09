@@ -18,6 +18,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,6 +42,7 @@ namespace FTM.Application.Services
         private readonly IFTAuthorizationService _fTAuthorizationService;
         private readonly IFTMemberFileRepository _fTMemberFileRepository;
         private readonly IFTUserRepository _fTUserRepository;
+        private readonly IRedisCacheService _redisCacheService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
@@ -56,6 +58,7 @@ namespace FTM.Application.Services
             IFTAuthorizationService fTAuthorizationService,
             IFTMemberFileRepository fTMemberFileRepository,
             IFTUserRepository fTUserRepository,
+            IRedisCacheService redisCacheService,
             IUnitOfWork unitOfWork,
             IMapper mapper)
         {
@@ -69,6 +72,7 @@ namespace FTM.Application.Services
             _fTAuthorizationService = fTAuthorizationService;
             _fTMemberFileRepository = fTMemberFileRepository;
             _fTUserRepository = fTUserRepository;
+            _redisCacheService = redisCacheService;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
@@ -206,6 +210,11 @@ namespace FTM.Application.Services
                        }
                    }
                 );
+
+            //Cache - START
+            string redisKey = $"MemberTree_{FTId}";
+            await _redisCacheService.RemoveDataAsync(redisKey);
+            //Cache - END
             return _mapper.Map<FTMemberDetailsDto>(newFMember);
         }
 
@@ -398,26 +407,40 @@ namespace FTM.Application.Services
 
         public async Task<FTMemberTreeDto> GetMembersTree(Guid ftId)
         {
-            var members = await _fTMemberRepository.GetMembersTree(ftId);
+            
+            string redisKey = $"MemberTree_{ftId}";
 
-            if (!members.Any(m => m.IsRoot == true)) return new FTMemberTreeDto();
+            FTMemberTreeDto result = await _redisCacheService.GetDataAsync<FTMemberTreeDto>(redisKey);
 
-            var membersTreeDetails = members.Select(_mapper.Map<FTMemberTreeDetailsDto>);
-            var partnerIds = membersTreeDetails.SelectMany(m => m.Partners).ToList();
-
-            return new FTMemberTreeDto()
+            if (result == null)
             {
-                Root = members.First(m => m.IsRoot == true).Id,
-                Datalist = membersTreeDetails.Select(m =>
+                List<FTMember> members = await _fTMemberRepository.GetMembersTree(ftId);
+
+                if (!members.Any(m => m.IsRoot == true)) return new FTMemberTreeDto();
+
+                var membersTreeDetails = members.Select(_mapper.Map<FTMemberTreeDetailsDto>);
+                // var partnerIds = membersTreeDetails.SelectMany(m => m.Partners).ToList();
+                var partnerLookup = membersTreeDetails
+                                    .SelectMany(m => m.Partners)
+                                    .ToHashSet();
+
+                result = new FTMemberTreeDto()
                 {
-                    m.IsPartner = partnerIds.Any(p => p == m.Id);
-                    return new KeyValueModel
+                    Root = members.First(m => m.IsRoot == true).Id,
+                    Datalist = membersTreeDetails.Select(m =>
                     {
-                        Key = m.Id,
-                        Value = m
-                    };
-                }).ToList()
-            };
+                        m.IsPartner = partnerLookup.Any(p => p == m.Id);
+                        return new KeyValueFTModel
+                        {
+                            Key = m.Id,
+                            Value = m
+                        };
+                    }).ToList()
+                };
+                await _redisCacheService.SetDataAsync(redisKey, result, absoluteMinutesExp: 10, slidingMinutesExp: 7);
+            }
+
+            return result;
         }
 
         public async Task<FTMemberDetailsDto> GetByMemberId(Guid ftid, Guid memberId)
@@ -558,13 +581,17 @@ namespace FTM.Application.Services
             _fTMemberRepository.Update(existingMember);
             await _unitOfWork.CompleteAsync();
 
+            //Cache - START
+            string redisKey = $"MemberTree_{ftId}";
+            await _redisCacheService.RemoveDataAsync(redisKey);
+            //Cache - END
+
             return await GetByMemberId(ftId, request.ftMemberId);
         }
 
         public async Task Delete(Guid ftMemberId)
         {
             var member = await _fTMemberRepository.GetMemberById(ftMemberId);
-
             // <----------------------Relationship Validation---------------------->
             if (member == null)
                 throw new ArgumentException("Không tìm thấy thành viên trong cây gia phả.");
@@ -591,6 +618,7 @@ namespace FTM.Application.Services
                 );
 
             // <----------------------Handle Logic---------------------->
+            var ftId = member.FTId;
             // Step 1: If the deleted member is partner and have the CHILDREN relationship => Soft Delete 
             if (member.FTRelationshipTo.Any(x => x.FromFTMember.FTRelationshipFrom.Any(
                                 y => y.CategoryCode == FTRelationshipCategory.CHILDREN && y.FromFTMemberPartnerId == member.Id)))
@@ -638,6 +666,11 @@ namespace FTM.Application.Services
                 }
             }
 
+            //Cache - START
+            string redisKey = $"MemberTree_{ftId}";
+            await _redisCacheService.RemoveDataAsync(redisKey);
+            //Cache - END
+
             await _unitOfWork.CompleteAsync();
         }
 
@@ -666,12 +699,12 @@ namespace FTM.Application.Services
         {
             var user = await _fTUserRepository.FindAsync(ftId, ftUserId);
 
-            if(user == null) throw new ArgumentException("Người dùng không thuộc trong gia tộc này hoặc gia tộc không tồn tại");
+            if (user == null) throw new ArgumentException("Người dùng không thuộc trong gia tộc này hoặc gia tộc không tồn tại");
 
             if (user.FTRole == FTMRole.FTOwner) throw new ArgumentException("Không thể xóa người sở hữu gia tộc");
 
 
-            if(user.FTRole == FTMRole.FTMember)
+            if (user.FTRole == FTMRole.FTMember)
             {
                 var member = await _fTMemberRepository.GetMemberByUserId(ftId, ftUserId);
 
@@ -683,6 +716,10 @@ namespace FTM.Application.Services
             }
 
             _fTUserRepository.Delete(user);
+            //Cache - START
+            string redisKey = $"MemberTree_{ftId}";
+            await _redisCacheService.RemoveDataAsync(redisKey);
+            //Cache - END
             await _unitOfWork.CompleteAsync();
         }
     }

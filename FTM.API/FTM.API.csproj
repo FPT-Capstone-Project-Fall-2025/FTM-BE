@@ -42,6 +42,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
 		<PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" />
+		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
 	</ItemGroup>
 
 	<ItemGroup>

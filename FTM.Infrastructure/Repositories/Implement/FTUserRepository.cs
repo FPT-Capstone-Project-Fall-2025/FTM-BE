@@ -1,4 +1,5 @@
-﻿using FTM.Domain.Entities.FamilyTree;
+﻿using FTM.Domain.DTOs.FamilyTree;
+using FTM.Domain.Entities.FamilyTree;
 using FTM.Domain.Enums;
 using FTM.Infrastructure.Data;
 using FTM.Infrastructure.Repositories.Interface;
@@ -51,6 +52,19 @@ namespace FTM.Infrastructure.Repositories.Implement
         public async Task<bool> IsGuestAsync(Guid ftId, Guid userId)
         {
             return await _context.FTUsers.AnyAsync(u => u.FTId == ftId && u.UserId == userId && u.FTRole == FTMRole.FTGuest && u.IsDeleted == false);
+        }
+
+        public async Task<FTUserDto?> FindUserDtoAsync(Guid ftId, Guid userId)
+        {
+            return await _context.FTUsers
+                .Where(u => u.FTId == ftId
+                         && u.UserId == userId
+                         && u.IsDeleted == false)
+                .Select(u => new FTUserDto
+                {
+                    FTRole = u.FTRole
+                })
+                .FirstOrDefaultAsync();
         }
     }
 }

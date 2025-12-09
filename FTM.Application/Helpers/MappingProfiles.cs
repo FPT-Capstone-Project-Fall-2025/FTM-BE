@@ -33,9 +33,9 @@ namespace FTM.Application.Helpers
                             .Where(rFrom => rFrom.CategoryCode == FTRelationshipCategory.CHILDREN && rFrom.FromFTMemberPartnerId != null)
                             .GroupBy(rFrom => rFrom.FromFTMemberPartnerId)
                             .Select(gr =>
-                                new KeyValueModel
+                                new KeyValueChildrenModel
                                 {
-                                    Key = gr.Key,
+                                    Key = (Guid)gr.Key,
                                     Value = gr.OrderBy(x => x.ToFTMember.Birthday).Select(rFrom => rFrom.ToFTMember.Id).ToArray()
                                 })))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Fullname))

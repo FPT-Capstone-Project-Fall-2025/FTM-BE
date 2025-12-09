@@ -81,7 +81,7 @@ namespace FTM.API.Extensions
                         .AddConsoleExporter() // debug traces locally
                         .AddOtlpExporter(options =>
                         {
-                            options.Endpoint = new Uri("http://localhost:4318/v1/traces");
+                            options.Endpoint = new Uri("http://20.205.100.39:4318/v1/traces");
                             options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
                         });
                 });
