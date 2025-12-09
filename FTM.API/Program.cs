@@ -36,10 +36,19 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSwaggerDocumentation();
 builder.Services.AddSwaggerGenNewtonsoftSupport();
+
 // Add HealthChecks for both DbContexts
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<AppIdentityDbContext>("IdentityDb")
     .AddDbContextCheck<FTMDbContext>("FTMDb");
+
+// Caching
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = Environment.GetEnvironmentVariable("REDIS_CONNECTION");
+});
+
+builder.Services.AddMemoryCache();
 
 var app = builder.Build();
 Console.WriteLine($"Environment: {app.Environment.EnvironmentName}");

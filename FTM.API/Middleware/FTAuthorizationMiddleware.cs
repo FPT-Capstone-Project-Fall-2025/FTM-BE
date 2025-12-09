@@ -44,14 +44,16 @@ namespace FTM.API.Middleware
             }
 
             // Check membership
-            if (!await authService.IsAccessedToFamilyTreeAsync(ftId, userId))
+            var ftUser = await authService.GetFTUserDtoAsync(ftId, userId);
+
+            if (ftUser == null)
             {
                 await WriteError(context, HttpStatusCode.Forbidden, "Bạn không phải là thành viên của cây gia phả này");
                 return;
             }
-            
-            var isOwner = await authService.IsOwnerAsync(ftId, userId);
-            var isGuest = await authService.IsGuestAsync(ftId, userId);
+
+            bool isOwner = ftUser.FTRole == FTMRole.FTOwner;
+            bool isGuest = ftUser.FTRole == FTMRole.FTGuest;
 
             // If the user is owner
             if (isOwner)

@@ -20,6 +20,7 @@ namespace FTM.API.Extensions
     {
         public static void AddDI(this IServiceCollection serrvices) {
             //---------------------------Services----------------------------------------
+            serrvices.AddScoped<IRedisCacheService, RedisCacheService>();
             serrvices.AddScoped<ITokenProvider, TokenProvider>();
             serrvices.AddScoped<IAccountService, AccountService>();
             serrvices.AddScoped<ICurrentUserResolver, CurrentUserResolver>();

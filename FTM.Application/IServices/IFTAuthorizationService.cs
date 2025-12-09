@@ -20,6 +20,7 @@ namespace FTM.Application.IServices
         Task<int> CountAuthorizationListViewAsync(FTAuthorizationSpecParams specParams);
         Task<bool> IsAccessedToFamilyTreeAsync(Guid ftId, Guid userId);
         Task<bool> IsOwnerAsync(Guid ftId, Guid userId);
+        Task<FTUserDto?> GetFTUserDtoAsync(Guid ftId, Guid userId);
         Task<bool> IsGuestAsync(Guid ftId, Guid userId);
         Task SetMemberAuthorizationAsync(Guid ftId, Guid memberId);
         Task DeleteAuthorizationAsync(Guid ftId, Guid ftMemberId);

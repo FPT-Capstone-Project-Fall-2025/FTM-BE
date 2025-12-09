@@ -10,6 +10,6 @@ namespace FTM.Domain.DTOs.FamilyTree
     public class FTMemberTreeDto
     {
         public Guid? Root { get; set; }
-        public List<KeyValueModel> Datalist { get; set; } = new List<KeyValueModel>();
+        public List<KeyValueFTModel> Datalist { get; set; } = new List<KeyValueFTModel>();
     }
 }

@@ -19,7 +19,7 @@ namespace FTM.Domain.DTOs.FamilyTree
         public bool? IsRoot { get; set; }
         public bool? IsDivorced { get; set; }
         public List<Guid> Partners { get; set; }
-        public List<KeyValueModel> Children { get; set; }
+        public List<KeyValueChildrenModel> Children { get; set; }
         public bool IsCurrentMember { get; set; }
         public bool IsPartner { get; set; }
         //public string? Address { get; set; }
