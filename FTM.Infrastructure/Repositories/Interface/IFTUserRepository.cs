@@ -1,4 +1,6 @@
-﻿using FTM.Domain.Entities.FamilyTree;
+﻿using FTM.Domain.DTOs.FamilyTree;
+using FTM.Domain.Entities.FamilyTree;
+using FTM.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +16,7 @@ namespace FTM.Infrastructure.Repositories.Interface
         Task<bool> IsGuestAsync(Guid ftId, Guid userId);
         Task<bool> IsUserExistingInFamilyTreeAsync(Guid ftId, Guid userId);
         Task<FTUser?> FindAsync(Guid ftId, Guid userId);
+        Task<FTUserDto?> FindUserDtoAsync(Guid ftId, Guid userId);
         Task<bool> BelongedToAsync(Guid ftId, Guid userId);
     }
 }

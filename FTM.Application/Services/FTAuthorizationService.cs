@@ -383,5 +383,11 @@ namespace FTM.Application.Services
 
             return ftAuthorizationDto;
         }
+
+        public async Task<FTUserDto?> GetFTUserDtoAsync(Guid ftId, Guid userId)
+        {
+            return await _fTUserRepository.FindUserDtoAsync(ftId, userId);
+        }
+
     }
 }
