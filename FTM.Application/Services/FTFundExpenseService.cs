@@ -61,15 +61,12 @@ namespace FTM.Application.Services
         }
 
         public async Task<PaginatedResponse<FTFundExpense>> GetPendingExpensesAsync(
-            Guid? fundId, int page, int pageSize)
+            Guid fundId, int page, int pageSize)
         {
             IQueryable<FTFundExpense> query = _unitOfWork.Repository<FTFundExpense>().GetQuery()
-                .Where(e => e.Status == TransactionStatus.Pending && e.IsDeleted == false);
-
-            if (fundId.HasValue)
-            {
-                query = query.Where(e => e.FTFundId == fundId.Value);
-            }
+                .Where(e => e.Status == TransactionStatus.Pending && 
+                           e.IsDeleted == false &&
+                           e.FTFundId == fundId);
 
             var totalCount = await query.CountAsync();
 

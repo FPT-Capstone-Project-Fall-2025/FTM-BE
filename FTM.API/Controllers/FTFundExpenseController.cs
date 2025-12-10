@@ -79,7 +79,7 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpGet("pending")]
         [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
-        public async Task<IActionResult> GetPendingExpenses([FromQuery] Guid? fundId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        public async Task<IActionResult> GetPendingExpenses([FromQuery] Guid fundId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
             try
             {
@@ -94,6 +94,7 @@ namespace FTM.API.Controllers
                     e.Recipient,
                     e.Status,
                     CreatedDate = e.CreatedOn,
+                    FundId = e.FTFundId,
                     FundName = e.Fund?.FundName,
                     e.ReceiptImages
                 });
