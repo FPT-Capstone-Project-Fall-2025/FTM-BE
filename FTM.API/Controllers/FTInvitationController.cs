@@ -61,18 +61,12 @@ namespace FTM.API.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> RespondInvitation([FromQuery(Name = "relatedId")] Guid invitationId, [FromQuery] bool accepted)
         {
+            string feURL = Environment.GetEnvironmentVariable("FE_URL");
             await _fTInvitationService.HandleRespondAsync(invitationId, accepted);
-            string msg = accepted
-                ? "Bạn đã chấp nhận lời mời thành công."
-                : "Bạn đã từ chối lời mời.";
-
-            string html = $@"
-                <div style='font-family:Arial;text-align:center;margin-top:50px'>
-                    <h3>{msg}</h3>
-                    <p>Bạn có thể đóng tab này lại.</p>
-                </div>";
-
-            return Content(html, "text/html; charset=utf-8");
+            if (accepted) {
+                return Redirect($"{feURL}/accept-invitation");
+            }
+            return NoContent();
         }
     }
 }
