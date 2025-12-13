@@ -35,11 +35,11 @@ namespace FTM.API.Controllers
             try
             {
                 var result = await _eventService.CreateEventAsync(request);
-                return Ok(new ApiSuccess("Event created successfully", result));
+                return Ok(new ApiSuccess("Tạo sự kiện thành công", result));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiError(ex.ToString()));
+                return BadRequest(new ApiError("Đã xảy ra lỗi khi tạo sự kiện"));
             }
         }
 
@@ -54,11 +54,11 @@ namespace FTM.API.Controllers
             try
             {
                 var result = await _eventService.UpdateEventAsync(id, request);
-                return Ok(new ApiSuccess("Event updated successfully", result));
+                return Ok(new ApiSuccess("Cập nhật sự kiện thành công", result));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                return BadRequest(new ApiError("Đã xảy ra lỗi khi cập nhật sự kiện"));
             }
         }
 
@@ -73,13 +73,13 @@ namespace FTM.API.Controllers
             {
                 var result = await _eventService.DeleteEventAsync(id);
                 if (!result)
-                    return NotFound(new ApiError("Event not found"));
+                    return NotFound(new ApiError("Không tìm thấy sự kiện"));
 
-                return Ok(new ApiSuccess("Event deleted successfully", result));
+                return Ok(new ApiSuccess("Xóa sự kiện thành công", result));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                return BadRequest(new ApiError("Đã xảy ra lỗi khi xóa sự kiện"));
             }
         }
 
@@ -94,13 +94,13 @@ namespace FTM.API.Controllers
             {
                 var result = await _eventService.GetEventByIdAsync(id);
                 if (result == null)
-                    return NotFound(new ApiError("Event not found"));
+                    return NotFound(new ApiError("Không tìm thấy sự kiện"));
 
                 return Ok(new ApiSuccess(result));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                return BadRequest(new ApiError("Đã xảy ra lỗi khi lấy thông tin sự kiện"));
             }
         }
 
@@ -121,12 +121,12 @@ namespace FTM.API.Controllers
                 var result = await _eventService.GetEventsByFTIdAsync(FTId, skip, requestParams.PageSize);
                 var totalItems = await _eventService.CountEventsByFTIdAsync(FTId);
 
-                return Ok(new ApiSuccess("Events retrieved successfully", 
+                return Ok(new ApiSuccess("Lấy danh sách sự kiện thành công", 
                     new Pagination<FTFamilyEventDto>(requestParams.PageIndex, requestParams.PageSize, totalItems, result.ToList())));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                return BadRequest(new ApiError("Đã xảy ra lỗi khi lấy danh sách sự kiện"));
             }
         }
 
@@ -140,11 +140,11 @@ namespace FTM.API.Controllers
             try
             {
                 var result = await _eventService.GetUpcomingEventsAsync(FTId, days);
-                return Ok(new ApiSuccess("Upcoming events retrieved successfully", result));
+                return Ok(new ApiSuccess("Lấy danh sách sự kiện sắp tới thành công", result));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                return BadRequest(new ApiError("Đã xảy ra lỗi khi lấy sự kiện sắp tới"));
             }
         }
 
@@ -161,11 +161,11 @@ namespace FTM.API.Controllers
             try
             {
                 var result = await _eventService.GetEventsByDateRangeAsync(FTId, startDate, endDate);
-                return Ok(new ApiSuccess("Events retrieved successfully", result));
+                return Ok(new ApiSuccess("Lấy danh sách sự kiện thành công", result));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                return BadRequest(new ApiError("Đã xảy ra lỗi khi lấy sự kiện theo khoảng thời gian"));
             }
         }
 
@@ -181,11 +181,11 @@ namespace FTM.API.Controllers
                 var skip = (requestParams.PageIndex - 1) * requestParams.PageSize;
                 var result = await _eventService.GetEventsByMemberIdAsync(memberId, skip, requestParams.PageSize);
 
-                return Ok(new ApiSuccess("Events retrieved successfully", result));
+                return Ok(new ApiSuccess("Lấy danh sách sự kiện thành công", result));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                return BadRequest(new ApiError("Đã xảy ra lỗi khi lấy sự kiện theo thành viên"));
             }
         }
 
@@ -199,11 +199,11 @@ namespace FTM.API.Controllers
             try
             {
                 var result = await _eventService.FilterEventsAsync(request);
-                return Ok(new ApiSuccess("Events filtered successfully", result));
+                return Ok(new ApiSuccess("Lọc sự kiện thành công", result));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                return BadRequest(new ApiError("Đã xảy ra lỗi khi lọc sự kiện"));
             }
         }
 
@@ -217,11 +217,11 @@ namespace FTM.API.Controllers
             try
             {
                 var result = await _eventService.GetEventsGroupedByYearAsync(ftId, year);
-                return Ok(new ApiSuccess("Events in year successfully", result));
+                return Ok(new ApiSuccess("Lấy sự kiện theo năm thành công", result));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                return BadRequest(new ApiError("Đã xảy ra lỗi khi lấy sự kiện theo năm"));
             }
         }
 
@@ -235,11 +235,11 @@ namespace FTM.API.Controllers
             try
             {
                 var result = await _eventService.GetEventsGroupedByMonthAsync(ftId, year, month);
-                return Ok(new ApiSuccess("Events in month successfully", result));
+                return Ok(new ApiSuccess("Lấy sự kiện theo tháng thành công", result));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                return BadRequest(new ApiError("Đã xảy ra lỗi khi lấy sự kiện theo tháng"));
             }
         }
 
@@ -253,11 +253,11 @@ namespace FTM.API.Controllers
             try
             {
                 var result = await _eventService.GetEventsGroupedByWeekAsync(ftId, year, month, week);
-                return Ok(new ApiSuccess("Events in week successfully", result));
+                return Ok(new ApiSuccess("Lấy sự kiện theo tuần thành công", result));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                return BadRequest(new ApiError("Đã xảy ra lỗi khi lấy sự kiện theo tuần"));
             }
         }
 
@@ -274,11 +274,11 @@ namespace FTM.API.Controllers
                 var skip = (requestParams.PageIndex - 1) * requestParams.PageSize;
                 var result = await _eventService.GetMyEventsAsync(userId, ftId, skip, requestParams.PageSize);
 
-                return Ok(new ApiSuccess("My events retrieved successfully", result));
+                return Ok(new ApiSuccess("Lấy sự kiện của tôi thành công", result));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                return BadRequest(new ApiError("Đã xảy ra lỗi khi lấy sự kiện của bạn"));
             }
         }
 
@@ -294,11 +294,11 @@ namespace FTM.API.Controllers
                 var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
                 var result = await _eventService.GetMyUpcomingEventsAsync(userId, ftId, days);
 
-                return Ok(new ApiSuccess("My upcoming events retrieved successfully", result));
+                return Ok(new ApiSuccess("Lấy sự kiện sắp tới của tôi thành công", result));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                return BadRequest(new ApiError("Đã xảy ra lỗi khi lấy sự kiện sắp tới của bạn"));
             }
         }
 
@@ -317,13 +317,13 @@ namespace FTM.API.Controllers
             {
                 var result = await _eventService.AddMemberToEventAsync(eventId, memberId);
                 if (!result)
-                    return BadRequest(new ApiError("Member already in event or event not found"));
+                    return BadRequest(new ApiError("Thành viên đã có trong sự kiện hoặc không tìm thấy sự kiện"));
 
-                return Ok(new ApiSuccess("Member added to event successfully", result));
+                return Ok(new ApiSuccess("Thêm thành viên vào sự kiện thành công", result));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                return BadRequest(new ApiError("Đã xảy ra lỗi khi thêm thành viên vào sự kiện"));
             }
         }
 
@@ -338,13 +338,13 @@ namespace FTM.API.Controllers
             {
                 var result = await _eventService.RemoveMemberFromEventAsync(eventId, memberId);
                 if (!result)
-                    return NotFound(new ApiError("Member not found in event"));
+                    return NotFound(new ApiError("Không tìm thấy thành viên trong sự kiện"));
 
-                return Ok(new ApiSuccess("Member removed from event successfully", result));
+                return Ok(new ApiSuccess("Xóa thành viên khỏi sự kiện thành công", result));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                return BadRequest(new ApiError("Đã xảy ra lỗi khi xóa thành viên khỏi sự kiện"));
             }
         }
 
@@ -358,11 +358,11 @@ namespace FTM.API.Controllers
             try
             {
                 var result = await _eventService.GetEventMembersAsync(eventId);
-                return Ok(new ApiSuccess("Event members retrieved successfully", result));
+                return Ok(new ApiSuccess("Lấy danh sách thành viên sự kiện thành công", result));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiError(ex.Message));
+                return BadRequest(new ApiError("Đã xảy ra lỗi khi lấy danh sách thành viên"));
             }
         }
 
