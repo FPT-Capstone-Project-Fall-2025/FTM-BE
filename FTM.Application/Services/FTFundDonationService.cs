@@ -59,15 +59,12 @@ namespace FTM.Application.Services
         }
 
         public async Task<PaginatedResponse<FTFundDonation>> GetPendingDonationsAsync(
-            Guid? fundId, int page, int pageSize)
+            Guid fundId, int page, int pageSize)
         {
             IQueryable<FTFundDonation> query = _unitOfWork.Repository<FTFundDonation>().GetQuery()
-                .Where(d => d.Status == DonationStatus.Pending && d.IsDeleted == false);
-
-            if (fundId.HasValue)
-            {
-                query = query.Where(d => d.FTFundId == fundId.Value);
-            }
+                .Where(d => d.Status == DonationStatus.Pending && 
+                           d.IsDeleted == false &&
+                           d.FTFundId == fundId);
 
             var totalCount = await query.CountAsync();
 
@@ -88,12 +85,13 @@ namespace FTM.Application.Services
             };
         }
 
-        public async Task<List<FTFundDonation>> GetUserPendingDonationsAsync(Guid userId)
+        public async Task<List<FTFundDonation>> GetUserPendingDonationsAsync(Guid userId, Guid fundId)
         {
             return await _unitOfWork.Repository<FTFundDonation>().GetQuery()
-                .Where(d => d.FTMemberId == userId || d.CreatedByUserId == userId &&
+                .Where(d => (d.FTMemberId == userId || d.CreatedByUserId == userId) &&
                            d.Status == DonationStatus.Pending && 
-                           d.IsDeleted == false)
+                           d.IsDeleted == false &&
+                           d.FTFundId == fundId)
                 .Include(d => d.Fund)
                 .Include(d => d.Member)
                 .OrderByDescending(d => d.CreatedOn)

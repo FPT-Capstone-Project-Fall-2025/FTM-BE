@@ -80,7 +80,7 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpGet("pending")]
         [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
-        public async Task<IActionResult> GetPendingDonations([FromQuery] Guid? fundId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        public async Task<IActionResult> GetPendingDonations([FromQuery] Guid fundId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
             try
             {
@@ -95,6 +95,7 @@ namespace FTM.API.Controllers
                     d.PaymentNotes,
                     d.Status,
                     CreatedDate = d.CreatedOn,
+                    FundId = d.FTFundId,
                     FundName = d.Fund?.FundName,
                     d.PayOSOrderCode,
                     d.ProofImages
@@ -124,14 +125,11 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpGet("my-pending")]
         [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
-        public async Task<IActionResult> GetMyPendingDonations([FromQuery] Guid? userId = null)
+        public async Task<IActionResult> GetMyPendingDonations([FromQuery] Guid userId, [FromQuery] Guid fundId)
         {
             try
             {
-                if (!userId.HasValue)
-                    return BadRequest(new ApiError("User ID is required"));
-
-                var donations = await _donationService.GetUserPendingDonationsAsync(userId.Value);
+                var donations = await _donationService.GetUserPendingDonationsAsync(userId, fundId);
 
                 var donationDtos = donations.Select(d => new
                 {
@@ -141,6 +139,7 @@ namespace FTM.API.Controllers
                     d.PaymentNotes,
                     d.Status,
                     CreatedDate = d.CreatedOn,
+                    FundId = d.FTFundId,
                     FundName = d.Fund?.FundName,
                     d.PayOSOrderCode,
                     d.CreatedByUserId,
