@@ -18,9 +18,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Server.IIS.Core;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore.Metadata;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -192,22 +194,39 @@ namespace FTM.Application.Services
             if (invitedUser == null)
                 throw new ArgumentException("Người được mời không tồn tại trong hệ thống.");
 
-            var ftInvitation = new FTInvitation
-            {
-                FTId = request.FTId,
-                FTName = familyTree.Name,
-                InviterUserId = _currentUserResolver.UserId,
-                InviterName = _currentUserResolver.Name,
-                Email = request.InvitedUserEmail,
-                InvitedUserId = invitedUser.Id,
-                InvitedName = invitedUser.Name,
-                Token = Guid.NewGuid().ToString(),
-                ExpirationDate = DateTime.UtcNow.AddDays(3),
-                Status = InvitationStatus.PENDING
-            };
+            if (familyTree.OwnerId == invitedUser.Id)
+                throw new ArgumentException("Chủ sở hữu trong gia tộc nên không thể là khách.");
 
-            await AddAsync(ftInvitation);
-            await SendToGuestAsync(ftInvitation);
+            var isConnectedToMember = await _fTMemberRepository.IsConnectedTo(request.FTId, invitedUser.Id);
+
+            if (isConnectedToMember)
+            {
+                throw new ArgumentException("Nguời dùng đã được liên kết với một thành viên trong gia phả nên không thể là khách.");
+            }
+
+            if (_currentUserResolver.Email.Equals(request.InvitedUserEmail))
+            {
+                throw new ArgumentException("Bạn là thành viên trong gia tộc nên không thể là khách.");
+            }
+            else
+            {
+                var ftInvitation = new FTInvitation
+                {
+                    FTId = request.FTId,
+                    FTName = familyTree.Name,
+                    InviterUserId = _currentUserResolver.UserId,
+                    InviterName = _currentUserResolver.Name,
+                    Email = request.InvitedUserEmail,
+                    InvitedUserId = invitedUser.Id,
+                    InvitedName = invitedUser.Name,
+                    Token = Guid.NewGuid().ToString(),
+                    ExpirationDate = DateTime.UtcNow.AddDays(3),
+                    Status = InvitationStatus.PENDING
+                };
+
+                await AddAsync(ftInvitation);
+                await SendToGuestAsync(ftInvitation);
+            }
         }
 
         public async Task InviteToMemberAsync(MemberInvitationDto request)
@@ -222,27 +241,64 @@ namespace FTM.Application.Services
             if (ftMember == null)
                 throw new ArgumentException("Thành viên được liên kết không tồn tại trong hệ thống.");
 
+            if (ftMember.UserId != null)
+                throw new ArgumentException("Thành viên đã được liên kết với người dùng.");
+
             if (invitedUser == null)
                 throw new ArgumentException("Người được mời không tồn tại trong hệ thống.");
 
-            var ftInvitation = new FTInvitation
-            {
-                FTId = request.FTId,
-                FTName = familyTree.Name,
-                FTMemberId = ftMember.Id,
-                FTMemberName = ftMember.Fullname,
-                InviterUserId = _currentUserResolver.UserId,
-                InviterName = _currentUserResolver.Name,
-                Email = request.InvitedUserEmail,
-                InvitedUserId = invitedUser.Id,
-                InvitedName = invitedUser.Name,
-                Token = Guid.NewGuid().ToString(),
-                ExpirationDate = DateTime.UtcNow.AddDays(3),
-                Status = InvitationStatus.PENDING
-            };
+            var isConnectedToMember = await _fTMemberRepository.IsConnectedTo(request.FTId, invitedUser.Id);
+            var isUserExistedInFamilyTree = await _fTUserRepository.IsUserExistingInFamilyTreeAsync(request.FTId, invitedUser.Id);
 
-            await AddAsync(ftInvitation);
-            await SendAsync(ftInvitation);
+            if (isConnectedToMember)
+            {
+                throw new ArgumentException("Nguời dùng đã được liên kết với một thành viên khác trong gia phả");
+            }
+
+            if (_currentUserResolver.Email.Equals(request.InvitedUserEmail))
+            {
+                ftMember.UserId = invitedUser.Id;
+
+                //Send By Signal R
+                var notification = new FTNotification
+                {
+                    UserId = invitedUser.Id,
+                    Title = "Liên kết thành viên",
+                    Message = $"<p><b>Bạn đã liên kết với <b>{ftMember.Fullname}</b> trong cây <em>{familyTree.Name}</em>.</p>",
+                    Type = NotificationType.INVITE,
+                    IsRead = false,
+                    IsActionable = true,
+                    RelatedId = null,
+                };
+                await _fTNotificationRepository.AddAsync(notification);
+                var fTNotificationDto = _mapper.Map<FTNotificationDto>(notification);
+                await _hubContext.Clients.User(notification.UserId.ToString())
+                .SendAsync("ReceiveNotification", fTNotificationDto);
+
+                await _unitOfWork.CompleteAsync();
+            }
+            else
+            {
+
+                var ftInvitation = new FTInvitation
+                {
+                    FTId = request.FTId,
+                    FTName = familyTree.Name,
+                    FTMemberId = ftMember.Id,
+                    FTMemberName = ftMember.Fullname,
+                    InviterUserId = _currentUserResolver.UserId,
+                    InviterName = _currentUserResolver.Name,
+                    Email = request.InvitedUserEmail,
+                    InvitedUserId = invitedUser.Id,
+                    InvitedName = invitedUser.Name,
+                    Token = Guid.NewGuid().ToString(),
+                    ExpirationDate = DateTime.UtcNow.AddDays(3),
+                    Status = InvitationStatus.PENDING
+                };
+
+                await AddAsync(ftInvitation);
+                await SendAsync(ftInvitation);
+            }
         }
 
         public async Task<IReadOnlyList<SimpleFTInvitationDto>> ListAsync(FTInvitationSpecParams specParams)
@@ -288,7 +344,8 @@ namespace FTM.Application.Services
 
                 await _emailSender.SendEmailAsync(invitation.Email, "Lời mời tham gia gia phả", body);
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
             }
 
             //Send By Signal R
