@@ -10,6 +10,7 @@ namespace FTM.Domain.DTOs.FamilyTree
     public class FTMemberTreeDetailsDto
     {
         public Guid Id { get; set; }
+        public Guid? UserId { get; set; }
         public bool? IsActive { get; set; }
         public string Name { get; set; }
         public int? Gender { get; set; }
