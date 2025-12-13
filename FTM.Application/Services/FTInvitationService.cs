@@ -264,10 +264,10 @@ namespace FTM.Application.Services
                 {
                     UserId = invitedUser.Id,
                     Title = "Liên kết thành viên",
-                    Message = $"<p><b>Bạn đã liên kết với <b>{ftMember.Fullname}</b> trong cây <em>{familyTree.Name}</em>.</p>",
+                    Message = $"<p><b>Bạn đã liên kết với <b>{ftMember.Fullname}</b> trong gia tộc <em>{familyTree.Name}</em>.</p>",
                     Type = NotificationType.INVITE,
                     IsRead = false,
-                    IsActionable = true,
+                    IsActionable = false,
                     RelatedId = null,
                 };
                 await _fTNotificationRepository.AddAsync(notification);
