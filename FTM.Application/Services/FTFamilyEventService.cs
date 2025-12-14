@@ -311,20 +311,7 @@ namespace FTM.Application.Services
             if (!userIsMember && currentUserRole != "GPOwner")
                 throw new Exception("User is not a member of this family tree");
 
-            // Check permission to update events
-            if (userIsMember)
-            {
-                var memberId = await _eventRepository.GetMemberIdByUserIdAndFTIdAsync(currentUserId, eventEntity.FTId);
-                if (memberId.HasValue)
-                {
-                    var hasPermission = await _authorizationRepository.IsAuthorizationExisting(
-                        eventEntity.FTId, memberId.Value, FeatureType.EVENT, MethodType.UPDATE);
-                    
-                    if (!hasPermission && currentUserRole != "GPOwner")
-                        throw new Exception("User does not have permission to update events in this family tree");
-                }
-            }
-
+           
             // Validate RecurrenceType if provided
             if (request.RecurrenceType.HasValue && (request.RecurrenceType.Value < 0 || request.RecurrenceType.Value > 3))
                 throw new Exception("Invalid recurrence type. Must be between 0 and 3");
