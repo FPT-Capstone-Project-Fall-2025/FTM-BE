@@ -88,6 +88,10 @@ namespace FTM.Infrastructure.Repositories
                 .Select(em => em.FTFamilyEventId);
 
             return await Context.FTFamilyEvents
+                .Include(e => e.FT)
+                .Include(e => e.TargetMember)
+                .Include(e => e.EventMembers.Where(em => em.IsDeleted == false))
+                    .ThenInclude(em => em.FTMember)
                 .Where(e => e.IsDeleted == false && 
                     (assignedEventIds.Contains(e.Id) || e.CreatedByUserId == member.UserId))
                 .OrderBy(e => e.StartTime)

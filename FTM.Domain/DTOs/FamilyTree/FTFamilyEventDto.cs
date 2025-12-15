@@ -14,6 +14,7 @@ namespace FTM.Domain.DTOs.FamilyTree
         public string? Location { get; set; }
         public RecurrenceType RecurrenceType { get; set; }
         public Guid FTId { get; set; }
+        public string? FtName { get; set; }
         public string? Description { get; set; }
         public string? ImageUrl { get; set; }
         public Guid? ReferenceEventId { get; set; }

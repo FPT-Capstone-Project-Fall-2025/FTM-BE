@@ -782,6 +782,7 @@ namespace FTM.Application.Services
                 Location = eventEntity.Location,
                 RecurrenceType = eventEntity.RecurrenceType,
                 FTId = eventEntity.FTId,
+                FtName = eventEntity.FT?.Name,
                 Description = eventEntity.Description,
                 ImageUrl = eventEntity.ImageUrl,
                 ReferenceEventId = eventEntity.ReferenceEventId,
