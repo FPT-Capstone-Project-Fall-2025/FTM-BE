@@ -71,11 +71,25 @@ namespace FTM.Infrastructure.Repositories
 
         public async Task<IEnumerable<FTFamilyEvent>> GetEventsByMemberIdAsync(Guid memberId, int skip = 0, int take = 20)
         {
-            return await Context.FTFamilyEventMembers
-                .Include(em => em.FTFamilyEvent)
+            // Get member's userId
+            var member = await Context.FTMembers
+                .Where(m => m.Id == memberId && m.IsDeleted == false)
+                .Select(m => new { m.UserId })
+                .FirstOrDefaultAsync();
+
+            if (member == null)
+                return new List<FTFamilyEvent>();
+
+            // Get events where:
+            // 1. Member is assigned to the event (via FTFamilyEventMembers)
+            // 2. Member created the event (via CreatedByUserId)
+            var assignedEventIds = Context.FTFamilyEventMembers
                 .Where(em => em.FTMemberId == memberId && em.IsDeleted == false)
-                .Select(em => em.FTFamilyEvent)
-                .Where(e => e.IsDeleted == false)
+                .Select(em => em.FTFamilyEventId);
+
+            return await Context.FTFamilyEvents
+                .Where(e => e.IsDeleted == false && 
+                    (assignedEventIds.Contains(e.Id) || e.CreatedByUserId == member.UserId))
                 .OrderBy(e => e.StartTime)
                 .Skip(skip)
                 .Take(take)
