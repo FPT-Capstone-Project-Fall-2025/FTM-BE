@@ -204,6 +204,7 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpPost("{donationId}/confirm")]
         [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
+        [FTAuthorizeOwner]
         public async Task<IActionResult> ConfirmDonation(Guid donationId, [FromBody] ConfirmDonationRequest request)
         {
             try
@@ -244,6 +245,7 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpPost("{donationId}/reject")]
         [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
+        [FTAuthorizeOwner]
         public async Task<IActionResult> RejectDonation(Guid donationId, [FromBody] RejectDonationRequest request)
         {
             try
