@@ -184,7 +184,6 @@ namespace FTM.API.Controllers
         /// Member uploads receipts when creating expense
         /// </summary>
         [HttpPost]
-        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> CreateExpense([FromForm] CreateExpenseRequest request)
         {
             try
