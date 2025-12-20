@@ -237,11 +237,14 @@ namespace FTM.Application.Services
 
             if (relationShipChild.FromFTMemberPartnerId == null)
             {
+                var fromMember = await _fTMemberRepository.GetByIdAsync(relationShipChild.FromFTMemberId);
+                var parentTitle = fromMember.Gender == 0 ? "Mẹ" : "Bố";
+
                 var partnerUndefined = new FTMember()
                 {
                     StatusCode = FTMemberStatus.UNDEFINED,
                     FTId = request.FTId.Value,
-                    Fullname = $"Bố hoặc mẹ của {request.Fullname}",
+                    Fullname = $"{parentTitle} của {request.Fullname}",
                     IsRoot = false,
                     FTRole = FTMRole.FTMember,
                     Gender = request.Gender == 1 ? 0 : 1,
@@ -276,9 +279,9 @@ namespace FTM.Application.Services
                                         .FirstOrDefaultAsync(x => x.ToFTMemberId == request.RootId
                                                             && x.CategoryCode == FTRelationshipCategory.PARTNER);
 
-            if (partnerOfFromFTMember != null && !partnerOfFromFTMember.FromFTMember.IsDivorced) throw new ArgumentException("Quan hệ hôn nhân một vợ một chồng.");
+            if (partnerOfFromFTMember != null && !partnerOfFromFTMember.FromFTMember.IsDivorced && partnerOfFromFTMember.FromFTMember.IsDeath == false) throw new ArgumentException("Quan hệ hôn nhân một vợ một chồng.");
 
-            if (firstPartner != null && !firstPartner.ToFTMember.IsDivorced && firstPartner.ToFTMember.StatusCode != FTMemberStatus.UNDEFINED) throw new ArgumentException("Quan hệ hôn nhân một vợ một chồng.");
+            if (firstPartner != null && !firstPartner.ToFTMember.IsDivorced && firstPartner.ToFTMember.IsDeath == false && firstPartner.ToFTMember.StatusCode != FTMemberStatus.UNDEFINED) throw new ArgumentException("Quan hệ hôn nhân một vợ một chồng.");
 
             if (firstPartner != null && firstPartner.ToFTMember.StatusCode == FTMemberStatus.UNDEFINED)
             {
