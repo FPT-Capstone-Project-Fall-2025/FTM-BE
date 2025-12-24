@@ -12,6 +12,7 @@ namespace FTM.Infrastructure.Repositories.Interface
     public interface IFTUserRepository : IGenericRepository<FTUser>
     {
         Task<FTUser?> FindOwnerAsync(Guid ftId);
+        Task<List<FTUser>> FindUserList(Guid userId);
         Task<bool> IsOwnerAsync(Guid ftId, Guid userId);
         Task<bool> IsGuestAsync(Guid ftId, Guid userId);
         Task<bool> IsUserExistingInFamilyTreeAsync(Guid ftId, Guid userId);
