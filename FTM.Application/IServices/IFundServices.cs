@@ -45,12 +45,12 @@ namespace FTM.Application.IServices
         /// Get pending donations with pagination (optional fund filter)
         /// </summary>
         Task<PaginatedResponse<FTFundDonation>> GetPendingDonationsAsync(
-            Guid? fundId, int page, int pageSize);
+            Guid fundId, int page, int pageSize);
 
         /// <summary>
         /// Get user's pending donations (for uploading proof)
         /// </summary>
-        Task<List<FTFundDonation>> GetUserPendingDonationsAsync(Guid userId);
+        Task<List<FTFundDonation>> GetUserPendingDonationsAsync(Guid userId, Guid fundId);
 
         /// <summary>
         /// Create a new donation
@@ -100,7 +100,7 @@ namespace FTM.Application.IServices
         /// Get pending expenses with pagination (optional fund filter)
         /// </summary>
         Task<PaginatedResponse<FTFundExpense>> GetPendingExpensesAsync(
-            Guid? fundId, int page, int pageSize);
+            Guid fundId, int page, int pageSize);
 
         /// <summary>
         /// Create a new expense

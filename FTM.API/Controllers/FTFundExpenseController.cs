@@ -79,7 +79,7 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpGet("pending")]
         [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
-        public async Task<IActionResult> GetPendingExpenses([FromQuery] Guid? fundId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        public async Task<IActionResult> GetPendingExpenses([FromQuery] Guid fundId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
             try
             {
@@ -94,6 +94,7 @@ namespace FTM.API.Controllers
                     e.Recipient,
                     e.Status,
                     CreatedDate = e.CreatedOn,
+                    FundId = e.FTFundId,
                     FundName = e.Fund?.FundName,
                     e.ReceiptImages
                 });
@@ -183,7 +184,6 @@ namespace FTM.API.Controllers
         /// Member uploads receipts when creating expense
         /// </summary>
         [HttpPost]
-        [FTAuthorize(MethodType.VIEW, FeatureType.FUND)]
         public async Task<IActionResult> CreateExpense([FromForm] CreateExpenseRequest request)
         {
             try
@@ -299,6 +299,7 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpPost("{expenseId}/approve")]
         [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
+        [FTAuthorizeOwner]
         public async Task<IActionResult> ApproveExpense(Guid expenseId, [FromForm] ApproveExpenseRequest request)
         {
             try
@@ -350,6 +351,7 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpPost("{expenseId}/reject")]
         [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
+        [FTAuthorizeOwner]
         public async Task<IActionResult> RejectExpense(Guid expenseId, [FromBody] RejectExpenseRequest request)
         {
             try
