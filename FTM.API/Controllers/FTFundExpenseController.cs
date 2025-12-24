@@ -299,6 +299,7 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpPost("{expenseId}/approve")]
         [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
+        [FTAuthorizeOwner]
         public async Task<IActionResult> ApproveExpense(Guid expenseId, [FromForm] ApproveExpenseRequest request)
         {
             try
@@ -350,6 +351,7 @@ namespace FTM.API.Controllers
         /// </summary>
         [HttpPost("{expenseId}/reject")]
         [FTAuthorize(MethodType.UPDATE, FeatureType.FUND)]
+        [FTAuthorizeOwner]
         public async Task<IActionResult> RejectExpense(Guid expenseId, [FromBody] RejectExpenseRequest request)
         {
             try
