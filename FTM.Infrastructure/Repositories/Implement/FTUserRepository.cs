@@ -66,5 +66,10 @@ namespace FTM.Infrastructure.Repositories.Implement
                 })
                 .FirstOrDefaultAsync();
         }
+
+        public async Task<List<FTUser>> FindUserList(Guid userId)
+        {
+            return await _context.FTUsers.Where(u => u.UserId == userId && u.IsDeleted == false).ToListAsync();
+        }
     }
 }

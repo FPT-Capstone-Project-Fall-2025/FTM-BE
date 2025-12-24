@@ -24,6 +24,7 @@ using XAct.Messages;
 using XAct.Security;
 using XAct.Users;
 using static FTM.Domain.Constants.Constants;
+using FTM.Domain.Entities.FamilyTree;
 
 namespace FTM.Application.Services
 {
@@ -36,6 +37,8 @@ namespace FTM.Application.Services
         private readonly IEmailSender _emailSender;
         private readonly IUnitOfWork _unitOfWork;
         private readonly AppIdentityDbContext _context;
+        private readonly FTMDbContext _ftcontext;
+        private readonly IFTUserRepository _userRepository;
         private readonly ITokenProvider _tokenProvider;
         private readonly IBlobStorageService _blobStorageService;
 
@@ -48,7 +51,9 @@ namespace FTM.Application.Services
             IUnitOfWork unitOfWork,
             IEmailSender emailSender,
             ITokenProvider tokenProvider,
+            IFTUserRepository userRepository,
             AppIdentityDbContext context,
+            FTMDbContext ftcontext,
             IBlobStorageService blobStorageService
         )
         {
@@ -59,7 +64,9 @@ namespace FTM.Application.Services
             _currentUserResolver = currentUserResolver;
             _emailSender = emailSender;
             _unitOfWork = unitOfWork;
+            _userRepository = userRepository;
             _context = context;
+            _ftcontext = ftcontext;
             _blobStorageService = blobStorageService;
         }
 
@@ -504,7 +511,17 @@ namespace FTM.Application.Services
 
             // Update user properties
             if (!string.IsNullOrEmpty(request.Name))
+            {
                 user.Name = request.Name;
+                var userList = await _userRepository.FindUserList(currentUserId);
+
+                userList.ForEach(u => u.Name = request.Name);
+                foreach(FTUser fTUser in userList)
+                {
+                    _userRepository.Update(fTUser);
+                }
+                await _ftcontext.SaveChangesAsync();
+            }
 
             if (!string.IsNullOrEmpty(request.PhoneNumber))
                 user.PhoneNumber = request.PhoneNumber;
